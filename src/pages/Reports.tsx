@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Download, Eye, Calendar, Search, Filter, FileText, TrendingUp, BarChart3, PieChart } from "lucide-react";
+import { CreateReportDialog } from "@/components/CreateReportDialog";
+import { Download, Eye, Calendar, Search, Filter, FileText, TrendingUp, BarChart3, PieChart, Edit } from "lucide-react";
 
 const reports = [
   {
@@ -73,27 +73,32 @@ const reports = [
 ];
 
 const reportTemplates = [
-  { id: 1, name: 'Sales Performance', icon: TrendingUp, color: 'from-green-500 to-green-600' },
-  { id: 2, name: 'Financial Analysis', icon: BarChart3, color: 'from-blue-500 to-blue-600' },
-  { id: 3, name: 'Customer Insights', icon: PieChart, color: 'from-purple-500 to-purple-600' },
-  { id: 4, name: 'Operational Report', icon: FileText, color: 'from-orange-500 to-orange-600' },
+  { id: 1, name: 'Sales Performance', icon: TrendingUp, color: 'from-green-500 to-green-600', editable: true },
+  { id: 2, name: 'Financial Analysis', icon: BarChart3, color: 'from-blue-500 to-blue-600', editable: true },
+  { id: 3, name: 'Customer Insights', icon: PieChart, color: 'from-purple-500 to-purple-600', editable: true },
+  { id: 4, name: 'Operational Report', icon: FileText, color: 'from-orange-500 to-orange-600', editable: true },
 ];
 
 const Reports = () => {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [reportName, setReportName] = useState('');
-  const [reportType, setReportType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [editingTemplate, setEditingTemplate] = useState<number | null>(null);
+  const [templateNames, setTemplateNames] = useState<{[key: number]: string}>({
+    1: 'Sales Performance',
+    2: 'Financial Analysis', 
+    3: 'Customer Insights',
+    4: 'Operational Report'
+  });
 
-  const handleCreateReport = () => {
-    if (reportName && reportType) {
-      console.log('Creating report:', { name: reportName, type: reportType });
-      setReportName('');
-      setReportType('');
-      setShowCreateForm(false);
-    }
+  const handleCreateReport = (name: string, type: string) => {
+    console.log('Creating report:', { name, type });
+    // Add logic to create report
+  };
+
+  const handleEditTemplate = (id: number, newName: string) => {
+    setTemplateNames(prev => ({ ...prev, [id]: newName }));
+    setEditingTemplate(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -124,13 +129,7 @@ const Reports = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
             <p className="text-gray-600 text-lg">Create, manage and analyze your business intelligence reports</p>
           </div>
-          <Button 
-            onClick={() => setShowCreateForm(true)} 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 text-base font-medium shadow-lg"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Create Report
-          </Button>
+          <CreateReportDialog onCreateReport={handleCreateReport} />
         </div>
 
         {/* Quick Stats */}
@@ -182,9 +181,8 @@ const Reports = () => {
         </div>
 
         <Tabs defaultValue="all-reports" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-none lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:grid-cols-none lg:inline-flex">
             <TabsTrigger value="all-reports" className="px-6 py-3">All Reports</TabsTrigger>
-            <TabsTrigger value="create-report" className="px-6 py-3">Create New</TabsTrigger>
             <TabsTrigger value="templates" className="px-6 py-3">Templates</TabsTrigger>
           </TabsList>
 
@@ -279,54 +277,6 @@ const Reports = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="create-report" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Create New Report</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-gray-700">Report Name</label>
-                    <Input
-                      value={reportName}
-                      onChange={(e) => setReportName(e.target.value)}
-                      placeholder="Enter report name"
-                      className="h-12"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-gray-700">Report Type</label>
-                    <Select value={reportType} onValueChange={setReportType}>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Select report type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sales">Sales Report</SelectItem>
-                        <SelectItem value="analytics">Analytics Report</SelectItem>
-                        <SelectItem value="inventory">Inventory Report</SelectItem>
-                        <SelectItem value="finance">Financial Report</SelectItem>
-                        <SelectItem value="customer">Customer Report</SelectItem>
-                        <SelectItem value="performance">Performance Report</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <Button 
-                    onClick={handleCreateReport} 
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-3"
-                  >
-                    Generate Report
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowCreateForm(false)} className="px-8 py-3">
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="templates" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {reportTemplates.map((template) => (
@@ -335,10 +285,35 @@ const Reports = () => {
                     <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r ${template.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                       <template.icon className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="font-semibold text-lg text-gray-900 mb-2">{template.name}</h3>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Use Template
-                    </Button>
+                    {editingTemplate === template.id ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={templateNames[template.id]}
+                          onChange={(e) => setTemplateNames(prev => ({ ...prev, [template.id]: e.target.value }))}
+                          className="text-center"
+                        />
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleEditTemplate(template.id, templateNames[template.id])}>
+                            Save
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingTemplate(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="font-semibold text-lg text-gray-900 mb-2">{templateNames[template.id]}</h3>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1">
+                            Use Template
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingTemplate(template.id)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               ))}

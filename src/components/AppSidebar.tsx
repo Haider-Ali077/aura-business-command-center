@@ -61,12 +61,12 @@ export function AppSidebar() {
                         `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group ${
                           linkActive || isActive(item.url)
                             ? `bg-gradient-to-r ${item.gradient} text-white shadow-md`
-                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            : "text-gray-700 bg-gray-50 hover:bg-gradient-to-r hover:" + item.gradient + " hover:text-white"
                         } ${collapsed ? "justify-center px-2" : ""}`
                       }
                     >
                       <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${
-                        isActive(item.url) ? "bg-white/20" : "bg-gray-100 group-hover:bg-gray-200"
+                        isActive(item.url) ? "bg-white/20" : "bg-white/50"
                       } transition-colors duration-200`}>
                         <item.icon className="h-5 w-5" />
                       </div>
