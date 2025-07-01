@@ -1,25 +1,73 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Bell, User } from "lucide-react";
+import { Bell, Search, User, LogOut } from "lucide-react";
+import { useAuth0 } from '@auth0/auth0-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
+  const { user, logout } = useAuth0();
+
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+    <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
         <SidebarTrigger />
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">ERP Dashboard</h1>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+          />
         </div>
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm">
           <Bell className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="sm">
-          <User className="h-4 w-4" />
-        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              {user?.picture ? (
+                <img 
+                  src={user.picture} 
+                  alt={user.name || 'User'} 
+                  className="w-6 h-6 rounded-full"
+                />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
+              <span className="text-sm font-medium">{user?.name || 'User'}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              Preferences
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+              className="text-red-600 focus:text-red-600"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

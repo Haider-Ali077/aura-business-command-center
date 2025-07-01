@@ -1,11 +1,11 @@
 
-import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AddWidgetDialog } from "@/components/AddWidgetDialog";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { Settings } from "lucide-react";
+import { useWidgetStore } from "@/store/widgetStore";
 
 const analyticsData = [
   { name: 'Jan', revenue: 4000, customers: 240, orders: 120, visits: 1200 },
@@ -16,35 +16,16 @@ const analyticsData = [
   { name: 'Jun', revenue: 2390, customers: 250, orders: 125, visits: 1800 },
 ];
 
-interface Widget {
-  id: string;
-  title: string;
-  type: string;
-  span: number;
-  config?: {
-    timePeriod?: string;
-    dataSource?: string;
-  };
-}
-
 const Analytics = () => {
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { id: '1', title: 'Revenue Trends', type: 'line', span: 2 },
-    { id: '2', title: 'Customer Growth', type: 'bar', span: 1 },
-    { id: '3', title: 'Website Traffic', type: 'area', span: 2 },
-    { id: '4', title: 'Order Volume', type: 'bar', span: 1 },
-  ]);
+  const { widgets, addWidget, removeWidget, updateWidget } = useWidgetStore();
 
   const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }) => {
-    setWidgets(prev => [...prev, widget]);
-  };
-
-  const handleRemoveWidget = (id: string) => {
-    setWidgets(prev => prev.filter(w => w.id !== id));
-  };
-
-  const handleUpdateWidget = (id: string, updates: Partial<Widget>) => {
-    setWidgets(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
+    const newWidget = {
+      ...widget,
+      position: { x: 0, y: 0 },
+      size: { width: widget.span === 2 ? 600 : 300, height: 300 }
+    };
+    addWidget(newWidget);
   };
 
   return (
@@ -70,8 +51,8 @@ const Analytics = () => {
               key={widget.id}
               widget={widget}
               data={analyticsData}
-              onRemove={handleRemoveWidget}
-              onUpdate={handleUpdateWidget}
+              onRemove={removeWidget}
+              onUpdate={updateWidget}
             />
           ))}
         </div>
