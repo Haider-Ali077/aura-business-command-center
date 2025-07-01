@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAuth0 } from '@auth0/auth0-react';
 import { Auth0ProviderWrapper } from "@/components/Auth0ProviderWrapper";
 import { LoginPage } from "@/components/LoginPage";
+import { useTenantStore } from "@/store/tenantStore";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
@@ -17,7 +19,18 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { isLoading, isAuthenticated } = useAuth0();
+  const { isLoading, isAuthenticated, user } = useAuth0();
+  const { fetchUserTenants, setSession } = useTenantStore();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Initialize tenant session
+      fetchUserTenants(user.sub || '');
+      
+      // Store auth token (in a real app, this would come from Auth0)
+      localStorage.setItem('auth_token', 'dummy_token_' + user.sub);
+    }
+  }, [isAuthenticated, user, fetchUserTenants]);
 
   if (isLoading) {
     return (

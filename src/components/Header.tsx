@@ -3,6 +3,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, Search, User, LogOut } from "lucide-react";
 import { useAuth0 } from '@auth0/auth0-react';
+import { TenantSelector } from '@/components/TenantSelector';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,8 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-4">
+        <TenantSelector />
+        
         <Button variant="ghost" size="sm">
           <Bell className="h-4 w-4" />
         </Button>
