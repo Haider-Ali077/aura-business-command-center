@@ -37,22 +37,31 @@ class DataService {
       throw new Error('No active session');
     }
     
-    // Use tenant-specific database URL
-    return `${session.tenantInfo.database_url}/api/${endpoint}`;
+    // Use your localhost Python backend
+    return `http://localhost:8000/api/v1/tenants/${session.tenantId}/${endpoint}`;
   }
 
-  private getHeaders(): HeadersInit {
+  private async getHeaders(): Promise<HeadersInit> {
+    // Get the Auth0 token
+    const token = localStorage.getItem('auth_token') || await this.getAuth0Token();
+    
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+      'Authorization': `Bearer ${token}`,
       'X-Tenant-ID': useTenantStore.getState().currentSession?.tenantId || '',
     };
+  }
+
+  private async getAuth0Token(): Promise<string> {
+    // This would be implemented with your Auth0 token retrieval logic
+    // For now, returning a placeholder
+    return 'auth0_token_placeholder';
   }
 
   async fetchDashboardData(): Promise<DashboardData> {
     try {
       const response = await fetch(this.getApiUrl('dashboard'), {
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
 
       if (!response.ok) {
@@ -108,7 +117,7 @@ class DataService {
   async fetchAnalyticsData(): Promise<AnalyticsData[]> {
     try {
       const response = await fetch(this.getApiUrl('analytics'), {
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
 
       if (!response.ok) {
@@ -136,7 +145,7 @@ class DataService {
     try {
       const response = await fetch(this.getApiUrl('analytics/charts'), {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify(chartData),
       });
 
@@ -145,6 +154,29 @@ class DataService {
       }
     } catch (error) {
       console.error('Error saving chart to analytics:', error);
+    }
+  }
+
+  async chatWithAgent(message: string): Promise<string> {
+    try {
+      const response = await fetch(this.getApiUrl('chat/agent'), {
+        method: 'POST',
+        headers: await this.getHeaders(),
+        body: JSON.stringify({
+          message,
+          tenant_context: useTenantStore.getState().currentSession?.tenantInfo
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to chat with agent');
+      }
+
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error('Error chatting with agent:', error);
+      return 'Sorry, I encountered an error processing your request.';
     }
   }
 }
