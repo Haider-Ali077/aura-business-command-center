@@ -7,18 +7,14 @@ interface Auth0ProviderWrapperProps {
 }
 
 export function Auth0ProviderWrapper({ children }: Auth0ProviderWrapperProps) {
-  const domain = import.meta.env.VITE_AUTH0_DOMAIN;
-  const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-  const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
-
-  if (!domain || !clientId) {
-    console.error('Auth0 configuration missing. Please set VITE_AUTH0_DOMAIN and VITE_AUTH0_CLIENT_ID environment variables.');
-  }
+  const domain = "dev-zh3w0q2u3um73byh.us.auth0.com";
+  const clientId = "cViqSXjuhLvSzdmj7rvC6AvNtqcRLCIF";
+  const audience = "http://localhost:8000";
 
   return (
     <Auth0Provider
-      domain={domain || 'your-domain.auth0.com'}
-      clientId={clientId || 'your-client-id'}
+      domain={domain}
+      clientId={clientId}
       authorizationParams={{
         redirect_uri: window.location.origin,
         audience: audience,

@@ -49,10 +49,11 @@ export const useTenantStore = create<TenantStore>()(
       fetchUserTenants: async (userId: string) => {
         set({ isLoading: true, error: null });
         try {
-          // Dummy API call to admin database
-          const response = await fetch(`/api/admin/users/${userId}/tenants`, {
+          // Call your Python admin database API
+          const response = await fetch(`http://localhost:8000/api/v1/admin/users/${userId}/tenants`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+              'Content-Type': 'application/json',
             },
           });
           
@@ -71,13 +72,51 @@ export const useTenantStore = create<TenantStore>()(
               email: '', // Will be filled from Auth0
               tenantId: defaultTenant.id,
               tenantInfo: defaultTenant,
-              permissions: ['read', 'write'], // Default permissions
+              permissions: ['read', 'write'], // Will come from admin DB
               lastAccessed: new Date(),
             };
             set({ currentSession: session });
           }
         } catch (error) {
+          console.error('Error fetching tenants:', error);
           set({ error: (error as Error).message, isLoading: false });
+          
+          // Set dummy data for development
+          const dummyTenants = [
+            {
+              id: 'company_a',
+              name: 'Company A',
+              database_url: 'postgresql://localhost:5432/company_a_erp',
+              company_code: 'COMP_A'
+            },
+            {
+              id: 'company_b', 
+              name: 'Company B',
+              database_url: 'postgresql://localhost:5432/company_b_erp',
+              company_code: 'COMP_B'
+            },
+            {
+              id: 'company_c',
+              name: 'Company C', 
+              database_url: 'postgresql://localhost:5432/company_c_erp',
+              company_code: 'COMP_C'
+            }
+          ];
+          
+          set({ tenants: dummyTenants, isLoading: false, error: null });
+          
+          if (dummyTenants.length > 0) {
+            const defaultTenant = dummyTenants[0];
+            const session: UserSession = {
+              userId,
+              email: '',
+              tenantId: defaultTenant.id,
+              tenantInfo: defaultTenant,
+              permissions: ['read', 'write'],
+              lastAccessed: new Date(),
+            };
+            set({ currentSession: session });
+          }
         }
       },
 
