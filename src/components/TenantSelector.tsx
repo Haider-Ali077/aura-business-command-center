@@ -35,7 +35,7 @@ export function TenantSelector() {
   return (
     <div className="flex items-center gap-2">
       <Building2 className="h-4 w-4 text-gray-500" />
-      <Select value={currentSession.tenantId} onValueChange={handleTenantChange}>
+      <Select value={currentSession.tenantId.toString()} onValueChange={handleTenantChange}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder="Select company" />
         </SelectTrigger>

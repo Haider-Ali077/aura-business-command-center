@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, File, Trash2, Download, RefreshCw } from "lucide-react";
 import { useTenantStore } from "@/store/tenantStore";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
 
 interface Document {
@@ -29,7 +29,7 @@ interface UserRole {
 
 const Settings = () => {
   const { currentSession } = useTenantStore();
-  const { user } = useAuth0();
+  const { session } = useAuthStore();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [userRole, setUserRole] = useState<UserRole>({
     canUpload: false,
@@ -44,7 +44,7 @@ const Settings = () => {
     autoReports: false,
     dataRetention: '12',
     companyName: currentSession?.tenantInfo.name || 'Your Company Name',
-    email: user?.email || 'admin@company.com'
+    email: session?.user.email || 'admin@company.com'
   });
 
   // Fetch user role and documents on component mount
@@ -58,10 +58,10 @@ const Settings = () => {
   const fetchUserRole = async () => {
     try {
       // Dummy API call - replace with actual endpoint
-      const response = await fetch(`/api/admin/users/${user?.sub}/role`, {
+      const response = await fetch(`/api/admin/users/${session?.user.user_id}/role`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'X-Tenant-ID': currentSession?.tenantId || '',
+          'Authorization': `Bearer ${session?.token}`,
+          'X-Tenant-ID': currentSession?.tenantId.toString() || '',
         },
       });
       
@@ -86,10 +86,10 @@ const Settings = () => {
     setIsLoading(true);
     try {
       // Dummy API call - replace with actual endpoint
-      const response = await fetch(`/api/tenants/${currentSession.tenantId}/documents`, {
+      const response = await fetch(`/api/tenants/${currentSession.tenantId.toString()}/documents`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'X-Tenant-ID': currentSession.tenantId,
+          'Authorization': `Bearer ${session?.token}`,
+          'X-Tenant-ID': currentSession.tenantId.toString(),
         },
       });
       
@@ -108,7 +108,7 @@ const Settings = () => {
           uploadDate: '2024-01-15',
           type: 'Business Document',
           uploadedBy: 'admin@company.com',
-          tenantId: currentSession?.tenantId || '',
+          tenantId: currentSession?.tenantId.toString() || '',
         },
         {
           id: '2',
@@ -117,7 +117,7 @@ const Settings = () => {
           uploadDate: '2024-01-14',
           type: 'Financial Report',
           uploadedBy: 'user@company.com',
-          tenantId: currentSession?.tenantId || '',
+          tenantId: currentSession?.tenantId.toString() || '',
         },
       ]);
     } finally {
@@ -139,15 +139,15 @@ const Settings = () => {
         Array.from(files).forEach(file => {
           formData.append('files', file);
         });
-        formData.append('tenantId', currentSession.tenantId);
-        formData.append('uploadedBy', user?.email || '');
+        formData.append('tenantId', currentSession.tenantId.toString());
+        formData.append('uploadedBy', session?.user.email || '');
 
         // Dummy API call - replace with actual endpoint
-        const response = await fetch(`/api/tenants/${currentSession.tenantId}/documents/upload`, {
+        const response = await fetch(`/api/tenants/${currentSession.tenantId.toString()}/documents/upload`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'X-Tenant-ID': currentSession.tenantId,
+            'Authorization': `Bearer ${session?.token}`,
+            'X-Tenant-ID': currentSession.tenantId.toString(),
           },
           body: formData,
         });
@@ -175,11 +175,11 @@ const Settings = () => {
 
     try {
       // Dummy API call - replace with actual endpoint
-      const response = await fetch(`/api/tenants/${currentSession?.tenantId}/documents/${id}`, {
+      const response = await fetch(`/api/tenants/${currentSession?.tenantId.toString()}/documents/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'X-Tenant-ID': currentSession?.tenantId || '',
+          'Authorization': `Bearer ${session?.token}`,
+          'X-Tenant-ID': currentSession?.tenantId.toString() || '',
         },
       });
 
