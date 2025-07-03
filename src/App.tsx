@@ -10,17 +10,12 @@ import Settings from '@/pages/Settings';
 import NotFound from '@/pages/NotFound';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/authStore';
-import { useEffect } from 'react';
 import './App.css';
 
 const queryClient = new QueryClient();
 
 function App() {
-  const { session, checkSession } = useAuthStore();
-
-  useEffect(() => {
-    checkSession();
-  }, [checkSession]);
+  const { session } = useAuthStore();
 
   if (!session) {
     return (
