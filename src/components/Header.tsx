@@ -2,7 +2,8 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, Search, User, LogOut } from "lucide-react";
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuthStore } from '@/store/authStore';
+import { useTenantStore } from '@/store/tenantStore';
 import { TenantSelector } from '@/components/TenantSelector';
 import {
   DropdownMenu,
@@ -14,7 +15,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { user, logout } = useAuth0();
+  const { session, logout } = useAuthStore();
+  const { clearSession } = useTenantStore();
+
+  const handleLogout = () => {
+    logout();
+    clearSession();
+  };
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
@@ -40,16 +47,8 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              {user?.picture ? (
-                <img 
-                  src={user.picture} 
-                  alt={user.name || 'User'} 
-                  className="w-6 h-6 rounded-full"
-                />
-              ) : (
-                <User className="h-4 w-4" />
-              )}
-              <span className="text-sm font-medium">{user?.name || 'User'}</span>
+              <User className="h-4 w-4" />
+              <span className="text-sm font-medium">{session?.user.email}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -63,7 +62,7 @@ export function Header() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+              onClick={handleLogout}
               className="text-red-600 focus:text-red-600"
             >
               <LogOut className="h-4 w-4 mr-2" />

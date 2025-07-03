@@ -1,5 +1,5 @@
-
 import { useTenantStore } from '@/store/tenantStore';
+import { useAuthStore } from '@/store/authStore';
 
 export interface DashboardData {
   revenue: number;
@@ -37,25 +37,24 @@ class DataService {
       throw new Error('No active session');
     }
     
-    // Use your localhost Python backend
     return `http://localhost:8000/api/v1/tenants/${session.tenantId}/${endpoint}`;
   }
 
   private async getHeaders(): Promise<HeadersInit> {
-    // Get the Auth0 token
-    const token = localStorage.getItem('auth_token') || await this.getAuth0Token();
+    const authSession = useAuthStore.getState().session;
+    const tenantSession = useTenantStore.getState().currentSession;
+    
+    if (!authSession || !tenantSession) {
+      throw new Error('No active session');
+    }
     
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      'X-Tenant-ID': useTenantStore.getState().currentSession?.tenantId || '',
+      'Authorization': `Bearer ${authSession.token}`,
+      'X-User-ID': authSession.user.user_id.toString(),
+      'X-Tenant-ID': tenantSession.tenantId.toString(),
+      'X-Role-ID': authSession.user.role_id.toString(),
     };
-  }
-
-  private async getAuth0Token(): Promise<string> {
-    // This would be implemented with your Auth0 token retrieval logic
-    // For now, returning a placeholder
-    return 'auth0_token_placeholder';
   }
 
   async fetchDashboardData(): Promise<DashboardData> {

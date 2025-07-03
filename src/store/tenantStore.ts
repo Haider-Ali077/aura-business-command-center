@@ -10,11 +10,11 @@ export interface TenantInfo {
 }
 
 export interface UserSession {
-  userId: string;
+  userId: number;
   email: string;
-  tenantId: string;
+  tenantId: number;
+  roleId: number;
   tenantInfo: TenantInfo;
-  permissions: string[];
   lastAccessed: Date;
 }
 
@@ -25,7 +25,7 @@ interface TenantStore {
   error: string | null;
   setSession: (session: UserSession) => void;
   clearSession: () => void;
-  fetchUserTenants: (userId: string) => Promise<void>;
+  fetchUserTenants: (userId: number, tenantId: number) => Promise<void>;
   switchTenant: (tenantId: string) => Promise<void>;
   refreshDashboardData: () => Promise<void>;
 }
@@ -46,14 +46,14 @@ export const useTenantStore = create<TenantStore>()(
         set({ currentSession: null, tenants: [], error: null });
       },
 
-      fetchUserTenants: async (userId: string) => {
+      fetchUserTenants: async (userId: number, tenantId: number) => {
         set({ isLoading: true, error: null });
         try {
-          // Call your Python admin database API
           const response = await fetch(`http://localhost:8000/api/v1/admin/users/${userId}/tenants`, {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
               'Content-Type': 'application/json',
+              'X-User-ID': userId.toString(),
+              'X-Tenant-ID': tenantId.toString(),
             },
           });
           
@@ -63,20 +63,6 @@ export const useTenantStore = create<TenantStore>()(
           
           const tenants = await response.json();
           set({ tenants, isLoading: false });
-          
-          // Set default tenant if user has access to any
-          if (tenants.length > 0 && !get().currentSession?.tenantId) {
-            const defaultTenant = tenants[0];
-            const session: UserSession = {
-              userId,
-              email: '', // Will be filled from Auth0
-              tenantId: defaultTenant.id,
-              tenantInfo: defaultTenant,
-              permissions: ['read', 'write'], // Will come from admin DB
-              lastAccessed: new Date(),
-            };
-            set({ currentSession: session });
-          }
         } catch (error) {
           console.error('Error fetching tenants:', error);
           set({ error: (error as Error).message, isLoading: false });
@@ -86,37 +72,24 @@ export const useTenantStore = create<TenantStore>()(
             {
               id: 'company_a',
               name: 'Company A',
-              database_url: 'postgresql://localhost:5432/company_a_erp',
+              database_url: 'Server=localhost;Database=company_a_erp;Integrated Security=true;',
               company_code: 'COMP_A'
             },
             {
               id: 'company_b', 
               name: 'Company B',
-              database_url: 'postgresql://localhost:5432/company_b_erp',
+              database_url: 'Server=localhost;Database=company_b_erp;Integrated Security=true;',
               company_code: 'COMP_B'
             },
             {
               id: 'company_c',
               name: 'Company C', 
-              database_url: 'postgresql://localhost:5432/company_c_erp',
+              database_url: 'Server=localhost;Database=company_c_erp;Integrated Security=true;',
               company_code: 'COMP_C'
             }
           ];
           
           set({ tenants: dummyTenants, isLoading: false, error: null });
-          
-          if (dummyTenants.length > 0) {
-            const defaultTenant = dummyTenants[0];
-            const session: UserSession = {
-              userId,
-              email: '',
-              tenantId: defaultTenant.id,
-              tenantInfo: defaultTenant,
-              permissions: ['read', 'write'],
-              lastAccessed: new Date(),
-            };
-            set({ currentSession: session });
-          }
         }
       },
 
@@ -130,14 +103,13 @@ export const useTenantStore = create<TenantStore>()(
 
         const updatedSession: UserSession = {
           ...currentSession,
-          tenantId,
+          tenantId: parseInt(tenantId),
           tenantInfo: tenant,
           lastAccessed: new Date(),
         };
 
         set({ currentSession: updatedSession });
         
-        // Refresh dashboard data for new tenant
         await get().refreshDashboardData();
       },
 
@@ -147,7 +119,6 @@ export const useTenantStore = create<TenantStore>()(
 
         set({ isLoading: true });
         try {
-          // This will trigger data refresh in other stores
           console.log(`Refreshing data for tenant: ${currentSession.tenantInfo.name}`);
           set({ isLoading: false });
         } catch (error) {
