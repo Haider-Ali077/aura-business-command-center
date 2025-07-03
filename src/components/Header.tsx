@@ -3,8 +3,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, Search, User, LogOut } from "lucide-react";
 import { useAuthStore } from '@/store/authStore';
-import { useTenantStore } from '@/store/tenantStore';
-import { TenantSelector } from '@/components/TenantSelector';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,11 +14,9 @@ import {
 
 export function Header() {
   const { session, logout } = useAuthStore();
-  const { clearSession } = useTenantStore();
 
   const handleLogout = () => {
     logout();
-    clearSession();
   };
 
   return (
@@ -38,8 +34,6 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-4">
-        <TenantSelector />
-        
         <Button variant="ghost" size="sm">
           <Bell className="h-4 w-4" />
         </Button>

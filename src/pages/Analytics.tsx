@@ -8,16 +8,16 @@ import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { Settings, RefreshCw } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { dataService, AnalyticsData } from '@/services/dataService';
-import { useTenantStore } from '@/store/tenantStore';
+import { useAuthStore } from '@/store/authStore';
 
 const Analytics = () => {
   const { widgets, addWidget, removeWidget, updateWidget } = useWidgetStore();
-  const { currentSession } = useTenantStore();
+  const { session } = useAuthStore();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAnalyticsData = async () => {
-    if (!currentSession) return;
+    if (!session) return;
     
     setIsLoading(true);
     try {
@@ -32,12 +32,12 @@ const Analytics = () => {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [currentSession?.tenantId]);
+  }, [session]);
 
   const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }) => {
     const newWidget = {
       ...widget,
-      position: { x: 0, y: 0 },
+      position: { x: Math.random() * 200, y: Math.random() * 200 },
       size: { width: widget.span === 2 ? 600 : 300, height: 300 }
     };
     addWidget(newWidget);
@@ -50,7 +50,7 @@ const Analytics = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
             <p className="text-gray-600 mt-2">
-              Customize your analytics view for {currentSession?.tenantInfo.name}
+              Customize your analytics view - drag and resize widgets as needed
             </p>
           </div>
           <div className="flex gap-2">
@@ -70,7 +70,8 @@ const Analytics = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Widget Canvas */}
+        <div className="relative min-h-[600px] border-2 border-dashed border-gray-200 rounded-lg p-4" style={{ position: 'relative' }}>
           {widgets.map((widget) => (
             <ConfigurableWidget
               key={widget.id}
@@ -80,6 +81,14 @@ const Analytics = () => {
               onUpdate={updateWidget}
             />
           ))}
+          {widgets.length === 0 && (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="text-center">
+                <p className="text-lg">No widgets added yet</p>
+                <p className="text-sm">Click "Add Widget" to get started</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Key Metrics */}

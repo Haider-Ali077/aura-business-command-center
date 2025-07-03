@@ -1,27 +1,28 @@
-
 import { useEffect, useState } from 'react';
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, DollarSign, ShoppingCart, RefreshCw } from "lucide-react";
+import { TrendingUp, Users, DollarSign, ShoppingCart, RefreshCw, Clock } from "lucide-react";
 import { dataService, DashboardData } from '@/services/dataService';
-import { useTenantStore } from '@/store/tenantStore';
+import { useAuthStore } from '@/store/authStore';
 
 const pieColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
 const Dashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { currentSession } = useTenantStore();
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const { session } = useAuthStore();
 
   const fetchData = async () => {
-    if (!currentSession) return;
+    if (!session) return;
     
     setIsLoading(true);
     try {
       const dashboardData = await dataService.fetchDashboardData();
       setData(dashboardData);
+      setLastRefreshed(new Date());
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -31,7 +32,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [currentSession?.tenantId]);
+  }, [session]);
 
   if (!data) {
     return (
@@ -53,6 +54,19 @@ const Dashboard = () => {
     { name: 'Sports', value: 100, color: '#EF4444' },
   ];
 
+  const formatLastRefreshed = (date: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString();
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -60,13 +74,21 @@ const Dashboard = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
             <p className="text-gray-600 mt-2">
-              Welcome back! Here's what's happening with {currentSession?.tenantInfo.name} today.
+              Welcome back! Here's what's happening with your company today.
             </p>
           </div>
-          <Button onClick={fetchData} disabled={isLoading} variant="outline">
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh Data
-          </Button>
+          <div className="flex items-center gap-4">
+            {lastRefreshed && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Clock className="h-4 w-4" />
+                <span>Last updated: {formatLastRefreshed(lastRefreshed)}</span>
+              </div>
+            )}
+            <Button onClick={fetchData} disabled={isLoading} variant="outline">
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh Data
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
