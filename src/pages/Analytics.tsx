@@ -37,7 +37,7 @@ const Analytics = () => {
   const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }) => {
     const newWidget = {
       ...widget,
-      position: { x: Math.random() * 200, y: Math.random() * 200 },
+      position: { x: 0, y: 0 }, // Grid will handle positioning
       size: { width: widget.span === 2 ? 600 : 300, height: 300 }
     };
     addWidget(newWidget);
@@ -48,9 +48,9 @@ const Analytics = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="text-gray-600 mt-2">
-              Customize your analytics view - drag and resize widgets as needed
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Customize your analytics view with resizable widgets
             </p>
           </div>
           <div className="flex gap-2">
@@ -70,19 +70,20 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Widget Canvas */}
-        <div className="relative min-h-[600px] border-2 border-dashed border-gray-200 rounded-lg p-4" style={{ position: 'relative' }}>
+        {/* Widget Grid */}
+        <div className="widget-grid">
           {widgets.map((widget) => (
-            <ConfigurableWidget
-              key={widget.id}
-              widget={widget}
-              data={analyticsData}
-              onRemove={removeWidget}
-              onUpdate={updateWidget}
-            />
+            <div key={widget.id} className="widget-item">
+              <ConfigurableWidget
+                widget={widget}
+                data={analyticsData}
+                onRemove={removeWidget}
+                onUpdate={updateWidget}
+              />
+            </div>
           ))}
           {widgets.length === 0 && (
-            <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="col-span-full flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
               <div className="text-center">
                 <p className="text-lg">No widgets added yet</p>
                 <p className="text-sm">Click "Add Widget" to get started</p>
@@ -101,7 +102,7 @@ const Analytics = () => {
                   '24,500'
                 }
               </div>
-              <p className="text-sm text-gray-600 mt-1">Average Revenue</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Average Revenue</p>
               <div className="text-xs text-green-600 mt-2">↗ +15.3%</div>
             </CardContent>
           </Card>
@@ -114,7 +115,7 @@ const Analytics = () => {
                   '1,847'
                 }
               </div>
-              <p className="text-sm text-gray-600 mt-1">Total Customers</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Total Customers</p>
               <div className="text-xs text-green-600 mt-2">↗ +8.2%</div>
             </CardContent>
           </Card>
@@ -127,7 +128,7 @@ const Analytics = () => {
                   '633'
                 }
               </div>
-              <p className="text-sm text-gray-600 mt-1">Monthly Orders</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Monthly Orders</p>
               <div className="text-xs text-red-600 mt-2">↘ -2.1%</div>
             </CardContent>
           </Card>
@@ -135,7 +136,7 @@ const Analytics = () => {
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-orange-600">23.5%</div>
-              <p className="text-sm text-gray-600 mt-1">Conversion Rate</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Conversion Rate</p>
               <div className="text-xs text-green-600 mt-2">↗ +5.4%</div>
             </CardContent>
           </Card>

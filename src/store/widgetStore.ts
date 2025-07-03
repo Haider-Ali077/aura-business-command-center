@@ -34,7 +34,7 @@ export const useWidgetStore = create<WidgetStore>()(
           type: 'line', 
           span: 2, 
           position: { x: 0, y: 0 },
-          size: { width: 600, height: 300 }
+          size: { width: 600, height: 350 }
         },
         { 
           id: '2', 
@@ -42,23 +42,23 @@ export const useWidgetStore = create<WidgetStore>()(
           type: 'bar', 
           span: 1, 
           position: { x: 0, y: 1 },
-          size: { width: 300, height: 300 }
+          size: { width: 300, height: 350 }
         },
         { 
           id: '3', 
           title: 'Website Traffic', 
           type: 'area', 
-          span: 2, 
+          span: 1, 
           position: { x: 1, y: 0 },
-          size: { width: 600, height: 300 }
+          size: { width: 300, height: 350 }
         },
         { 
           id: '4', 
-          title: 'Order Volume', 
-          type: 'bar', 
+          title: 'Sales Distribution', 
+          type: 'pie', 
           span: 1, 
           position: { x: 1, y: 1 },
-          size: { width: 300, height: 300 }
+          size: { width: 300, height: 350 }
         },
       ],
       addWidget: (widget) =>
