@@ -40,8 +40,6 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
     if (widget.sqlQuery) {
@@ -72,65 +70,6 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
       sqlQuery: sqlQuery
     });
     setConfigOpen(false);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setIsDragging(true);
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const startPosition = { ...widget.position };
-
-      const handleMouseMove = (e: MouseEvent) => {
-        const deltaX = Math.round((e.clientX - startX) / 320);
-        const deltaY = Math.round((e.clientY - startY) / 380);
-        
-        const newPosition = {
-          x: Math.max(0, startPosition.x + deltaX),
-          y: Math.max(0, startPosition.y + deltaY)
-        };
-        
-        onMove(widget.id, newPosition);
-      };
-
-      const handleMouseUp = () => {
-        setIsDragging(false);
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-  };
-
-  const handleResizeMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsResizing(true);
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startSize = { ...widget.size };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-      
-      const newSize = {
-        width: Math.max(280, startSize.width + deltaX),
-        height: Math.max(300, startSize.height + deltaY)
-      };
-      
-      onResize(widget.id, newSize);
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const renderChart = () => {
@@ -211,19 +150,15 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
 
   return (
     <Card 
-      className={`group transition-all duration-200 select-none ${
+      className={`group transition-all duration-200 ${
         isMaximized ? 'fixed inset-4 z-50 bg-white dark:bg-gray-800' : ''
-      } ${isDragging ? 'opacity-75 z-20' : ''} ${isResizing ? 'z-20' : ''}`}
+      }`}
       style={{
-        gridColumn: `${widget.position.x + 1} / span ${widget.span}`,
-        gridRow: `${widget.position.y + 1}`,
         width: isMaximized ? 'auto' : `${widget.size.width}px`,
         height: isMaximized ? 'auto' : `${widget.size.height}px`,
-        cursor: isDragging ? 'grabbing' : 'auto'
       }}
-      onMouseDown={handleMouseDown}
     >
-      <CardHeader className="flex flex-row items-center justify-between cursor-grab active:cursor-grabbing">
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg flex items-center gap-2">
           <GripHorizontal className="h-4 w-4 text-gray-400" />
           {widget.title}
@@ -235,20 +170,13 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMaximized(!isMaximized);
-            }}
+            onClick={() => setIsMaximized(!isMaximized)}
           >
             <Maximize2 className="h-4 w-4" />
           </Button>
           <Dialog open={configOpen} onOpenChange={setConfigOpen}>
             <DialogTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -296,10 +224,7 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(widget.id);
-            }}
+            onClick={() => onRemove(widget.id)}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -308,14 +233,6 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
       <CardContent className="flex-1 p-4">
         {renderChart()}
       </CardContent>
-      
-      {/* Resize handle */}
-      <div
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-        onMouseDown={handleResizeMouseDown}
-      >
-        <div className="w-full h-full bg-gray-400 transform rotate-45 translate-x-1 translate-y-1"></div>
-      </div>
       
       {isMaximized && (
         <div className="absolute top-4 right-4">

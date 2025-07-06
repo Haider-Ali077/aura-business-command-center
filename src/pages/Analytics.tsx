@@ -35,12 +35,10 @@ const Analytics = () => {
   }, [session]);
 
   const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }) => {
-    // Find the next available position
-    const maxY = widgets.length > 0 ? Math.max(...widgets.map(w => w.position.y)) : 0;
     const newWidget = {
       ...widget,
-      position: { x: 0, y: maxY + 1 },
-      size: { width: widget.span === 2 ? 600 : 300, height: 350 },
+      position: { x: 0, y: 0 },
+      size: { width: widget.span === 2 ? 600 : 400, height: 350 },
       sqlQuery: `SELECT 'Sample' as name, 100 as value`
     };
     addWidget(newWidget);
@@ -48,7 +46,7 @@ const Analytics = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
@@ -73,21 +71,24 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Widget Grid */}
-        <div className="analytics-grid relative">
-          {widgets.map((widget) => (
-            <ConfigurableWidget
-              key={widget.id}
-              widget={widget}
-              data={analyticsData}
-              onRemove={removeWidget}
-              onUpdate={updateWidget}
-              onMove={moveWidget}
-              onResize={resizeWidget}
-            />
-          ))}
+        {/* Widget Container */}
+        <div className="relative min-h-[600px]">
+          <div className="flex flex-wrap gap-4">
+            {widgets.map((widget) => (
+              <div key={widget.id} className="relative">
+                <ConfigurableWidget
+                  widget={widget}
+                  data={analyticsData}
+                  onRemove={removeWidget}
+                  onUpdate={updateWidget}
+                  onMove={moveWidget}
+                  onResize={resizeWidget}
+                />
+              </div>
+            ))}
+          </div>
           {widgets.length === 0 && (
-            <div className="col-span-full flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
               <div className="text-center">
                 <p className="text-lg">No widgets added yet</p>
                 <p className="text-sm">Click "Add Widget" to get started</p>

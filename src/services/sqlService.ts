@@ -1,4 +1,6 @@
 
+import { useTenantStore } from '@/store/tenantStore';
+
 export interface SqlResult {
   columns: string[];
   rows: any[][];
@@ -12,12 +14,29 @@ export interface ChartData {
 class SqlService {
   async runSql(query: string): Promise<SqlResult> {
     try {
+      // Get current tenant information
+      const tenantStore = useTenantStore.getState();
+      const currentSession = tenantStore.currentSession;
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add tenant information to headers if available
+      if (currentSession) {
+        headers['X-Tenant-ID'] = currentSession.tenantId.toString();
+        headers['X-User-ID'] = currentSession.userId.toString();
+        headers['X-Company-Code'] = currentSession.tenantInfo.company_code;
+      }
+
       const response = await fetch('/runsql', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
+        headers,
+        body: JSON.stringify({ 
+          query,
+          tenantId: currentSession?.tenantId,
+          companyCode: currentSession?.tenantInfo.company_code 
+        }),
       });
 
       if (!response.ok) {
