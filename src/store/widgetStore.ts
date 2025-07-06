@@ -9,9 +9,11 @@ export interface Widget {
   span: number;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  sqlQuery?: string;
   config?: {
     timePeriod?: string;
     dataSource?: string;
+    chartData?: any;
   };
 }
 
@@ -34,23 +36,26 @@ export const useWidgetStore = create<WidgetStore>()(
           type: 'line', 
           span: 2, 
           position: { x: 0, y: 0 },
-          size: { width: 600, height: 350 }
+          size: { width: 600, height: 350 },
+          sqlQuery: 'SELECT DATE_FORMAT(created_at, "%Y-%m") as name, SUM(amount) as revenue FROM orders GROUP BY DATE_FORMAT(created_at, "%Y-%m") ORDER BY name'
         },
         { 
           id: '2', 
           title: 'Customer Growth', 
           type: 'bar', 
           span: 1, 
-          position: { x: 0, y: 1 },
-          size: { width: 300, height: 350 }
+          position: { x: 2, y: 0 },
+          size: { width: 300, height: 350 },
+          sqlQuery: 'SELECT DATE_FORMAT(created_at, "%Y-%m") as name, COUNT(*) as customers FROM customers GROUP BY DATE_FORMAT(created_at, "%Y-%m") ORDER BY name'
         },
         { 
           id: '3', 
           title: 'Website Traffic', 
           type: 'area', 
           span: 1, 
-          position: { x: 1, y: 0 },
-          size: { width: 300, height: 350 }
+          position: { x: 0, y: 1 },
+          size: { width: 300, height: 350 },
+          sqlQuery: 'SELECT DATE_FORMAT(visit_date, "%Y-%m") as name, COUNT(*) as visits FROM website_visits GROUP BY DATE_FORMAT(visit_date, "%Y-%m") ORDER BY name'
         },
         { 
           id: '4', 
@@ -58,7 +63,8 @@ export const useWidgetStore = create<WidgetStore>()(
           type: 'pie', 
           span: 1, 
           position: { x: 1, y: 1 },
-          size: { width: 300, height: 350 }
+          size: { width: 300, height: 350 },
+          sqlQuery: 'SELECT category as name, SUM(amount) as revenue FROM orders o JOIN products p ON o.product_id = p.id GROUP BY category'
         },
       ],
       addWidget: (widget) =>

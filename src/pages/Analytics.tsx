@@ -11,7 +11,7 @@ import { dataService, AnalyticsData } from '@/services/dataService';
 import { useAuthStore } from '@/store/authStore';
 
 const Analytics = () => {
-  const { widgets, addWidget, removeWidget, updateWidget } = useWidgetStore();
+  const { widgets, addWidget, removeWidget, updateWidget, moveWidget, resizeWidget } = useWidgetStore();
   const { session } = useAuthStore();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,10 +35,13 @@ const Analytics = () => {
   }, [session]);
 
   const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }) => {
+    // Find the next available position
+    const maxY = widgets.length > 0 ? Math.max(...widgets.map(w => w.position.y)) : 0;
     const newWidget = {
       ...widget,
-      position: { x: 0, y: 0 }, // Grid will handle positioning
-      size: { width: widget.span === 2 ? 600 : 300, height: 300 }
+      position: { x: 0, y: maxY + 1 },
+      size: { width: widget.span === 2 ? 600 : 300, height: 350 },
+      sqlQuery: `SELECT 'Sample' as name, 100 as value`
     };
     addWidget(newWidget);
   };
@@ -50,7 +53,7 @@ const Analytics = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Customize your analytics view with resizable widgets
+              Drag and resize widgets to customize your view. Configure SQL queries for real-time data.
             </p>
           </div>
           <div className="flex gap-2">
@@ -71,16 +74,17 @@ const Analytics = () => {
         </div>
 
         {/* Widget Grid */}
-        <div className="widget-grid">
+        <div className="analytics-grid relative">
           {widgets.map((widget) => (
-            <div key={widget.id} className="widget-item">
-              <ConfigurableWidget
-                widget={widget}
-                data={analyticsData}
-                onRemove={removeWidget}
-                onUpdate={updateWidget}
-              />
-            </div>
+            <ConfigurableWidget
+              key={widget.id}
+              widget={widget}
+              data={analyticsData}
+              onRemove={removeWidget}
+              onUpdate={updateWidget}
+              onMove={moveWidget}
+              onResize={resizeWidget}
+            />
           ))}
           {widgets.length === 0 && (
             <div className="col-span-full flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">

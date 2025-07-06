@@ -21,6 +21,7 @@ interface ChartData {
   y: number[];
   xLabel: string;
   yLabel: string;
+  sqlQuery?: string;
 }
 
 interface Message {
@@ -52,14 +53,15 @@ export function FloatingChatbot() {
       // Save chart data to backend
       await dataService.saveChartToAnalytics(chart);
       
-      // Add widget to analytics dashboard
+      // Add widget to analytics dashboard with SQL query
       const newWidget = {
         id: `chart-${Date.now()}`,
         title: chart.title,
         type: chart.chart_type,
         span: 1,
         position: { x: 0, y: 0 },
-        size: { width: 300, height: 300 },
+        size: { width: 300, height: 350 },
+        sqlQuery: chart.sqlQuery || `SELECT '${chart.xLabel}' as name, ${chart.y[0]} as value`,
         config: {
           dataSource: 'chatbot',
           chartData: chart,
@@ -72,7 +74,7 @@ export function FloatingChatbot() {
       const successMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'bot',
-        content: `✅ Chart "${chart.title}" has been added to your Analytics dashboard!`,
+        content: `✅ Chart "${chart.title}" has been added to your Analytics dashboard with SQL query!`,
         timestamp: new Date(),
       };
       
@@ -124,12 +126,14 @@ export function FloatingChatbot() {
           y: data.response.data.map((row: any) => row[data.response.y_axis]),
           xLabel: data.response.x_axis,
           yLabel: data.response.y_axis,
+          sqlQuery: data.response.sql_query || data.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
         };
       }
+      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: typeof data.response === 'string' ? data.response : '',
+        content: typeof data.response === 'string' ? data.response : (data.sql_query ? `SQL Query: ${data.sql_query}` : ''),
         timestamp: new Date(),
         chart,
       };
