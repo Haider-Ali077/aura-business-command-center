@@ -71,11 +71,23 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Widget Container */}
-        <div className="relative min-h-[600px]">
-          <div className="flex flex-wrap gap-4">
+        {/* Widget Grid Container */}
+        <div className="widget-grid-container">
+          <div 
+            className="grid gap-4 auto-rows-fr"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+              minHeight: '600px'
+            }}
+          >
             {widgets.map((widget) => (
-              <div key={widget.id} className="relative">
+              <div 
+                key={widget.id} 
+                className="widget-item"
+                style={{
+                  gridColumn: widget.span === 2 ? 'span 2' : 'span 1',
+                }}
+              >
                 <ConfigurableWidget
                   widget={widget}
                   data={analyticsData}
