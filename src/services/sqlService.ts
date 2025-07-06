@@ -1,4 +1,3 @@
-
 import { useTenantStore } from '@/store/tenantStore';
 
 export interface SqlResult {
@@ -22,20 +21,15 @@ class SqlService {
         'Content-Type': 'application/json',
       };
 
-      // Add tenant information to headers if available
-      if (currentSession) {
-        headers['X-Tenant-ID'] = currentSession.tenantId.toString();
-        headers['X-User-ID'] = currentSession.userId.toString();
-        headers['X-Company-Code'] = currentSession.tenantInfo.company_code;
-      }
+      // Get tenant name from company code or use a default format
+      const tenantName = currentSession?.tenantInfo.company_code || 'Company_A';
 
       const response = await fetch('/runsql', {
         method: 'POST',
         headers,
         body: JSON.stringify({ 
           query,
-          tenantId: currentSession?.tenantId,
-          companyCode: currentSession?.tenantInfo.company_code 
+          tenant_name: tenantName
         }),
       });
 
