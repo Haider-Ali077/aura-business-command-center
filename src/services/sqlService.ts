@@ -14,23 +14,23 @@ export interface ChartData {
 class SqlService {
   async runSql(query: string): Promise<SqlResult> {
     try {
-      // Get current session information from auth store
       const authStore = useAuthStore.getState();
       const session = authStore.session;
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Get tenant name from session or use a default format
-      const tenantName = session?.tenantInfo.company_code || 'Company_A';
+      if (!session) {
+        throw new Error('No active session');
+      }
 
       const response = await fetch('/runsql', {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ 
           query,
-          tenant_name: tenantName
+          tenant_name: session.user.tenant_id,
+          user_id: session.user.user_id,
+          token: session.token
         }),
       });
 
@@ -60,7 +60,6 @@ class SqlService {
       sqlResult.columns.forEach((column, index) => {
         item[column.toLowerCase()] = row[index];
         
-        // Set the first column as 'name' for charts
         if (index === 0) {
           item.name = String(row[index]);
         }

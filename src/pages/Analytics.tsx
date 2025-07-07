@@ -47,16 +47,15 @@ const Analytics = () => {
   return (
     <Layout>
       <div className="p-6 space-y-6">
-        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">
               Configure SQL queries for real-time data visualization
             </p>
-            {session?.tenantInfo && (
+            {session && (
               <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                Current Tenant: {session.tenantInfo.name} ({session.tenantInfo.company_code})
+                Tenant: {session.user.tenant_id} | Role: {session.user.role_name}
               </p>
             )}
           </div>
@@ -77,7 +76,6 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Widgets Grid */}
         <div className="widgets-container">
           {widgets.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
@@ -107,7 +105,6 @@ const Analytics = () => {
           )}
         </div>
 
-        {/* Key Metrics Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">

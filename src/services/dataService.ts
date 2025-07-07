@@ -31,16 +31,7 @@ export interface AnalyticsData {
 }
 
 class DataService {
-  private getApiUrl(endpoint: string): string {
-    const session = useAuthStore.getState().session;
-    if (!session) {
-      throw new Error('No active session');
-    }
-    
-    return `http://localhost:8000/api/v1/tenants/${session.user.tenant_id}/${endpoint}`;
-  }
-
-  private async getHeaders(): Promise<HeadersInit> {
+  private async getRequestBody(): Promise<any> {
     const session = useAuthStore.getState().session;
     
     if (!session) {
@@ -48,18 +39,23 @@ class DataService {
     }
     
     return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.token}`,
-      'X-User-ID': session.user.user_id.toString(),
-      'X-Tenant-ID': session.user.tenant_id.toString(),
-      'X-Role-ID': session.user.role_id.toString(),
+      user_id: session.user.user_id,
+      tenant_name: session.user.tenant_id,
+      token: session.token,
+      role_name: session.user.role_name
     };
   }
 
   async fetchDashboardData(): Promise<DashboardData> {
     try {
-      const response = await fetch(this.getApiUrl('dashboard'), {
-        headers: await this.getHeaders(),
+      const requestBody = await this.getRequestBody();
+      
+      const response = await fetch('http://localhost:8000/api/dashboard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -71,7 +67,6 @@ class DataService {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       
-      // Return dummy data for now
       return {
         revenue: 45231.89,
         customers: 2350,
@@ -114,8 +109,14 @@ class DataService {
 
   async fetchAnalyticsData(): Promise<AnalyticsData[]> {
     try {
-      const response = await fetch(this.getApiUrl('analytics'), {
-        headers: await this.getHeaders(),
+      const requestBody = await this.getRequestBody();
+      
+      const response = await fetch('http://localhost:8000/api/analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -127,24 +128,30 @@ class DataService {
     } catch (error) {
       console.error('Error fetching analytics data:', error);
       
-      // Return dummy data for now
       return [
         { name: 'Jan', revenue: 4000, customers: 240, orders: 120, visits: 1200 },
         { name: 'Feb', revenue: 3000, customers: 198, orders: 98, visits: 1900 },
         { name: 'Mar', revenue: 2000, customers: 180, orders: 85, visits: 1600 },
         { name: 'Apr', revenue: 2780, customers: 208, orders: 110, visits: 2100 },
         { name: 'May', revenue: 1890, customers: 181, orders: 95, visits: 2400 },
-        { name: 'Jun', revenue: 2390, customers: 250, orders: 125, visits: 1800 },
+        { name: 'Jun', revenue: 2390, orders: 125, customers: 250, visits: 1800 },
       ];
     }
   }
 
   async saveChartToAnalytics(chartData: any): Promise<void> {
     try {
-      const response = await fetch(this.getApiUrl('analytics/charts'), {
+      const requestBody = await this.getRequestBody();
+      
+      const response = await fetch('http://localhost:8000/api/analytics/charts', {
         method: 'POST',
-        headers: await this.getHeaders(),
-        body: JSON.stringify(chartData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...requestBody,
+          chart_data: chartData
+        }),
       });
 
       if (!response.ok) {
@@ -157,13 +164,16 @@ class DataService {
 
   async chatWithAgent(message: string): Promise<string> {
     try {
-      const session = useAuthStore.getState().session;
-      const response = await fetch(this.getApiUrl('chat/agent'), {
+      const requestBody = await this.getRequestBody();
+      
+      const response = await fetch('http://localhost:8000/api/chat/agent', {
         method: 'POST',
-        headers: await this.getHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          message,
-          tenant_context: session?.tenantInfo
+          ...requestBody,
+          message
         }),
       });
 

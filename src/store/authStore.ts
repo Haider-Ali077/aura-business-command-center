@@ -5,23 +5,15 @@ import { persist } from 'zustand/middleware';
 export interface User {
   user_id: number;
   email: string;
-  tenant_id: number;
-  role_id: number;
+  tenant_id: string; // This is actually the tenant name from your query
+  role_name: string; // This is the role name from your query
   is_active: boolean;
-}
-
-export interface TenantInfo {
-  id: string;
-  name: string;
-  database_url: string;
-  company_code: string;
 }
 
 export interface AuthSession {
   user: User;
   token: string;
   expiresAt: Date;
-  tenantInfo: TenantInfo;
 }
 
 interface AuthStore {
@@ -61,19 +53,10 @@ export const useAuthStore = create<AuthStore>()(
           const data = await response.json();
           const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours from now
           
-          // Mock tenant info - replace with actual data from your API
-          const tenantInfo: TenantInfo = {
-            id: data.user.tenant_id.toString(),
-            name: `Company ${data.user.tenant_id}`,
-            database_url: `Server=localhost;Database=company_${data.user.tenant_id}_erp;Integrated Security=true;`,
-            company_code: `Company_${String.fromCharCode(64 + data.user.tenant_id)}`
-          };
-          
           const session: AuthSession = {
             user: data.user,
             token: data.token,
-            expiresAt,
-            tenantInfo
+            expiresAt
           };
 
           set({ session, isLoading: false });
