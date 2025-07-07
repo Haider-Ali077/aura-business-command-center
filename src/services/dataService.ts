@@ -1,4 +1,3 @@
-
 import { useAuthStore } from '@/store/authStore';
 
 export interface DashboardData {
@@ -13,12 +12,10 @@ export interface DashboardData {
     customers: number;
     visits: number;
   }>;
-  recentActivity: Array<{
-    id: string;
-    type: 'order' | 'report' | 'alert';
-    title: string;
-    description: string;
-    timestamp: string;
+  categoryData: Array<{
+    name: string;
+    value: number;
+    color: string;
   }>;
 }
 
@@ -80,28 +77,11 @@ class DataService {
           { name: 'May', value: 1890, orders: 181, customers: 170, visits: 2400 },
           { name: 'Jun', value: 2390, orders: 250, customers: 200, visits: 1800 },
         ],
-        recentActivity: [
-          {
-            id: '1',
-            type: 'order',
-            title: 'New order received',
-            description: 'Order #1234 - $299.99',
-            timestamp: '2 min ago',
-          },
-          {
-            id: '2',
-            type: 'report',
-            title: 'Report generated',
-            description: 'Monthly sales report',
-            timestamp: '15 min ago',
-          },
-          {
-            id: '3',
-            type: 'alert',
-            title: 'Inventory alert',
-            description: 'Low stock on item #456',
-            timestamp: '1 hour ago',
-          },
+        categoryData: [
+          { name: 'Electronics', value: 35, color: '#3B82F6' },
+          { name: 'Clothing', value: 25, color: '#10B981' },
+          { name: 'Home & Garden', value: 20, color: '#F59E0B' },
+          { name: 'Sports', value: 20, color: '#EF4444' },
         ],
       };
     }

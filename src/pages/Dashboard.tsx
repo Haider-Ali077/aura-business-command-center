@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +7,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, Users, DollarSign, ShoppingCart, RefreshCw, Clock } from "lucide-react";
 import { dataService, DashboardData } from '@/services/dataService';
 import { useAuthStore } from '@/store/authStore';
-
-const pieColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
 const Dashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -46,13 +45,6 @@ const Dashboard = () => {
       </Layout>
     );
   }
-
-  const pieData = [
-    { name: 'Electronics', value: 400, color: '#3B82F6' },
-    { name: 'Clothing', value: 300, color: '#10B981' },
-    { name: 'Home & Garden', value: 200, color: '#F59E0B' },
-    { name: 'Sports', value: 100, color: '#EF4444' },
-  ];
 
   const formatLastRefreshed = (date: Date) => {
     const now = new Date();
@@ -177,7 +169,29 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Category Distribution */}
+          {/* Customer Distribution - Horizontal Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={data.salesData} 
+                  layout="horizontal"
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" />
+                  <Tooltip />
+                  <Bar dataKey="customers" fill="#6366F1" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Category Distribution - Donut Chart */}
           <Card>
             <CardHeader>
               <CardTitle>Sales by Category</CardTitle>
@@ -186,43 +200,21 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={pieData}
+                    data={data.categoryData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    innerRadius={60}
+                    outerRadius={100}
                     dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}%`}
                   >
-                    {pieData.map((entry, index) => (
+                    {data.categoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} />
                 </PieChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.type === 'order' ? 'bg-green-500' :
-                      activity.type === 'report' ? 'bg-blue-500' : 'bg-orange-500'
-                    }`}></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.title}</p>
-                      <p className="text-sm text-gray-500">{activity.description}</p>
-                    </div>
-                    <p className="text-sm text-gray-400">{activity.timestamp}</p>
-                  </div>
-                ))}
-              </div>
             </CardContent>
           </Card>
         </div>
