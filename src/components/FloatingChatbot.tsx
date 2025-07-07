@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
+import { useAuthStore } from "@/store/authStore";
 import { dataService } from "@/services/dataService";
 import {
   BarChart, Bar,
@@ -47,6 +48,7 @@ export function FloatingChatbot() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { addWidget } = useWidgetStore();
+  const { session } = useAuthStore();
 
   const handleAddToAnalytics = async (chart: ChartData) => {
     try {
@@ -94,7 +96,7 @@ export function FloatingChatbot() {
   };
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || !session) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -111,7 +113,14 @@ export function FloatingChatbot() {
       const res = await fetch('http://localhost:8000/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMessage.content, mode: 'auto' }),
+        body: JSON.stringify({ 
+          prompt: userMessage.content, 
+          mode: 'auto',
+          user_id: session.user.user_id,
+          tenant_name: session.user.tenant_id,
+          role_name: session.user.role_name,
+          token: session.token
+        }),
       });
 
       const data = await res.json();
