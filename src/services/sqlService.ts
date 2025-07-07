@@ -1,4 +1,5 @@
-import { useTenantStore } from '@/store/tenantStore';
+
+import { useAuthStore } from '@/store/authStore';
 
 export interface SqlResult {
   columns: string[];
@@ -13,16 +14,16 @@ export interface ChartData {
 class SqlService {
   async runSql(query: string): Promise<SqlResult> {
     try {
-      // Get current tenant information
-      const tenantStore = useTenantStore.getState();
-      const currentSession = tenantStore.currentSession;
+      // Get current session information from auth store
+      const authStore = useAuthStore.getState();
+      const session = authStore.session;
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
 
-      // Get tenant name from company code or use a default format
-      const tenantName = currentSession?.tenantInfo.company_code || 'Company_A';
+      // Get tenant name from session or use a default format
+      const tenantName = session?.tenantInfo.company_code || 'Company_A';
 
       const response = await fetch('/runsql', {
         method: 'POST',

@@ -1,4 +1,4 @@
-import { useTenantStore } from '@/store/tenantStore';
+
 import { useAuthStore } from '@/store/authStore';
 
 export interface DashboardData {
@@ -32,28 +32,27 @@ export interface AnalyticsData {
 
 class DataService {
   private getApiUrl(endpoint: string): string {
-    const session = useTenantStore.getState().currentSession;
+    const session = useAuthStore.getState().session;
     if (!session) {
       throw new Error('No active session');
     }
     
-    return `http://localhost:8000/api/v1/tenants/${session.tenantId}/${endpoint}`;
+    return `http://localhost:8000/api/v1/tenants/${session.user.tenant_id}/${endpoint}`;
   }
 
   private async getHeaders(): Promise<HeadersInit> {
-    const authSession = useAuthStore.getState().session;
-    const tenantSession = useTenantStore.getState().currentSession;
+    const session = useAuthStore.getState().session;
     
-    if (!authSession || !tenantSession) {
+    if (!session) {
       throw new Error('No active session');
     }
     
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authSession.token}`,
-      'X-User-ID': authSession.user.user_id.toString(),
-      'X-Tenant-ID': tenantSession.tenantId.toString(),
-      'X-Role-ID': authSession.user.role_id.toString(),
+      'Authorization': `Bearer ${session.token}`,
+      'X-User-ID': session.user.user_id.toString(),
+      'X-Tenant-ID': session.user.tenant_id.toString(),
+      'X-Role-ID': session.user.role_id.toString(),
     };
   }
 
@@ -158,12 +157,13 @@ class DataService {
 
   async chatWithAgent(message: string): Promise<string> {
     try {
+      const session = useAuthStore.getState().session;
       const response = await fetch(this.getApiUrl('chat/agent'), {
         method: 'POST',
         headers: await this.getHeaders(),
         body: JSON.stringify({
           message,
-          tenant_context: useTenantStore.getState().currentSession?.tenantInfo
+          tenant_context: session?.tenantInfo
         }),
       });
 

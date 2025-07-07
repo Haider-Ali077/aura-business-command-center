@@ -41,67 +41,33 @@
 }
 
 /* Widget Grid Styling */
-.widget-grid-container {
-  position: relative;
+.widgets-container {
+  min-height: 400px;
 }
 
 .widget-item {
-  position: relative;
   min-height: 350px;
-  border-radius: 8px;
   transition: all 0.2s ease;
-  cursor: move;
 }
 
 .widget-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.widget-item.dragging {
-  z-index: 1000;
-  transform: rotate(2deg) scale(1.02);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-  cursor: grabbing;
-}
-
-/* Resize handle styling */
-.resize-handle {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  cursor: se-resize;
-  background: linear-gradient(-45deg, transparent 30%, #ccc 30%, #ccc 50%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 10;
-}
-
-.widget-item:hover .resize-handle {
-  opacity: 1;
-}
-
-/* Grid responsive behavior */
+/* Responsive Grid Adjustments */
 @media (max-width: 768px) {
-  .widget-grid-container .grid {
-    grid-template-columns: 1fr;
+  .widget-item {
+    min-height: 300px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .widgets-container .grid {
+    grid-template-columns: repeat(4, 1fr);
   }
   
-  .widget-item {
-    grid-column: span 1 !important;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1200px) {
-  .widget-grid-container .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1201px) {
-  .widget-grid-container .grid {
-    grid-template-columns: repeat(3, 1fr);
+  .widget-item.md\:col-span-2 {
+    grid-column: span 2;
   }
 }

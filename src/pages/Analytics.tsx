@@ -47,12 +47,18 @@ const Analytics = () => {
   return (
     <Layout>
       <div className="p-6 space-y-6">
+        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Drag and resize widgets to customize your view. Configure SQL queries for real-time data.
+              Configure SQL queries for real-time data visualization
             </p>
+            {session?.tenantInfo && (
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                Current Tenant: {session.tenantInfo.name} ({session.tenantInfo.company_code})
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <Button 
@@ -71,45 +77,37 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Widget Grid Container */}
-        <div className="widget-grid-container">
-          <div 
-            className="grid gap-4 auto-rows-fr"
-            style={{
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-              minHeight: '600px'
-            }}
-          >
-            {widgets.map((widget) => (
-              <div 
-                key={widget.id} 
-                className="widget-item"
-                style={{
-                  gridColumn: widget.span === 2 ? 'span 2' : 'span 1',
-                }}
-              >
-                <ConfigurableWidget
-                  widget={widget}
-                  data={analyticsData}
-                  onRemove={removeWidget}
-                  onUpdate={updateWidget}
-                  onMove={moveWidget}
-                  onResize={resizeWidget}
-                />
-              </div>
-            ))}
-          </div>
-          {widgets.length === 0 && (
-            <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+        {/* Widgets Grid */}
+        <div className="widgets-container">
+          {widgets.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+              {widgets.map((widget) => (
+                <div 
+                  key={widget.id}
+                  className={`widget-item ${widget.span === 2 ? 'md:col-span-2' : ''}`}
+                >
+                  <ConfigurableWidget
+                    widget={widget}
+                    data={analyticsData}
+                    onRemove={removeWidget}
+                    onUpdate={updateWidget}
+                    onMove={moveWidget}
+                    onResize={resizeWidget}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
               <div className="text-center">
-                <p className="text-lg">No widgets added yet</p>
-                <p className="text-sm">Click "Add Widget" to get started</p>
+                <p className="text-lg font-medium">No widgets added yet</p>
+                <p className="text-sm mt-1">Click "Add Widget" to get started</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Key Metrics */}
+        {/* Key Metrics Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
