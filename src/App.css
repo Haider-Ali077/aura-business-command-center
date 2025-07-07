@@ -40,34 +40,48 @@
   color: #888;
 }
 
-/* Widget Grid Styling */
-.widgets-container {
-  min-height: 400px;
+/* Fixed Grid Layout for Analytics */
+.widgets-grid {
+  min-height: 600px;
 }
 
-.widget-item {
-  min-height: 350px;
-  transition: all 0.2s ease;
+.widget-cell {
+  min-height: 250px;
+  transition: all 0.3s ease;
+  cursor: move;
 }
 
-.widget-item:hover {
+.widget-cell:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Responsive Grid Adjustments */
-@media (max-width: 768px) {
-  .widget-item {
-    min-height: 300px;
-  }
+/* Grid system for widgets */
+.grid.grid-cols-6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(4, minmax(250px, 1fr));
 }
 
-@media (min-width: 1200px) {
-  .widgets-container .grid {
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .grid.grid-cols-6 {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+@media (max-width: 768px) {
+  .grid.grid-cols-6 {
+    grid-template-columns: repeat(2, 1fr);
+  }
   
-  .widget-item.md\:col-span-2 {
-    grid-column: span 2;
+  .widget-cell {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid.grid-cols-6 {
+    grid-template-columns: 1fr;
   }
 }

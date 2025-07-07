@@ -33,12 +33,16 @@ export function DocumentManagement() {
     setIsLoading(true);
     try {
       const response = await fetch(`http://localhost:8000/api/documents`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${session.token}`,
-          'X-User-ID': session.user.user_id.toString(),
-          'X-Tenant-ID': session.user.tenant_id.toString(),
-          'X-Role-ID': session.user.role_id.toString(),
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          user_id: session.user.user_id,
+          tenant_name: session.user.tenant_id,
+          role_name: session.user.role_name,
+          token: session.token
+        })
       });
       
       if (response.ok) {
@@ -80,18 +84,20 @@ export function DocumentManagement() {
         Array.from(files).forEach(file => {
           formData.append('files', file);
         });
-        formData.append('tenantId', session.user.tenant_id.toString());
-        formData.append('uploadedBy', session.user.email);
 
         const response = await fetch(`http://localhost:8000/api/documents/upload`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session.token}`,
-            'X-User-ID': session.user.user_id.toString(),
-            'X-Tenant-ID': session.user.tenant_id.toString(),
-            'X-Role-ID': session.user.role_id.toString(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify({
+            files: Array.from(files).map(file => file.name),
+            user_id: session.user.user_id,
+            tenant_name: session.user.tenant_id,
+            role_name: session.user.role_name,
+            token: session.token,
+            uploadedBy: session.user.email
+          })
         });
 
         if (response.ok) {
@@ -114,11 +120,14 @@ export function DocumentManagement() {
       const response = await fetch(`http://localhost:8000/api/documents/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session?.token}`,
-          'X-User-ID': session?.user.user_id.toString() || '',
-          'X-Tenant-ID': session?.user.tenant_id.toString() || '',
-          'X-Role-ID': session?.user.role_id.toString() || '',
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          user_id: session?.user.user_id,
+          tenant_name: session?.user.tenant_id,
+          role_name: session?.user.role_name,
+          token: session?.token
+        })
       });
 
       if (response.ok) {

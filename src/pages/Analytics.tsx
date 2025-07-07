@@ -38,10 +38,24 @@ const Analytics = () => {
     const newWidget = {
       ...widget,
       position: { x: 0, y: 0 },
-      size: { width: widget.span === 2 ? 600 : 400, height: 350 },
+      size: { width: widget.span === 2 ? 2 : 1, height: 1 },
       sqlQuery: `SELECT 'Sample' as name, 100 as value`
     };
     addWidget(newWidget);
+  };
+
+  // Create a 6x4 grid layout
+  const gridCols = 6;
+  const gridRows = 4;
+  
+  // Create grid positions for widgets
+  const getGridPosition = (widget: any, index: number) => {
+    const col = (index * 2) % gridCols;
+    const row = Math.floor((index * 2) / gridCols);
+    return {
+      gridColumn: `span ${widget.size.width}`,
+      gridRow: `span ${widget.size.height}`,
+    };
   };
 
   return (
@@ -76,13 +90,15 @@ const Analytics = () => {
           </div>
         </div>
 
-        <div className="widgets-container">
+        {/* Widgets Grid */}
+        <div className="widgets-grid">
           {widgets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-              {widgets.map((widget) => (
+            <div className="grid grid-cols-6 gap-4 min-h-[600px] auto-rows-fr">
+              {widgets.map((widget, index) => (
                 <div 
                   key={widget.id}
-                  className={`widget-item ${widget.span === 2 ? 'md:col-span-2' : ''}`}
+                  className="widget-cell"
+                  style={getGridPosition(widget, index)}
                 >
                   <ConfigurableWidget
                     widget={widget}
@@ -105,6 +121,7 @@ const Analytics = () => {
           )}
         </div>
 
+        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">

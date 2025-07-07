@@ -30,14 +30,14 @@ export function PasswordChange() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.token}`,
-          'X-User-ID': session?.user.user_id.toString() || '',
-          'X-Tenant-ID': session?.user.tenant_id.toString() || '',
-          'X-Role-ID': session?.user.role_id.toString() || '',
         },
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
+          user_id: session?.user.user_id,
+          tenant_name: session?.user.tenant_id,
+          role_name: session?.user.role_name,
+          token: session?.token
         }),
       });
 
