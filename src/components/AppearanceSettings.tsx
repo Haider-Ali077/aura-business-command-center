@@ -15,7 +15,7 @@ export function AppearanceSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg md:text-xl">Appearance</CardTitle>
-        <p className="text-gray-600 text-sm md:text-base">Customize how the app looks</p>
+        <p className="text-muted-foreground text-sm md:text-base">Customize how the app looks</p>
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
@@ -23,7 +23,7 @@ export function AppearanceSettings() {
             {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             <div>
               <h4 className="font-medium">Dark Mode</h4>
-              <p className="text-sm text-gray-600">Switch between light and dark themes</p>
+              <p className="text-sm text-muted-foreground">Switch between light and dark themes</p>
             </div>
           </div>
           <Switch

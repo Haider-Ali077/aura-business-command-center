@@ -20,36 +20,36 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl grid lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-background to-purple-50 dark:from-gray-900 dark:via-background dark:to-gray-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* Left side - Branding */}
-        <div className="text-center lg:text-left space-y-6">
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-              <BarChart3 className="h-7 w-7 text-white" />
+        <div className="text-center lg:text-left space-y-8 px-4 lg:px-0">
+          <div className="flex items-center justify-center lg:justify-start gap-4 mb-8">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg">
+              <BarChart3 className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Intellyca</h1>
-              <p className="text-gray-600">ERP Intelligence Platform</p>
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground">Intellyca</h1>
+              <p className="text-muted-foreground text-base lg:text-lg">ERP Intelligence Platform</p>
             </div>
           </div>
           
-          <div className="space-y-4">
-            <h2 className="text-4xl font-bold text-gray-900 leading-tight">
+          <div className="space-y-6">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground leading-tight">
               Transform Your Business Intelligence
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed">
               Powerful analytics, intuitive dashboards, and AI-driven insights to accelerate your business growth.
             </p>
           </div>
         </div>
 
         {/* Right side - Login Form */}
-        <div className="flex justify-center">
-          <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader className="text-center space-y-2 pb-8">
-              <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
-              <CardDescription className="text-gray-600">
+        <div className="flex justify-center px-4 lg:px-0">
+          <Card className="w-full max-w-md shadow-2xl border bg-card/95 backdrop-blur-sm">
+            <CardHeader className="text-center space-y-3 pb-8">
+              <CardTitle className="text-2xl lg:text-3xl font-bold text-card-foreground">Welcome Back</CardTitle>
+              <CardDescription className="text-muted-foreground text-base">
                 Sign in to access your dashboard
               </CardDescription>
             </CardHeader>
@@ -95,12 +95,12 @@ export function LoginForm() {
                 </div>
 
                 {error && (
-                  <div className="text-red-600 text-sm">{error}</div>
+                  <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md border border-destructive/20">{error}</div>
                 )}
 
                 <Button 
                   type="submit"
-                  className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="w-full h-12 text-base font-medium bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 text-primary-foreground border-0 shadow-lg transition-all duration-200 hover:shadow-xl disabled:opacity-50"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Signing In...' : 'Sign In'}
