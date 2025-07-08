@@ -1,0 +1,67 @@
+
+import { CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { GripHorizontal, Maximize2, X } from "lucide-react";
+import { WidgetConfigDialog } from "./WidgetConfigDialog";
+
+interface Widget {
+  id: string;
+  title: string;
+  type: string;
+  span: number;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  sqlQuery?: string;
+  config?: {
+    timePeriod?: string;
+    dataSource?: string;
+    chartData?: any;
+  };
+}
+
+interface WidgetHeaderProps {
+  widget: Widget;
+  timePeriod: string;
+  isMaximized: boolean;
+  onUpdate: (id: string, updates: Partial<Widget>) => void;
+  onRemove: (id: string) => void;
+  onToggleMaximize: () => void;
+}
+
+export const WidgetHeader = ({
+  widget,
+  timePeriod,
+  isMaximized,
+  onUpdate,
+  onRemove,
+  onToggleMaximize
+}: WidgetHeaderProps) => {
+  return (
+    <div className="flex flex-row items-center justify-between pb-2">
+      <CardTitle className="text-lg flex items-center gap-2">
+        <GripHorizontal className="h-4 w-4 text-gray-400" />
+        {widget.title}
+        {widget.config?.timePeriod && (
+          <span className="text-sm text-gray-500 ml-2">({timePeriod})</span>
+        )}
+      </CardTitle>
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={onToggleMaximize}
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+        <WidgetConfigDialog widget={widget} onUpdate={onUpdate} />
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => onRemove(widget.id)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
