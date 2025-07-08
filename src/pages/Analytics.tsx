@@ -44,20 +44,6 @@ const Analytics = () => {
     addWidget(newWidget);
   };
 
-  // Create a 6x4 grid layout
-  const gridCols = 6;
-  const gridRows = 4;
-  
-  // Create grid positions for widgets
-  const getGridPosition = (widget: any, index: number) => {
-    const col = (index * 2) % gridCols;
-    const row = Math.floor((index * 2) / gridCols);
-    return {
-      gridColumn: `span ${widget.size.width}`,
-      gridRow: `span ${widget.size.height}`,
-    };
-  };
-
   return (
     <Layout>
       <div className="p-6 space-y-6">
@@ -90,38 +76,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Widgets Grid */}
-        <div className="widgets-grid">
-          {widgets.length > 0 ? (
-            <div className="grid grid-cols-6 gap-4 min-h-[600px] auto-rows-fr">
-              {widgets.map((widget, index) => (
-                <div 
-                  key={widget.id}
-                  className="widget-cell"
-                  style={getGridPosition(widget, index)}
-                >
-                  <ConfigurableWidget
-                    widget={widget}
-                    data={analyticsData}
-                    onRemove={removeWidget}
-                    onUpdate={updateWidget}
-                    onMove={moveWidget}
-                    onResize={resizeWidget}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <div className="text-center">
-                <p className="text-lg font-medium">No widgets added yet</p>
-                <p className="text-sm mt-1">Click "Add Widget" to get started</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Summary Cards */}
+        {/* Summary Cards - Now at the top */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
@@ -169,6 +124,36 @@ const Analytics = () => {
               <div className="text-xs text-green-600 mt-2">↗ +5.4%</div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Widgets Grid - Fixed layout */}
+        <div className="widgets-container">
+          {widgets.length > 0 ? (
+            <div className="widgets-grid">
+              {widgets.map((widget, index) => (
+                <div 
+                  key={widget.id}
+                  className={`widget-item ${widget.size.width === 2 ? 'span-2' : 'span-1'}`}
+                >
+                  <ConfigurableWidget
+                    widget={widget}
+                    data={analyticsData}
+                    onRemove={removeWidget}
+                    onUpdate={updateWidget}
+                    onMove={moveWidget}
+                    onResize={resizeWidget}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+              <div className="text-center">
+                <p className="text-lg font-medium">No widgets added yet</p>
+                <p className="text-sm mt-1">Click "Add Widget" to get started</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

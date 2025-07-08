@@ -74,12 +74,12 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
 
   const renderChart = () => {
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-    const chartHeight = isMaximized ? 400 : Math.max(200, widget.size.height - 120);
+    const chartHeight = isMaximized ? 400 : 250;
     const displayData = chartData.length > 0 ? chartData : data;
     
     if (isLoading) {
       return (
-        <div className="h-64 flex items-center justify-center">
+        <div className="h-full flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       );
@@ -131,7 +131,7 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                outerRadius={Math.min(chartHeight / 6, 80)}
+                outerRadius={Math.min(chartHeight / 4, 80)}
                 fill="#8884d8"
                 dataKey="revenue"
               >
@@ -144,21 +144,17 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           </ResponsiveContainer>
         );
       default:
-        return <div className="h-64 flex items-center justify-center text-gray-500">No chart available</div>;
+        return <div className="h-full flex items-center justify-center text-gray-500">No chart available</div>;
     }
   };
 
   return (
     <Card 
-      className={`group transition-all duration-200 ${
+      className={`h-full w-full group transition-all duration-200 ${
         isMaximized ? 'fixed inset-4 z-50 bg-white dark:bg-gray-800' : ''
       }`}
-      style={{
-        width: isMaximized ? 'auto' : `${widget.size.width}px`,
-        height: isMaximized ? 'auto' : `${widget.size.height}px`,
-      }}
     >
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <GripHorizontal className="h-4 w-4 text-gray-400" />
           {widget.title}
@@ -230,8 +226,10 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-4">
-        {renderChart()}
+      <CardContent className="flex-1 p-4 pt-0 h-full">
+        <div className="h-full">
+          {renderChart()}
+        </div>
       </CardContent>
       
       {isMaximized && (
