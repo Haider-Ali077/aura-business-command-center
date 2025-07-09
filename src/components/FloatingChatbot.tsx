@@ -163,22 +163,22 @@ export function FloatingChatbot() {
     switch (chart.chart_type) {
       case 'bar':
         return (
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={chart.xLabel} angle={-30} interval={0} textAnchor="end" height={60} />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey={chart.yLabel} fill="#8884d8" barSize={40} />
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey={chart.xLabel} tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ fontSize: '12px' }} />
+            <Bar dataKey={chart.yLabel} fill="#3b82f6" barSize={20} radius={[2, 2, 0, 0]} />
           </BarChart>
         );
       case 'line':
         return (
-          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={chart.xLabel} angle={-30} interval={0} textAnchor="end" height={60} />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey={chart.yLabel} stroke="#8884d8" strokeWidth={2} />
+          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey={chart.xLabel} tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ fontSize: '12px' }} />
+            <Line type="monotone" dataKey={chart.yLabel} stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
           </LineChart>
         );
       case 'pie':
@@ -188,16 +188,16 @@ export function FloatingChatbot() {
         }));
         return (
           <PieChart>
-            <Tooltip />
+            <Tooltip contentStyle={{ fontSize: '12px' }} />
             <Pie
               data={pieData}
               dataKey="value"
               nameKey="name"
               cx="50%"
               cy="50%"
-              outerRadius={80}
-              fill="#8884d8"
-              label
+              outerRadius={60}
+              fill="#3b82f6"
+              label={false}
             />
           </PieChart>
         );
@@ -252,8 +252,8 @@ export function FloatingChatbot() {
                       <div className={`p-3 rounded-xl shadow-sm ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
                         <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
                         {msg.chart && (
-                          <div className="mt-3 overflow-x-auto">
-                            <div className="min-w-[600px] h-[300px]">
+                          <div className="mt-2">
+                            <div className="w-full h-[180px] bg-slate-50 rounded-lg p-2 border">
                               <ResponsiveContainer width="100%" height="100%">
                                 {renderChart(msg.chart)}
                               </ResponsiveContainer>
@@ -262,7 +262,7 @@ export function FloatingChatbot() {
                               <Button
                                 size="sm"
                                 onClick={() => handleAddToAnalytics(msg.chart!)}
-                                className="bg-green-600 hover:bg-green-700 text-white"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6"
                               >
                                 <Plus className="h-3 w-3 mr-1" />
                                 Add to Analytics
