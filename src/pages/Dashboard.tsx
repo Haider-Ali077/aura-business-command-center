@@ -16,7 +16,7 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     if (!session) return;
-    
+
     setIsLoading(true);
     try {
       const dashboardData = await dataService.fetchDashboardData();
@@ -49,13 +49,13 @@ const Dashboard = () => {
   const formatLastRefreshed = (date: Date) => {
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    
+
     return date.toLocaleDateString();
   };
 
@@ -91,8 +91,8 @@ const Dashboard = () => {
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">${data.revenue.toLocaleString()}</div>
-              <p className="text-xs text-green-600 mt-1">+20.1% from last month</p>
+              <div className="text-2xl font-bold text-gray-900">${data.datacards.revenue.value.toLocaleString()}</div>
+              <p className="text-xs text-green-600 mt-1">{data.datacards.revenue.growth}% from last month</p>
             </CardContent>
           </Card>
 
@@ -102,8 +102,8 @@ const Dashboard = () => {
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{data.customers.toLocaleString()}</div>
-              <p className="text-xs text-blue-600 mt-1">+180.1% from last month</p>
+              <div className="text-2xl font-bold text-gray-900">{data.datacards.customers.value.toLocaleString()}</div>
+              <p className="text-xs text-blue-600 mt-1">{data.datacards.customers.growth}% from last month</p>
             </CardContent>
           </Card>
 
@@ -113,32 +113,32 @@ const Dashboard = () => {
               <ShoppingCart className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{data.orders.toLocaleString()}</div>
-              <p className="text-xs text-purple-600 mt-1">+19% from last month</p>
+              <div className="text-2xl font-bold text-gray-900">{data.datacards.orders.value.toLocaleString()}</div>
+              <p className="text-xs text-purple-600 mt-1">{data.datacards.orders.growth}% from last month</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Growth Rate</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Average Order Value</CardTitle>
               <TrendingUp className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{data.growthRate}%</div>
-              <p className="text-xs text-orange-600 mt-1">+4.5% from last month</p>
+              <div className="text-2xl font-bold text-gray-900">{data.datacards.avg_order_value.value}</div>
+              <p className="text-xs text-orange-600 mt-1">{data.datacards.avg_order_value.growth}% from last month</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Sales Chart */}
+          {/* Daily revenue for last 30 days */}
           <Card>
             <CardHeader>
-              <CardTitle>Sales Overview</CardTitle>
+              <CardTitle>Daily revenue for last 30 days</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.salesData}>
+                <LineChart data={data.charts.line}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -149,14 +149,14 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Order Statistics */}
+          {/* Monthly revenue for last 6 months */}
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Orders</CardTitle>
+              <CardTitle>Monthly revenue for last 6 months</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.salesData}>
+                <BarChart data={data.charts.vertical_bar}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -170,14 +170,14 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Customer Distribution - Horizontal Bar Chart */}
-          <Card>
+          {/* <Card>
             <CardHeader>
-              <CardTitle>Customer Distribution</CardTitle>
+              <CardTitle>Top 5 Customers by Revenue</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
-                  data={data.salesData} 
+                  data={data.charts.horizontal_bar} 
                   layout="horizontal"
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
@@ -189,18 +189,39 @@ const Dashboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
+          </Card> */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top 5 Customers by Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={data.charts.horizontal_bar}
+                  layout="vertical"
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#6366F1" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
           </Card>
+
 
           {/* Category Distribution - Donut Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Sales by Category</CardTitle>
+              <CardTitle>Revenue by Product Category</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={data.categoryData}
+                    data={data.charts.pie}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -208,7 +229,7 @@ const Dashboard = () => {
                     dataKey="value"
                     label={({ name, value }) => `${name}: ${value}%`}
                   >
-                    {data.categoryData.map((entry, index) => (
+                    {data.charts.pie.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
