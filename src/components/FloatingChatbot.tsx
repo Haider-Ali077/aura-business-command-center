@@ -110,7 +110,7 @@ export function FloatingChatbot() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('https://sql-database-agent.onrender.com/ask', {
+      const res = await fetch('http://localhost:8000/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
