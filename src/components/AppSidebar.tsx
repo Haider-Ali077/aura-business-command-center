@@ -111,7 +111,7 @@
 // }
 
 import { NavLink, useLocation } from "react-router-dom";
-import { BarChart3, FileText, PieChart, Settings, Home } from "lucide-react";
+import { BarChart3, FileText, PieChart, Settings, Home, Layout } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -130,6 +130,12 @@ const navItems = [
     url: "/dashboard",
     icon: Home,
     gradient: "from-blue-500 to-blue-600",
+  },
+  {
+    title: "Role Dashboards",
+    url: "/dashboards",
+    icon: Layout,
+    gradient: "from-indigo-500 to-indigo-600",
   },
   {
     title: "Reports",

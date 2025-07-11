@@ -7,6 +7,7 @@ import Dashboard from '@/pages/Dashboard';
 import Analytics from '@/pages/Analytics';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
+import RoleDashboards from '@/pages/RoleDashboards';
 import NotFound from '@/pages/NotFound';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/authStore';
@@ -36,6 +37,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboards" element={<RoleDashboards />} />
+              <Route path="/dashboards/:moduleId" element={<RoleDashboards />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
