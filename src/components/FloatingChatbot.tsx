@@ -2,9 +2,12 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
+import { useTenantStore } from "@/store/tenantStore";
+import { useRoleStore } from "@/store/roleStore";
 import { dataService } from "@/services/dataService";
 import {
   BarChart, Bar,
@@ -46,16 +49,32 @@ export function FloatingChatbot() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedDashboard, setSelectedDashboard] = useState<string>('');
+  const [showDashboardSelect, setShowDashboardSelect] = useState(false);
+  const [pendingChart, setPendingChart] = useState<ChartData | null>(null);
 
   const { addWidget } = useWidgetStore();
   const { session } = useAuthStore();
+  const { currentSession } = useTenantStore();
+  const { getAccessibleModules } = useRoleStore();
 
-  const handleAddToAnalytics = async (chart: ChartData) => {
+  const handleAddToDashboard = (chart: ChartData) => {
+    const accessibleModules = getAccessibleModules();
+    if (accessibleModules.length === 1) {
+      // If user has access to only one dashboard, add directly
+      confirmAddToDashboard(chart, accessibleModules[0].id);
+    } else {
+      // Show dashboard selection
+      setPendingChart(chart);
+      setShowDashboardSelect(true);
+    }
+  };
+
+  const confirmAddToDashboard = async (chart: ChartData, dashboardId: string) => {
     try {
-      // Save chart data to backend
-      await dataService.saveChartToAnalytics(chart);
-      
-      // Add widget to analytics dashboard with SQL query
+      if (!currentSession?.tenantId) throw new Error('No tenant session');
+
+      // Add widget to selected dashboard
       const newWidget = {
         id: `chart-${Date.now()}`,
         title: chart.title,
@@ -70,24 +89,30 @@ export function FloatingChatbot() {
         }
       };
       
-      addWidget(newWidget, 1, 'main');
+      await addWidget(newWidget, currentSession.tenantId, dashboardId);
       
       // Show success message
+      const dashboardName = getAccessibleModules().find(m => m.id === dashboardId)?.name || dashboardId;
       const successMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'bot',
-        content: `✅ Chart "${chart.title}" has been added to your Analytics dashboard with SQL query!`,
+        content: `✅ Chart "${chart.title}" has been added to your ${dashboardName} dashboard!`,
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, successMessage]);
+      
+      // Reset state
+      setShowDashboardSelect(false);
+      setPendingChart(null);
+      setSelectedDashboard('');
     } catch (error) {
-      console.error('Error adding chart to analytics:', error);
+      console.error('Error adding chart to dashboard:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'bot',
-        content: '❌ Failed to add chart to Analytics dashboard. Please try again.',
+        content: '❌ Failed to add chart to dashboard. Please try again.',
         timestamp: new Date(),
       };
       
@@ -261,11 +286,11 @@ export function FloatingChatbot() {
                             <div className="mt-2 flex justify-end">
                               <Button
                                 size="sm"
-                                onClick={() => handleAddToAnalytics(msg.chart!)}
+                                onClick={() => handleAddToDashboard(msg.chart!)}
                                 className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6"
                               >
                                 <Plus className="h-3 w-3 mr-1" />
-                                Add to Analytics
+                                Add to Dashboard
                               </Button>
                             </div>
                           </div>
@@ -290,6 +315,47 @@ export function FloatingChatbot() {
                   </div>
                 )}
               </div>
+
+              {/* Dashboard Selection Modal */}
+              {showDashboardSelect && pendingChart && (
+                <div className="p-3 border-t border-slate-200 bg-blue-50">
+                  <div className="text-xs font-medium mb-2">Select Dashboard:</div>
+                  <div className="flex gap-2">
+                    <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
+                      <SelectTrigger className="flex-1 h-8 text-xs">
+                        <SelectValue placeholder="Choose dashboard" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAccessibleModules().map((module) => (
+                          <SelectItem key={module.id} value={module.id} className="text-xs">
+                            {module.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      size="sm" 
+                      onClick={() => selectedDashboard && confirmAddToDashboard(pendingChart, selectedDashboard)}
+                      disabled={!selectedDashboard}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Add
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowDashboardSelect(false);
+                        setPendingChart(null);
+                        setSelectedDashboard('');
+                      }}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Input Box Fixed at Bottom */}
               <div className="p-3 border-t border-slate-200 bg-white">

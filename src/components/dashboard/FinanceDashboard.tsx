@@ -6,6 +6,7 @@ import { DollarSign, TrendingUp, CreditCard, PiggyBank, Calculator, Calendar, Re
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useTenantStore } from "@/store/tenantStore";
+import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 
 interface FinanceMetric {
   title: string;
@@ -118,7 +119,24 @@ export function FinanceDashboard() {
         ))}
       </div>
 
-      {/* Charts Grid */}
+      {/* Dynamic Widgets */}
+      {widgets.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {widgets.map((widget) => (
+            <ConfigurableWidget 
+              key={widget.id} 
+              widget={widget}
+              data={widget.config?.chartData || []}
+              onRemove={() => {}}
+              onUpdate={() => {}}
+              onMove={() => {}}
+              onResize={() => {}}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Default Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cash Flow Analysis */}
         <Card>

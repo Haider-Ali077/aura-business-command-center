@@ -1,6 +1,7 @@
 
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { ChartData } from "@/services/sqlService";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface ChartRendererProps {
   type: string;
@@ -79,6 +80,31 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <Tooltip />
           </PieChart>
         </ResponsiveContainer>
+      );
+    case 'table':
+      return (
+        <div className="h-full overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {data.length > 0 && Object.keys(data[0]).map((key) => (
+                  <TableHead key={key} className="text-xs">{key}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((row, index) => (
+                <TableRow key={index}>
+                  {Object.values(row).map((value, cellIndex) => (
+                    <TableCell key={cellIndex} className="text-xs">
+                      {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       );
     default:
       return <div className="h-full flex items-center justify-center text-gray-500">No chart available</div>;

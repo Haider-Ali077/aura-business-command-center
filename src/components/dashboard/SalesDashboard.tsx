@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, FunnelChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Target, Users, Award, MapPin, Calendar, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useTenantStore } from "@/store/tenantStore";
+import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 
 interface SalesMetric {
   title: string;
@@ -125,7 +126,24 @@ export function SalesDashboard() {
         ))}
       </div>
 
-      {/* Charts Grid */}
+      {/* Dynamic Widgets */}
+      {widgets.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {widgets.map((widget) => (
+            <ConfigurableWidget 
+              key={widget.id} 
+              widget={widget}
+              data={widget.config?.chartData || []}
+              onRemove={() => {}}
+              onUpdate={() => {}}
+              onMove={() => {}}
+              onResize={() => {}}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Default Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Funnel */}
         <Card>
