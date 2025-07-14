@@ -282,18 +282,18 @@ const navItems = [
     icon: Home,
     gradient: "from-blue-500 to-blue-600",
   },
-  {
-    title: "Reports",
-    url: "/reports",
-    icon: FileText,
-    gradient: "from-green-500 to-green-600",
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: PieChart,
-    gradient: "from-purple-500 to-purple-600",
-  },
+  // {
+  //   title: "Reports",
+  //   url: "/reports",
+  //   icon: FileText,
+  //   gradient: "from-green-500 to-green-600",
+  // },
+  // {
+  //   title: "Analytics",
+  //   url: "/analytics",
+  //   icon: PieChart,
+  //   gradient: "from-purple-500 to-purple-600",
+  // },
   {
     title: "Settings",
     url: "/settings",

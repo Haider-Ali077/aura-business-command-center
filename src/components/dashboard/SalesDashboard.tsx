@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, FunnelChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Target, Users, Award, MapPin, Calendar } from "lucide-react";
+import { TrendingUp, Target, Users, Award, MapPin, Calendar, RefreshCw } from "lucide-react";
+import { Layout } from "@/components/Layout";
+import { useWidgetStore } from "@/store/widgetStore";
+import { useTenantStore } from "@/store/tenantStore";
 
 interface SalesMetric {
   title: string;
@@ -23,6 +27,15 @@ export function SalesDashboard() {
   const [productData, setProductData] = useState<ChartData[]>([]);
   const [performanceData, setPerformanceData] = useState<ChartData[]>([]);
   const [topCustomers, setTopCustomers] = useState<ChartData[]>([]);
+  
+  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { currentSession } = useTenantStore();
+
+  useEffect(() => {
+    if (currentSession?.tenantId) {
+      fetchWidgets(currentSession.tenantId, 'sales');
+    }
+  }, [currentSession]);
 
   useEffect(() => {
     setMetrics([
@@ -76,13 +89,22 @@ export function SalesDashboard() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sales & CRM Analytics</h1>
-          <p className="text-gray-600 mt-2">Sales performance, pipeline, and customer insights</p>
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Sales & CRM Analytics</h1>
+            <p className="text-gray-600 mt-2">Sales performance, pipeline, and customer insights</p>
+          </div>
+          <Button 
+            onClick={refreshData} 
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
-      </div>
 
       {/* Sales Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -227,6 +249,7 @@ export function SalesDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

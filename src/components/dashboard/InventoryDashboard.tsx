@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Package, TrendingDown, Truck, AlertTriangle, RotateCcw, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Package, TrendingDown, AlertTriangle, Clock, Truck, BarChart3, RefreshCw } from "lucide-react";
+import { Layout } from "@/components/Layout";
+import { useWidgetStore } from "@/store/widgetStore";
+import { useTenantStore } from "@/store/tenantStore";
 
 interface InventoryMetric {
   title: string;
@@ -23,12 +27,21 @@ export function InventoryDashboard() {
   const [agingData, setAgingData] = useState<ChartData[]>([]);
   const [supplierData, setSupplierData] = useState<ChartData[]>([]);
   const [demandForecast, setDemandForecast] = useState<ChartData[]>([]);
+  
+  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { currentSession } = useTenantStore();
+
+  useEffect(() => {
+    if (currentSession?.tenantId) {
+      fetchWidgets(currentSession.tenantId, 'inventory');
+    }
+  }, [currentSession]);
 
   useEffect(() => {
     setMetrics([
       { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
       { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
-      { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: RotateCcw, color: 'text-green-600' },
+      { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
       { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
       { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
       { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
@@ -78,13 +91,22 @@ export function InventoryDashboard() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventory & Supply Chain</h1>
-          <p className="text-gray-600 mt-2">Stock management, turnover, and supplier performance</p>
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Inventory & Supply Chain Analytics</h1>
+            <p className="text-gray-600 mt-2">Stock levels, turnover, and supply chain performance</p>
+          </div>
+          <Button 
+            onClick={refreshData} 
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
-      </div>
 
       {/* Inventory Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -236,6 +258,7 @@ export function InventoryDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

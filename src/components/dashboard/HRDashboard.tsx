@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, UserPlus, UserMinus, Clock, TrendingUp, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, UserPlus, UserMinus, Clock, Target, TrendingUp, RefreshCw } from "lucide-react";
+import { Layout } from "@/components/Layout";
+import { useWidgetStore } from "@/store/widgetStore";
+import { useTenantStore } from "@/store/tenantStore";
 
 interface HRMetric {
   title: string;
@@ -24,6 +28,15 @@ export function HRDashboard() {
   const [departmentData, setDepartmentData] = useState<ChartData[]>([]);
   const [performanceData, setPerformanceData] = useState<ChartData[]>([]);
   const [diversityData, setDiversityData] = useState<ChartData[]>([]);
+  
+  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { currentSession } = useTenantStore();
+
+  useEffect(() => {
+    if (currentSession?.tenantId) {
+      fetchWidgets(currentSession.tenantId, 'hr');
+    }
+  }, [currentSession]);
 
   useEffect(() => {
     setMetrics([
@@ -31,7 +44,7 @@ export function HRDashboard() {
       { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
       { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
       { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
-      { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Award, color: 'text-cyan-600' },
+      { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
       { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
     ]);
 
@@ -88,13 +101,22 @@ export function HRDashboard() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Human Resources Analytics</h1>
-          <p className="text-gray-600 mt-2">Workforce insights, hiring, and employee metrics</p>
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Human Resources Analytics</h1>
+            <p className="text-gray-600 mt-2">Employee metrics, hiring, and performance insights</p>
+          </div>
+          <Button 
+            onClick={refreshData} 
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
-      </div>
 
       {/* HR Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -237,6 +259,7 @@ export function HRDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

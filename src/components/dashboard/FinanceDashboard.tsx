@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { DollarSign, TrendingUp, CreditCard, PiggyBank, Calculator, Calendar } from "lucide-react";
+import { DollarSign, TrendingUp, CreditCard, PiggyBank, Calculator, Calendar, RefreshCw } from "lucide-react";
+import { Layout } from "@/components/Layout";
+import { useWidgetStore } from "@/store/widgetStore";
+import { useTenantStore } from "@/store/tenantStore";
 
 interface FinanceMetric {
   title: string;
@@ -22,6 +26,15 @@ export function FinanceDashboard() {
   const [budgetData, setBudgetData] = useState<ChartData[]>([]);
   const [revenueData, setRevenueData] = useState<ChartData[]>([]);
   const [arAgingData, setArAgingData] = useState<ChartData[]>([]);
+  
+  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { currentSession } = useTenantStore();
+
+  useEffect(() => {
+    if (currentSession?.tenantId) {
+      fetchWidgets(currentSession.tenantId, 'finance');
+    }
+  }, [currentSession]);
 
   useEffect(() => {
     setMetrics([
@@ -69,13 +82,22 @@ export function FinanceDashboard() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Finance Analytics</h1>
-          <p className="text-gray-600 mt-2">Financial performance and cash flow analysis</p>
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Finance Analytics</h1>
+            <p className="text-gray-600 mt-2">Financial performance and cash flow analysis</p>
+          </div>
+          <Button 
+            onClick={refreshData} 
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
-      </div>
 
       {/* Finance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -179,6 +201,7 @@ export function FinanceDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 }

@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Package, Use
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useTenantStore } from "@/store/tenantStore";
+import { Layout } from "@/components/Layout";
 
 interface ExecutiveKPI {
   title: string;
@@ -73,7 +74,8 @@ export function ExecutiveDashboard() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Executive Dashboard</h1>
@@ -200,6 +202,7 @@ export function ExecutiveDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 }

@@ -46,8 +46,8 @@ function App() {
               <Route path="/dashboard/sales" element={<SalesDashboard />} />
               <Route path="/dashboard/inventory" element={<InventoryDashboard />} />
               <Route path="/dashboard/hr" element={<HRDashboard />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/reports" element={<Reports />} />
+              {/* <Route path="/analytics" element={<Analytics />} /> */}
+              {/* <Route path="/reports" element={<Reports />} /> */}
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
