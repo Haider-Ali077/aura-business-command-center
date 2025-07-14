@@ -27,11 +27,11 @@ export function ExecutiveDashboard() {
     // Mock data - replace with actual API calls
     setKpis([
       { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
-      { title: 'Active Customers', value: '1,284', change: 8.3, icon: Users, color: 'text-blue-600' },
+      // { title: 'Active Customers', value: '1,284', change: 8.3, icon: Users, color: 'text-blue-600' },
       { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
       { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
       { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
-      { title: 'Open Issues', value: '23', change: -15.4, icon: AlertTriangle, color: 'text-red-600' }
+      //{ title: 'Open Issues', value: '23', change: -15.4, icon: AlertTriangle, color: 'text-red-600' }
     ]);
 
     setRevenueData([
@@ -69,7 +69,8 @@ export function ExecutiveDashboard() {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"> */}
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         {kpis.map((kpi, index) => (
           <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
