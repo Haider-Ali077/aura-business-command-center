@@ -70,7 +70,7 @@ export function FloatingChatbot() {
         }
       };
       
-      addWidget(newWidget);
+      addWidget(newWidget, 1, 'main');
       
       // Show success message
       const successMessage: Message = {

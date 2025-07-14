@@ -7,7 +7,11 @@ import Dashboard from '@/pages/Dashboard';
 import Analytics from '@/pages/Analytics';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
-import RoleDashboards from '@/pages/RoleDashboards';
+import { ExecutiveDashboard } from "@/components/dashboard/ExecutiveDashboard";
+import { FinanceDashboard } from "@/components/dashboard/FinanceDashboard";
+import { SalesDashboard } from "@/components/dashboard/SalesDashboard";
+import { InventoryDashboard } from "@/components/dashboard/InventoryDashboard";
+import { HRDashboard } from "@/components/dashboard/HRDashboard";
 import NotFound from '@/pages/NotFound';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/authStore';
@@ -37,8 +41,11 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboards" element={<RoleDashboards />} />
-              <Route path="/dashboards/:moduleId" element={<RoleDashboards />} />
+              <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
+              <Route path="/dashboard/finance" element={<FinanceDashboard />} />
+              <Route path="/dashboard/sales" element={<SalesDashboard />} />
+              <Route path="/dashboard/inventory" element={<InventoryDashboard />} />
+              <Route path="/dashboard/hr" element={<HRDashboard />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />

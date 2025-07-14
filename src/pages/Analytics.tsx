@@ -34,14 +34,16 @@ const Analytics = () => {
     fetchAnalyticsData();
   }, [session]);
 
-  const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }) => {
+  const handleAddWidget = (widget: { id: string; title: string; type: string; span: number }, dashboard: string) => {
     const newWidget = {
       ...widget,
       position: { x: 0, y: 0 },
       size: { width: widget.span === 2 ? 2 : 1, height: 1 },
       sqlQuery: `SELECT 'Sample' as name, 100 as value`
     };
-    addWidget(newWidget);
+    if (session?.user.tenant_id) {
+      addWidget(newWidget, Number(session.user.tenant_id), dashboard);
+    }
   };
 
   return (

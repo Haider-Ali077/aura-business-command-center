@@ -282,18 +282,18 @@ const navItems = [
     icon: Home,
     gradient: "from-blue-500 to-blue-600",
   },
-  // {
-  //   title: "Reports",
-  //   url: "/reports",
-  //   icon: FileText,
-  //   gradient: "from-green-500 to-green-600",
-  // },
-  // {
-  //   title: "Analytics",
-  //   url: "/analytics",
-  //   icon: PieChart,
-  //   gradient: "from-purple-500 to-purple-600",
-  // },
+  {
+    title: "Reports",
+    url: "/reports",
+    icon: FileText,
+    gradient: "from-green-500 to-green-600",
+  },
+  {
+    title: "Analytics",
+    url: "/analytics",
+    icon: PieChart,
+    gradient: "from-purple-500 to-purple-600",
+  },
   {
     title: "Settings",
     url: "/settings",
@@ -396,53 +396,59 @@ export function AppSidebar() {
                 );
               })}
 
-              {/* Role-Based Modules */}
-              {accessibleModules.length > 0 && (
-                <>
-                  <SidebarGroupLabel className="text-gray-600 uppercase tracking-wide text-xs font-medium mt-4 mb-2">
-                    {!collapsed && "Modules"}
-                  </SidebarGroupLabel>
-                  {accessibleModules.map((module) => {
-                    const moduleUrl = `/dashboards/${module.id}`;
-                    const active = isActive(moduleUrl);
-                    const IconComponent =
-                      iconMap[module.icon as keyof typeof iconMap] || Layout;
-
-                    return (
-                      <SidebarMenuItem key={module.id}>
-                        <SidebarMenuButton asChild className="p-0">
-                          <NavLink
-                            to={moduleUrl}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none ${
-                              collapsed ? "justify-center px-2" : ""
-                            } ${
-                              active
-                                ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md"
-                                : "text-gray-800 bg-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-indigo-600 hover:text-white"
-                            }`}
-                          >
-                            <div
-                              className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
-                                active ? "bg-white/20" : "bg-white/50"
-                              }`}
-                            >
-                              <IconComponent className="h-5 w-5" />
-                            </div>
-                            {!collapsed && (
-                              <span className="font-medium text-sm">
-                                {module.name}
-                              </span>
-                            )}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Role-Based Dashboards */}
+        {accessibleModules.length > 0 && (
+          <SidebarGroup className="px-3 py-2">
+            <SidebarGroupLabel className="text-gray-600 uppercase tracking-wide text-xs font-medium mb-3">
+              {!collapsed && "Dashboards"}
+            </SidebarGroupLabel>
+            
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-2">
+                {accessibleModules.map((module) => {
+                  const moduleUrl = `/dashboard/${module.id}`;
+                  const active = isActive(moduleUrl);
+                  const IconComponent =
+                    iconMap[module.icon as keyof typeof iconMap] || Layout;
+
+                  return (
+                    <SidebarMenuItem key={module.id}>
+                      <SidebarMenuButton asChild className="p-0">
+                        <NavLink
+                          to={moduleUrl}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none ${
+                            collapsed ? "justify-center px-2" : ""
+                          } ${
+                            active
+                              ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md"
+                              : "text-gray-800 bg-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-indigo-600 hover:text-white"
+                          }`}
+                        >
+                          <div
+                            className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                              active ? "bg-white/20" : "bg-white/50"
+                            }`}
+                          >
+                            <IconComponent className="h-5 w-5" />
+                          </div>
+                          {!collapsed && (
+                            <span className="font-medium text-sm">
+                              {module.name}
+                            </span>
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Footer */}
         {!collapsed && (

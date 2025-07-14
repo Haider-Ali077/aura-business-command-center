@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Package, UserCheck, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Package, UserCheck, AlertTriangle, RefreshCw } from "lucide-react";
+import { ConfigurableWidget } from "@/components/ConfigurableWidget";
+import { useWidgetStore } from "@/store/widgetStore";
+import { useTenantStore } from "@/store/tenantStore";
 
 interface ExecutiveKPI {
   title: string;
@@ -22,6 +26,15 @@ export function ExecutiveDashboard() {
   const [revenueData, setRevenueData] = useState<ChartData[]>([]);
   const [departmentData, setDepartmentData] = useState<ChartData[]>([]);
   const [trendData, setTrendData] = useState<ChartData[]>([]);
+  
+  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { currentSession } = useTenantStore();
+
+  useEffect(() => {
+    if (currentSession?.tenantId) {
+      fetchWidgets(currentSession.tenantId, 'executive');
+    }
+  }, [currentSession]);
 
   useEffect(() => {
     // Mock data - replace with actual API calls
@@ -66,6 +79,14 @@ export function ExecutiveDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Executive Dashboard</h1>
           <p className="text-gray-600 mt-2">High-level overview of company performance</p>
         </div>
+        <Button 
+          onClick={refreshData} 
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh Data
+        </Button>
       </div>
 
       {/* KPI Cards Grid */}
@@ -94,7 +115,24 @@ export function ExecutiveDashboard() {
         ))}
       </div>
 
-      {/* Charts Grid */}
+      {/* Dynamic Widgets */}
+      {widgets.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {widgets.map((widget) => (
+            <ConfigurableWidget 
+              key={widget.id} 
+              widget={widget}
+              data={widget.config?.chartData || []}
+              onRemove={() => {}}
+              onUpdate={() => {}}
+              onMove={() => {}}
+              onResize={() => {}}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Default Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue vs Expenses */}
         <Card>

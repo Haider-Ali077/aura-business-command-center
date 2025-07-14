@@ -120,18 +120,22 @@ export interface Widget {
 
 interface WidgetStore {
   widgets: Widget[];
+  loading: boolean;
   fetchWidgets: (tenantId: number, dashboard: string) => Promise<void>;
-  addWidget: (widget: Widget) => void;
+  addWidget: (widget: Widget, tenantId: number, dashboard: string) => Promise<void>;
   removeWidget: (id: string) => void;
   updateWidget: (id: string, updates: Partial<Widget>) => void;
   moveWidget: (id: string, position: { x: number; y: number }) => void;
   resizeWidget: (id: string, size: { width: number; height: number }) => void;
+  refreshData: () => Promise<void>;
 }
 
-export const useWidgetStore = create<WidgetStore>()((set) => ({
+export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   widgets: [],
+  loading: false,
 
   fetchWidgets: async (tenantId, dashboard) => {
+    set({ loading: true });
     try {
       const res = await fetch(`https://api.intellyca.com/widgets?tenant_id=${tenantId}&dashboard=${dashboard}`);
       const data = await res.json();
@@ -140,16 +144,68 @@ export const useWidgetStore = create<WidgetStore>()((set) => ({
         position: { x: w.position_x, y: w.position_y },
         size: { width: w.size_width, height: w.size_height },
       }));
-      set({ widgets: transformed });
+      set({ widgets: transformed, loading: false });
     } catch (err) {
       console.error("Failed to fetch widgets", err);
+      set({ loading: false });
     }
   },
 
-  addWidget: (widget) =>
-    set((state) => ({
-      widgets: [...state.widgets, widget],
-    })),
+  addWidget: async (widget, tenantId, dashboard) => {
+    try {
+      const payload = {
+        tenant_id: tenantId,
+        dashboard,
+        title: widget.title,
+        type: widget.type,
+        span: widget.span,
+        position_x: widget.position.x,
+        position_y: widget.position.y,
+        size_width: widget.size.width,
+        size_height: widget.size.height,
+        sql_query: widget.sqlQuery || '',
+      };
+      
+      const res = await fetch('https://api.intellyca.com/widgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      
+      if (res.ok) {
+        set((state) => ({
+          widgets: [...state.widgets, widget],
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to add widget", err);
+    }
+  },
+
+  refreshData: async () => {
+    const { widgets } = get();
+    // Refresh data for all widgets with SQL queries
+    const updatedWidgets = await Promise.all(
+      widgets.map(async (widget) => {
+        if (widget.sqlQuery) {
+          try {
+            const res = await fetch('https://api.intellyca.com/execute-sql', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: widget.sqlQuery }),
+            });
+            const data = await res.json();
+            return { ...widget, config: { ...widget.config, chartData: data } };
+          } catch (err) {
+            console.error(`Failed to refresh data for widget ${widget.id}`, err);
+            return widget;
+          }
+        }
+        return widget;
+      })
+    );
+    set({ widgets: updatedWidgets });
+  },
 
   removeWidget: (id) =>
     set((state) => ({
