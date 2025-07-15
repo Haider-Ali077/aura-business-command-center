@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Search, User, LogOut } from "lucide-react";
 import { useAuthStore } from '@/store/authStore';
 import { SearchDropdown } from "@/components/SearchDropdown";
+import { AlertsDropdown } from "@/components/AlertsDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,9 +29,7 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm">
-          <Bell className="h-4 w-4" />
-        </Button>
+        <AlertsDropdown />
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -7,7 +7,6 @@ import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useTenantStore } from "@/store/tenantStore";
 import { Layout } from "@/components/Layout";
-import { DashboardAlerts } from "@/components/DashboardAlerts";
 
 interface ExecutiveKPI {
   title: string;
@@ -91,9 +90,6 @@ export function ExecutiveDashboard() {
           Refresh Data
         </Button>
       </div>
-
-      {/* Alerts */}
-      <DashboardAlerts dashboardType="executive" />
 
       {/* KPI Cards Grid */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"> */}
