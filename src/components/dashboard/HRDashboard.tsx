@@ -7,6 +7,7 @@ import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useTenantStore } from "@/store/tenantStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
+import { DashboardAlerts } from "@/components/DashboardAlerts";
 
 interface HRMetric {
   title: string;
@@ -118,6 +119,9 @@ export function HRDashboard() {
             Refresh Data
           </Button>
         </div>
+
+        {/* Alerts */}
+        <DashboardAlerts dashboardType="hr" />
 
       {/* HR Metrics */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"> */}

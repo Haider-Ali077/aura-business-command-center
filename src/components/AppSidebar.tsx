@@ -276,12 +276,12 @@ import { useAuthStore } from "@/store/authStore";
 import { useEffect, useState } from "react";
 
 const navItems = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home,
-    gradient: "from-blue-500 to-blue-600",
-  },
+  // {
+  //   title: "Dashboard",
+  //   url: "/dashboard",
+  //   icon: Home,
+  //   gradient: "from-blue-500 to-blue-600",
+  // },
   // {
   //   title: "Reports",
   //   url: "/reports",
@@ -294,13 +294,14 @@ const navItems = [
   //   icon: PieChart,
   //   gradient: "from-purple-500 to-purple-600",
   // },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-    gradient: "from-orange-500 to-orange-600",
-  },
 ];
+
+const settingsItem = {
+  title: "Settings",
+  url: "/settings",
+  icon: Settings,
+  gradient: "from-orange-500 to-orange-600",
+};
 
 const iconMap = {
   BarChart3,
@@ -350,59 +351,9 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Navigation Group */}
-        <SidebarGroup className="px-3 py-4">
-          <SidebarGroupLabel className="text-gray-600 uppercase tracking-wide text-xs font-medium mb-3">
-            {!collapsed && "Navigation"}
-          </SidebarGroupLabel>
-
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
-              {navItems.map((item) => {
-                const active = isActive(item.url);
-                const hoverGradient = item.gradient
-                  .split(" ")
-                  .map((c) => `hover:${c}`)
-                  .join(" ");
-
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="p-0">
-                      <NavLink
-                        to={item.url}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none ${
-                          collapsed ? "justify-center px-2" : ""
-                        } ${
-                          active
-                            ? `bg-gradient-to-r ${item.gradient} text-white shadow-md`
-                            : `text-gray-800 bg-white hover:bg-gradient-to-r ${hoverGradient} hover:text-white`
-                        }`}
-                      >
-                        <div
-                          className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
-                            active ? "bg-white/20" : "bg-white/50"
-                          }`}
-                        >
-                          <item.icon className="h-5 w-5" />
-                        </div>
-                        {!collapsed && (
-                          <span className="font-medium text-sm">
-                            {item.title}
-                          </span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         {/* Role-Based Dashboards */}
         {accessibleModules.length > 0 && (
-          <SidebarGroup className="px-3 py-2">
+          <SidebarGroup className="px-3 py-4">
             <SidebarGroupLabel className="text-gray-600 uppercase tracking-wide text-xs font-medium mb-3">
               {!collapsed && "Dashboards"}
             </SidebarGroupLabel>
@@ -449,6 +400,45 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Settings */}
+        <div className="mt-auto">
+          <SidebarGroup className="px-3 py-2">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="p-0">
+                    <NavLink
+                      to={settingsItem.url}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none ${
+                        collapsed ? "justify-center px-2" : ""
+                      } ${
+                        isActive(settingsItem.url)
+                          ? `bg-gradient-to-r ${settingsItem.gradient} text-white shadow-md`
+                          : `text-gray-800 bg-white hover:bg-gradient-to-r hover:${settingsItem.gradient
+                              .split(" ")
+                              .join(" hover:")} hover:text-white`
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                          isActive(settingsItem.url) ? "bg-white/20" : "bg-white/50"
+                        }`}
+                      >
+                        <settingsItem.icon className="h-5 w-5" />
+                      </div>
+                      {!collapsed && (
+                        <span className="font-medium text-sm">
+                          {settingsItem.title}
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
 
         {/* Footer */}
         {!collapsed && (

@@ -39,8 +39,8 @@ function App() {
         <Router>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/" element={<Navigate to="/dashboard/executive" replace />} />
+              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
               <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
               <Route path="/dashboard/finance" element={<FinanceDashboard />} />
               <Route path="/dashboard/sales" element={<SalesDashboard />} />
