@@ -91,7 +91,8 @@ class DataService {
     try {
       const requestBody = await this.getRequestBody();
 
-      const response = await fetch("http://localhost:8000/api/dashboard", {
+      // const response = await fetch("http://localhost:8000/api/dashboard", {
+      const response = await fetch("https://sql-database-agent.onrender.com/api/dashboard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
