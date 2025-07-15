@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useWidgetStore } from '@/store/widgetStore';
 import { useRoleStore } from '@/store/roleStore';
 
@@ -16,7 +16,9 @@ export function useSearch(query: string) {
   const [isLoading, setIsLoading] = useState(false);
   const { widgets } = useWidgetStore();
   const { getAccessibleModules } = useRoleStore();
-  const accessibleModules = getAccessibleModules();
+  
+  // Memoize the accessible modules to prevent infinite re-renders
+  const accessibleModules = useMemo(() => getAccessibleModules(), [getAccessibleModules]);
 
   useEffect(() => {
     if (!query.trim()) {
