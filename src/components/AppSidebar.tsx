@@ -336,11 +336,12 @@ export function AppSidebar() {
     >
       <SidebarContent className="bg-white border-r border-gray-200 transition-all duration-300">
         {/* Header */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-              <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-6" />
-            </div>
+        <div className="py-4 px-3 border-b border-gray-100">
+          <div className="flex items-center ">
+            <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-11" />
+            {/* <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
+              <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-10" />
+            </div> */}
             {!collapsed && (
               <div>
                 <h1 className="font-bold text-lg text-gray-900">Intellyca</h1>
@@ -442,7 +443,7 @@ export function AppSidebar() {
         {/* Footer */}
         {!collapsed && (
           <div className="mt-auto p-4 border-t border-gray-100 text-center">
-            <p className="text-gray-500 text-xs">Powered by AI</p>
+            <p className="text-gray-500 text-xs">Powered by Technaptix</p>
             <p className="text-gray-400 text-xs mt-1">v2.1.0</p>
           </div>
         )}

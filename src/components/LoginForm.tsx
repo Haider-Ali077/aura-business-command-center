@@ -24,10 +24,11 @@ export function LoginForm() {
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* Left side - Branding */}
         <div className="text-center lg:text-left space-y-8 px-4 lg:px-0">
-          <div className="flex items-center justify-center lg:justify-start gap-4 mb-8">
-            <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-lg">
-              <img src="/logo.png" alt="Intellyca Logo" className="w-8 h-8" />
-            </div>
+          <div className="flex items-center justify-center lg:justify-start mb-8">
+            <img src="/logo.png" alt="Intellyca Logo" className="w-9 h-15" />
+            {/* <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-lg">
+              <img src="/logo.png" alt="Intellyca Logo" className="w-8 h-14" />
+            </div> */}
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">Intellyca</h1>
               <p className="text-gray-600 text-base lg:text-lg">ERP Intelligence Platform</p>
