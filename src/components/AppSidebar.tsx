@@ -259,7 +259,7 @@ import {
   Package,
   Users,
 } from "lucide-react";
-import { Logo } from "@/assets/logo";
+
 import {
   Sidebar,
   SidebarContent,
@@ -339,7 +339,7 @@ export function AppSidebar() {
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-              <Logo size={24} />
+              <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-6" />
             </div>
             {!collapsed && (
               <div>
