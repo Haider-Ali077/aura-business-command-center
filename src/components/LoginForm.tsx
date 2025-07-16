@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/authStore';
-import { BarChart3, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Logo } from '@/assets/logo';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -25,8 +26,8 @@ export function LoginForm() {
         {/* Left side - Branding */}
         <div className="text-center lg:text-left space-y-8 px-4 lg:px-0">
           <div className="flex items-center justify-center lg:justify-start gap-4 mb-8">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
-              <BarChart3 className="h-8 w-8 text-white" />
+            <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-lg">
+              <Logo size={32} />
             </div>
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">Intellyca</h1>

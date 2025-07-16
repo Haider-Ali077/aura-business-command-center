@@ -249,7 +249,6 @@
 
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  BarChart3,
   FileText,
   PieChart,
   Settings,
@@ -260,6 +259,7 @@ import {
   Package,
   Users,
 } from "lucide-react";
+import { Logo } from "@/assets/logo";
 import {
   Sidebar,
   SidebarContent,
@@ -304,7 +304,6 @@ const settingsItem = {
 };
 
 const iconMap = {
-  BarChart3,
   DollarSign,
   TrendingUp,
   Package,
@@ -339,8 +338,8 @@ export function AppSidebar() {
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-              <BarChart3 className="h-6 w-6 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
+              <Logo size={24} />
             </div>
             {!collapsed && (
               <div>
