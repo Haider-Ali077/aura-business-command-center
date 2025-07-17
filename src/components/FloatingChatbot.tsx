@@ -77,52 +77,35 @@ export function FloatingChatbot() {
       
       recognitionRef.current.onresult = (event: any) => {
         const last = event.results.length - 1;
-        const transcript = event.results[last][0].transcript.toLowerCase().trim();
+        const transcript = event.results[last][0].transcript;
+        const isFinal = event.results[last].isFinal;
+        
         console.log('Speech recognition transcript:', transcript);
-        console.log('isWaitingForWakeWord:', isWaitingForWakeWord);
-        console.log('isListening:', isListening);
+        console.log('isFinal:', isFinal);
         console.log('isOpen:', isOpen);
         
-        if (isWaitingForWakeWord) {
-          // Check for wake word - if found, open chatbot and continue listening
-          if (transcript.includes('hey intellyca') || transcript.includes('intellyca')) {
+        // Show transcription in input field in real-time
+        setInputValue(transcript);
+        
+        // If not open, check for wake word to open chatbot
+        if (!isOpen) {
+          if (transcript.toLowerCase().includes('hey intellyca') || transcript.toLowerCase().includes('intellyca')) {
             console.log('Wake word detected! Opening chatbot');
-            setIsOpen(true); // Open the chatbot
-            setIsWaitingForWakeWord(false);
-            setIsListening(true);
-            
-            // Start listening for the actual command after wake word
-            setTimeout(() => {
-              if (recognitionRef.current) {
-                recognitionRef.current.stop();
-                recognitionRef.current.start();
-              }
-            }, 500);
-          } else if (event.results[last].isFinal && transcript.length > 0) {
-            // Even without wake word, allow voice typing if chatbot is open
-            console.log('Voice input without wake word, chatbot open:', isOpen);
-            if (isOpen) {
-              setInputValue(transcript);
-              setIsWaitingForWakeWord(false);
-              setIsListening(false);
-              
-              // Auto-send the message
-              setTimeout(() => {
-                handleSendMessage();
-              }, 100);
-            }
+            setIsOpen(true);
+            setInputValue(''); // Clear the wake word from input
+            return;
           }
-        } else if (isListening) {
-          // Process the command if it's final
-          if (event.results[last].isFinal && transcript.length > 0) {
-            console.log('Processing voice command:', transcript);
-            setInputValue(transcript);
-            setIsListening(false);
-            
-            // Auto-send the message
+        }
+        
+        // If chatbot is open and speech is final, auto-send (optional)
+        if (isOpen && isFinal && transcript.trim().length > 0) {
+          // Don't auto-send if it's just the wake word
+          const cleanTranscript = transcript.toLowerCase().trim();
+          if (!cleanTranscript.includes('hey intellyca') && !cleanTranscript.includes('intellyca')) {
+            console.log('Auto-sending voice message:', transcript);
             setTimeout(() => {
               handleSendMessage();
-            }, 100);
+            }, 500);
           }
         }
       };
@@ -141,8 +124,8 @@ export function FloatingChatbot() {
           clearTimeout(restartTimeoutRef.current);
         }
         
-        if (isVoiceEnabled && (isWaitingForWakeWord || isListening)) {
-          // Restart with a delay to avoid conflicts
+        // Always restart if voice is enabled (simplified logic)
+        if (isVoiceEnabled) {
           restartTimeoutRef.current = setTimeout(() => {
             if (isVoiceEnabled && !isRecognitionActive && recognitionRef.current) {
               try {
@@ -160,7 +143,8 @@ export function FloatingChatbot() {
         console.error('Speech recognition error:', event.error);
         console.log('Error details:', event);
         setIsRecognitionActive(false);
-        setIsListening(false);
+      setIsListening(false);
+      setIsWaitingForWakeWord(false);
         
         // Don't restart on abort errors to prevent loops
         if (event.error === 'aborted') {
@@ -169,7 +153,7 @@ export function FloatingChatbot() {
         }
         
         if (isVoiceEnabled) {
-          setIsWaitingForWakeWord(true);
+          // Simplified: just restart if voice is still enabled
           // Clear any pending restarts
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
@@ -205,17 +189,14 @@ export function FloatingChatbot() {
       // Turn off voice recognition
       console.log('Turning OFF voice recognition');
       setIsVoiceEnabled(false);
-      setIsListening(false);
-      setIsWaitingForWakeWord(false);
       setIsRecognitionActive(false);
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
     } else {
-      // Turn on voice recognition - always start listening
+      // Turn on voice recognition
       console.log('Turning ON voice recognition');
       setIsVoiceEnabled(true);
-      setIsWaitingForWakeWord(true);
       if (recognitionRef.current && !isRecognitionActive) {
         try {
           recognitionRef.current.start();
