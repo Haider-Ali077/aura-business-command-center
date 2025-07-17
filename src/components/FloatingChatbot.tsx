@@ -76,10 +76,15 @@ export function FloatingChatbot() {
       recognitionRef.current.onresult = (event: any) => {
         const last = event.results.length - 1;
         const transcript = event.results[last][0].transcript.toLowerCase().trim();
+        console.log('Speech recognition transcript:', transcript);
+        console.log('isWaitingForWakeWord:', isWaitingForWakeWord);
+        console.log('isListening:', isListening);
+        console.log('isOpen:', isOpen);
         
         if (isWaitingForWakeWord) {
           // Check for wake word - if found, open chatbot and continue listening
           if (transcript.includes('hey intellyca') || transcript.includes('intellyca')) {
+            console.log('Wake word detected! Opening chatbot');
             setIsOpen(true); // Open the chatbot
             setIsWaitingForWakeWord(false);
             setIsListening(true);
@@ -93,6 +98,7 @@ export function FloatingChatbot() {
             }, 500);
           } else if (event.results[last].isFinal && transcript.length > 0) {
             // Even without wake word, allow voice typing if chatbot is open
+            console.log('Voice input without wake word, chatbot open:', isOpen);
             if (isOpen) {
               setInputValue(transcript);
               setIsWaitingForWakeWord(false);
@@ -107,6 +113,7 @@ export function FloatingChatbot() {
         } else if (isListening) {
           // Process the command if it's final
           if (event.results[last].isFinal && transcript.length > 0) {
+            console.log('Processing voice command:', transcript);
             setInputValue(transcript);
             setIsListening(false);
             
@@ -140,9 +147,20 @@ export function FloatingChatbot() {
       
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
+        console.log('Error details:', event);
         setIsListening(false);
         if (isVoiceEnabled) {
           setIsWaitingForWakeWord(true);
+          // Try to restart after error
+          setTimeout(() => {
+            if (recognitionRef.current && isVoiceEnabled) {
+              try {
+                recognitionRef.current.start();
+              } catch (e) {
+                console.error('Failed to restart recognition:', e);
+              }
+            }
+          }, 1000);
         }
       };
     }
@@ -156,6 +174,7 @@ export function FloatingChatbot() {
     
     if (isVoiceEnabled) {
       // Turn off voice recognition
+      console.log('Turning OFF voice recognition');
       setIsVoiceEnabled(false);
       setIsListening(false);
       setIsWaitingForWakeWord(false);
@@ -164,10 +183,16 @@ export function FloatingChatbot() {
       }
     } else {
       // Turn on voice recognition - always start listening
+      console.log('Turning ON voice recognition');
       setIsVoiceEnabled(true);
       setIsWaitingForWakeWord(true);
       if (recognitionRef.current) {
-        recognitionRef.current.start();
+        try {
+          recognitionRef.current.start();
+          console.log('Speech recognition started');
+        } catch (e) {
+          console.error('Failed to start speech recognition:', e);
+        }
       }
     }
   };
