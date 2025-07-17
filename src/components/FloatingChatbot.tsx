@@ -476,8 +476,8 @@ export function FloatingChatbot() {
 
           {!isMinimized && (
             <>
-              {/* Scrollable Messages Area with Horizontal Scroll */}
-              <ScrollArea className="flex-1 bg-gradient-to-b from-slate-50 to-white">
+              {/* Scrollable Messages Area with proper horizontal scrolling */}
+              <div className="flex-1 bg-gradient-to-b from-slate-50 to-white overflow-y-auto overflow-x-hidden">
                 <div className="p-3 space-y-3">
                   {messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -485,12 +485,14 @@ export function FloatingChatbot() {
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-slate-600 to-slate-700'}`}>
                           {msg.type === 'user' ? <User className="h-3 w-3 text-white" /> : <Bot className="h-3 w-3 text-white" />}
                         </div>
-                        <div className={`p-2 rounded-lg shadow-sm ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
-                          <p className="text-xs whitespace-pre-wrap break-words">{msg.content}</p>
+                        <div className={`p-2 rounded-lg shadow-sm min-w-0 ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
+                          <div className="overflow-x-auto">
+                            <p className="text-xs whitespace-pre-wrap break-words">{msg.content}</p>
+                          </div>
                           {msg.chart && (
                             <div className="mt-2">
                               <div className="w-full h-48 bg-slate-50 rounded-lg p-2 border overflow-x-auto">
-                                <div className="w-full h-full min-w-[320px]">
+                                <div className="min-w-[320px] h-full">
                                   <ResponsiveContainer width="100%" height="100%">
                                     {renderChart(msg.chart)}
                                   </ResponsiveContainer>
@@ -529,7 +531,7 @@ export function FloatingChatbot() {
                   )}
                   <div ref={messagesEndRef} />
                 </div>
-              </ScrollArea>
+              </div>
 
               {/* Dashboard Selection Modal */}
               {showDashboardSelect && pendingChart && (
