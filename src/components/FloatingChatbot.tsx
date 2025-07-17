@@ -78,8 +78,9 @@ export function FloatingChatbot() {
         const transcript = event.results[last][0].transcript.toLowerCase().trim();
         
         if (isWaitingForWakeWord) {
-          // Check for wake word
+          // Check for wake word - if found, open chatbot and continue listening
           if (transcript.includes('hey intellyca') || transcript.includes('intellyca')) {
+            setIsOpen(true); // Open the chatbot
             setIsWaitingForWakeWord(false);
             setIsListening(true);
             
@@ -90,6 +91,18 @@ export function FloatingChatbot() {
                 recognitionRef.current.start();
               }
             }, 500);
+          } else if (event.results[last].isFinal && transcript.length > 0) {
+            // Even without wake word, allow voice typing if chatbot is open
+            if (isOpen) {
+              setInputValue(transcript);
+              setIsWaitingForWakeWord(false);
+              setIsListening(false);
+              
+              // Auto-send the message
+              setTimeout(() => {
+                handleSendMessage();
+              }, 100);
+            }
           }
         } else if (isListening) {
           // Process the command if it's final
@@ -150,7 +163,7 @@ export function FloatingChatbot() {
         recognitionRef.current.stop();
       }
     } else {
-      // Turn on voice recognition
+      // Turn on voice recognition - always start listening
       setIsVoiceEnabled(true);
       setIsWaitingForWakeWord(true);
       if (recognitionRef.current) {
