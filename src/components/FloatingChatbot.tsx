@@ -410,7 +410,6 @@ export function FloatingChatbot() {
               outerRadius={80}
               fill="#3b82f6"
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              labelStyle={{ fontSize: '10px', fill: '#374151' }}
             />
           </PieChart>
         );
