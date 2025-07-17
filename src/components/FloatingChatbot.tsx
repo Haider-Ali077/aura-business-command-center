@@ -90,7 +90,7 @@ export function FloatingChatbot() {
           
           // If not open, check for wake word to open chatbot
           if (!isOpen) {
-            if (transcript.toLowerCase().includes('hey intellyca') || transcript.toLowerCase().includes('intellyca')) {
+            if (transcript.toLowerCase().includes('hey agent')) {
               console.log('Wake word detected! Opening chatbot');
               setIsOpen(true);
               setInputValue(''); // Clear the wake word from input
@@ -102,7 +102,7 @@ export function FloatingChatbot() {
           if (isOpen && transcript.trim().length > 0) {
             // Don't show wake word in input
             const cleanTranscript = transcript.toLowerCase().trim();
-            if (!cleanTranscript.includes('hey intellyca') && !cleanTranscript.includes('intellyca')) {
+            if (!cleanTranscript.includes('hey agent')) {
               console.log('Voice input complete - ready for manual send:', transcript);
               // Transcript is already set above
             } else {
@@ -145,8 +145,6 @@ export function FloatingChatbot() {
         console.error('Speech recognition error:', event.error);
         console.log('Error details:', event);
         setIsRecognitionActive(false);
-      setIsListening(false);
-      setIsWaitingForWakeWord(false);
         
         // Don't restart on abort errors to prevent loops
         if (event.error === 'aborted') {
@@ -413,10 +411,10 @@ export function FloatingChatbot() {
                 size="sm" 
                 onClick={toggleVoiceRecognition}
                 className={`text-white p-1 relative ${isVoiceEnabled ? 'bg-white/20' : ''}`}
-                title={isVoiceEnabled ? 'Voice commands ON - Say "Hey Intellyca"' : 'Enable voice commands'}
+                title={isVoiceEnabled ? 'Voice commands ON - Say "Hey Agent"' : 'Enable voice commands'}
               >
                 {isVoiceEnabled ? (
-                  <Mic className={`h-3 w-3 ${isListening ? 'text-red-300 animate-pulse' : isWaitingForWakeWord ? 'text-green-300 animate-pulse' : ''}`} />
+                  <Mic className={`h-3 w-3 ${isRecognitionActive ? 'text-green-300 animate-pulse' : ''}`} />
                 ) : (
                   <MicOff className="h-3 w-3" />
                 )}
