@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus } from "lucide-react";
+import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useTenantStore } from "@/store/tenantStore";
@@ -52,11 +52,112 @@ export function FloatingChatbot() {
   const [selectedDashboard, setSelectedDashboard] = useState<string>('');
   const [showDashboardSelect, setShowDashboardSelect] = useState(false);
   const [pendingChart, setPendingChart] = useState<ChartData | null>(null);
+  
+  // Voice recognition states
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isWaitingForWakeWord, setIsWaitingForWakeWord] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const { addWidget } = useWidgetStore();
   const { session } = useAuthStore();
   const { currentSession } = useTenantStore();
   const { getAccessibleModules } = useRoleStore();
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+      
+      recognitionRef.current.onresult = (event: any) => {
+        const last = event.results.length - 1;
+        const transcript = event.results[last][0].transcript.toLowerCase().trim();
+        
+        if (isWaitingForWakeWord) {
+          // Check for wake word
+          if (transcript.includes('hey intellyca') || transcript.includes('intellyca')) {
+            setIsWaitingForWakeWord(false);
+            setIsListening(true);
+            
+            // Start listening for the actual command after wake word
+            setTimeout(() => {
+              if (recognitionRef.current) {
+                recognitionRef.current.stop();
+                recognitionRef.current.start();
+              }
+            }, 500);
+          }
+        } else if (isListening) {
+          // Process the command if it's final
+          if (event.results[last].isFinal && transcript.length > 0) {
+            setInputValue(transcript);
+            setIsListening(false);
+            
+            // Auto-send the message
+            setTimeout(() => {
+              handleSendMessage();
+            }, 100);
+          }
+        }
+      };
+      
+      recognitionRef.current.onend = () => {
+        if (isVoiceEnabled && isWaitingForWakeWord) {
+          // Keep listening for wake word
+          setTimeout(() => {
+            if (recognitionRef.current && isVoiceEnabled) {
+              recognitionRef.current.start();
+            }
+          }, 100);
+        } else if (isVoiceEnabled && isListening) {
+          setIsListening(false);
+          setIsWaitingForWakeWord(true);
+          // Restart listening for wake word
+          setTimeout(() => {
+            if (recognitionRef.current && isVoiceEnabled) {
+              recognitionRef.current.start();
+            }
+          }, 100);
+        }
+      };
+      
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (isVoiceEnabled) {
+          setIsWaitingForWakeWord(true);
+        }
+      };
+    }
+  }, [isVoiceEnabled, isWaitingForWakeWord, isListening]);
+
+  const toggleVoiceRecognition = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+    
+    if (isVoiceEnabled) {
+      // Turn off voice recognition
+      setIsVoiceEnabled(false);
+      setIsListening(false);
+      setIsWaitingForWakeWord(false);
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    } else {
+      // Turn on voice recognition
+      setIsVoiceEnabled(true);
+      setIsWaitingForWakeWord(true);
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+      }
+    }
+  };
 
   const handleAddToDashboard = (chart: ChartData) => {
     const accessibleModules = getAccessibleModules();
@@ -256,6 +357,22 @@ export function FloatingChatbot() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleVoiceRecognition}
+                className={`text-white p-1 relative ${isVoiceEnabled ? 'bg-white/20' : ''}`}
+                title={isVoiceEnabled ? 'Voice commands ON - Say "Hey Intellyca"' : 'Enable voice commands'}
+              >
+                {isVoiceEnabled ? (
+                  <Mic className={`h-3 w-3 ${isListening ? 'text-red-300 animate-pulse' : isWaitingForWakeWord ? 'text-green-300 animate-pulse' : ''}`} />
+                ) : (
+                  <MicOff className="h-3 w-3" />
+                )}
+                {isVoiceEnabled && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                )}
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => setIsMinimized(!isMinimized)} className="text-white p-0">
                 {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
               </Button>
@@ -360,12 +477,28 @@ export function FloatingChatbot() {
 
               {/* Input Box Fixed at Bottom */}
               <div className="p-3 border-t border-slate-200 bg-white">
+                {/* Voice Status Indicator */}
+                {isVoiceEnabled && (
+                  <div className="mb-2 text-xs text-center">
+                    {isWaitingForWakeWord && (
+                      <span className="text-green-600 animate-pulse">
+                        🎤 Listening for "Hey Intellyca"...
+                      </span>
+                    )}
+                    {isListening && (
+                      <span className="text-red-600 animate-pulse">
+                        🔴 Recording your command...
+                      </span>
+                    )}
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Ask Intellyca about your business data..."
+                    placeholder={isVoiceEnabled ? 'Say "Hey Intellyca" or type here...' : 'Ask Intellyca about your business data...'}
                     disabled={isLoading}
                     className="flex-1 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg text-sm"
                   />
