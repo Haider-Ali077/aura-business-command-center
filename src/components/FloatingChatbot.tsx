@@ -339,22 +339,50 @@ export function FloatingChatbot() {
     switch (chart.chart_type) {
       case 'bar':
         return (
-          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+          <BarChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey={chart.xLabel} tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ fontSize: '12px' }} />
-            <Bar dataKey={chart.yLabel} fill="#3b82f6" barSize={20} radius={[2, 2, 0, 0]} />
+            <XAxis 
+              dataKey={chart.xLabel} 
+              tick={{ fontSize: 11 }} 
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip 
+              contentStyle={{ 
+                fontSize: '12px', 
+                backgroundColor: 'white', 
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }} 
+            />
+            <Bar dataKey={chart.yLabel} fill="#3b82f6" barSize={30} radius={[4, 4, 0, 0]} />
           </BarChart>
         );
       case 'line':
         return (
-          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey={chart.xLabel} tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ fontSize: '12px' }} />
-            <Line type="monotone" dataKey={chart.yLabel} stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+            <XAxis 
+              dataKey={chart.xLabel} 
+              tick={{ fontSize: 11 }} 
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip 
+              contentStyle={{ 
+                fontSize: '12px', 
+                backgroundColor: 'white', 
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }} 
+            />
+            <Line type="monotone" dataKey={chart.yLabel} stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} />
           </LineChart>
         );
       case 'pie':
@@ -364,16 +392,25 @@ export function FloatingChatbot() {
         }));
         return (
           <PieChart>
-            <Tooltip contentStyle={{ fontSize: '12px' }} />
+            <Tooltip 
+              contentStyle={{ 
+                fontSize: '12px', 
+                backgroundColor: 'white', 
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }} 
+            />
             <Pie
               data={pieData}
               dataKey="value"
               nameKey="name"
               cx="50%"
               cy="50%"
-              outerRadius={60}
+              outerRadius={80}
               fill="#3b82f6"
-              label={false}
+              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              labelStyle={{ fontSize: '10px', fill: '#374151' }}
             />
           </PieChart>
         );
@@ -393,7 +430,7 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-80 shadow-xl flex flex-col transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
+        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
           {/* Header */}
           <div className="p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -437,24 +474,26 @@ export function FloatingChatbot() {
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-50 to-white">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex max-w-[85%] gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex max-w-[90%] gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-slate-600 to-slate-700'}`}>
                         {msg.type === 'user' ? <User className="h-4 w-4 text-white" /> : <Bot className="h-4 w-4 text-white" />}
                       </div>
                       <div className={`p-3 rounded-xl shadow-sm ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
                         <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
                         {msg.chart && (
-                          <div className="mt-2">
-                            <div className="w-full h-[180px] bg-slate-50 rounded-lg p-2 border">
-                              <ResponsiveContainer width="100%" height="100%">
-                                {renderChart(msg.chart)}
-                              </ResponsiveContainer>
+                          <div className="mt-3">
+                            <div className="w-full h-[280px] bg-slate-50 rounded-lg p-3 border overflow-auto">
+                              <div className="w-full h-full min-w-[300px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  {renderChart(msg.chart)}
+                                </ResponsiveContainer>
+                              </div>
                             </div>
-                            <div className="mt-2 flex justify-end">
+                            <div className="mt-3 flex justify-end">
                               <Button
                                 size="sm"
                                 onClick={() => handleAddToDashboard(msg.chart!)}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 h-7"
                               >
                                 <Plus className="h-3 w-3 mr-1" />
                                 Add to Dashboard
