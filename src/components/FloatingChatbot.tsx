@@ -57,7 +57,9 @@ export function FloatingChatbot() {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isWaitingForWakeWord, setIsWaitingForWakeWord] = useState(false);
+  const [isRecognitionActive, setIsRecognitionActive] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const restartTimeoutRef = useRef<any>(null);
 
   const { addWidget } = useWidgetStore();
   const { session } = useAuthStore();
@@ -125,42 +127,64 @@ export function FloatingChatbot() {
         }
       };
       
+      recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started successfully');
+        setIsRecognitionActive(true);
+      };
+      
       recognitionRef.current.onend = () => {
-        if (isVoiceEnabled && isWaitingForWakeWord) {
-          // Keep listening for wake word
-          setTimeout(() => {
-            if (recognitionRef.current && isVoiceEnabled) {
-              recognitionRef.current.start();
+        console.log('Speech recognition ended');
+        setIsRecognitionActive(false);
+        
+        // Clear any pending restart timeouts
+        if (restartTimeoutRef.current) {
+          clearTimeout(restartTimeoutRef.current);
+        }
+        
+        if (isVoiceEnabled && (isWaitingForWakeWord || isListening)) {
+          // Restart with a delay to avoid conflicts
+          restartTimeoutRef.current = setTimeout(() => {
+            if (isVoiceEnabled && !isRecognitionActive && recognitionRef.current) {
+              try {
+                console.log('Restarting speech recognition...');
+                recognitionRef.current.start();
+              } catch (e) {
+                console.error('Failed to restart recognition:', e);
+              }
             }
-          }, 100);
-        } else if (isVoiceEnabled && isListening) {
-          setIsListening(false);
-          setIsWaitingForWakeWord(true);
-          // Restart listening for wake word
-          setTimeout(() => {
-            if (recognitionRef.current && isVoiceEnabled) {
-              recognitionRef.current.start();
-            }
-          }, 100);
+          }, 500);
         }
       };
       
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         console.log('Error details:', event);
+        setIsRecognitionActive(false);
         setIsListening(false);
+        
+        // Don't restart on abort errors to prevent loops
+        if (event.error === 'aborted') {
+          console.log('Recognition aborted - not restarting to prevent loops');
+          return;
+        }
+        
         if (isVoiceEnabled) {
           setIsWaitingForWakeWord(true);
-          // Try to restart after error
-          setTimeout(() => {
-            if (recognitionRef.current && isVoiceEnabled) {
+          // Clear any pending restarts
+          if (restartTimeoutRef.current) {
+            clearTimeout(restartTimeoutRef.current);
+          }
+          // Try to restart after a longer delay for errors
+          restartTimeoutRef.current = setTimeout(() => {
+            if (isVoiceEnabled && !isRecognitionActive && recognitionRef.current) {
               try {
+                console.log('Restarting after error...');
                 recognitionRef.current.start();
               } catch (e) {
-                console.error('Failed to restart recognition:', e);
+                console.error('Failed to restart after error:', e);
               }
             }
-          }, 1000);
+          }, 1500);
         }
       };
     }
@@ -172,12 +196,18 @@ export function FloatingChatbot() {
       return;
     }
     
+    // Clear any pending timeouts
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+    }
+    
     if (isVoiceEnabled) {
       // Turn off voice recognition
       console.log('Turning OFF voice recognition');
       setIsVoiceEnabled(false);
       setIsListening(false);
       setIsWaitingForWakeWord(false);
+      setIsRecognitionActive(false);
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -186,7 +216,7 @@ export function FloatingChatbot() {
       console.log('Turning ON voice recognition');
       setIsVoiceEnabled(true);
       setIsWaitingForWakeWord(true);
-      if (recognitionRef.current) {
+      if (recognitionRef.current && !isRecognitionActive) {
         try {
           recognitionRef.current.start();
           console.log('Speech recognition started');
