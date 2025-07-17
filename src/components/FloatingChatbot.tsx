@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
@@ -60,11 +61,17 @@ export function FloatingChatbot() {
   const [isRecognitionActive, setIsRecognitionActive] = useState(false);
   const recognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { addWidget } = useWidgetStore();
   const { session } = useAuthStore();
   const { currentSession } = useTenantStore();
   const { getAccessibleModules } = useRoleStore();
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -429,9 +436,9 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
-          {/* Header */}
-          <div className="p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between">
+        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
+          {/* Fixed Header */}
+          <div className="p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                 <Bot className="h-5 w-5" />
@@ -469,61 +476,64 @@ export function FloatingChatbot() {
 
           {!isMinimized && (
             <>
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-50 to-white">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex max-w-[90%] gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-slate-600 to-slate-700'}`}>
-                        {msg.type === 'user' ? <User className="h-4 w-4 text-white" /> : <Bot className="h-4 w-4 text-white" />}
-                      </div>
-                      <div className={`p-3 rounded-xl shadow-sm ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
-                        <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
-                        {msg.chart && (
-                          <div className="mt-3">
-                            <div className="w-full h-[280px] bg-slate-50 rounded-lg p-3 border overflow-auto">
-                              <div className="w-full h-full min-w-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  {renderChart(msg.chart)}
-                                </ResponsiveContainer>
+              {/* Scrollable Messages Area */}
+              <ScrollArea className="flex-1 bg-gradient-to-b from-slate-50 to-white">
+                <div className="p-4 space-y-4">
+                  {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex max-w-[90%] gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-slate-600 to-slate-700'}`}>
+                          {msg.type === 'user' ? <User className="h-4 w-4 text-white" /> : <Bot className="h-4 w-4 text-white" />}
+                        </div>
+                        <div className={`p-3 rounded-xl shadow-sm ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
+                          <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
+                          {msg.chart && (
+                            <div className="mt-3">
+                              <div className="w-full h-[300px] bg-slate-50 rounded-lg p-3 border overflow-auto">
+                                <div className="w-full h-full min-w-[350px]">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    {renderChart(msg.chart)}
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
+                              <div className="mt-3 flex justify-end">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAddToDashboard(msg.chart!)}
+                                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 h-7"
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add to Dashboard
+                                </Button>
                               </div>
                             </div>
-                            <div className="mt-3 flex justify-end">
-                              <Button
-                                size="sm"
-                                onClick={() => handleAddToDashboard(msg.chart!)}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 h-7"
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add to Dashboard
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                        <p className="text-xs mt-1 text-slate-500">{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          )}
+                          <p className="text-xs mt-1 text-slate-500">{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-2 items-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="p-3 rounded-xl bg-white border border-slate-200">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-100" />
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200" />
+                  ))}
+                  {isLoading && (
+                    <div className="flex gap-2 items-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="p-3 rounded-xl bg-white border border-slate-200">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-100" />
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
 
               {/* Dashboard Selection Modal */}
               {showDashboardSelect && pendingChart && (
-                <div className="p-3 border-t border-slate-200 bg-blue-50">
+                <div className="p-3 border-t border-slate-200 bg-blue-50 flex-shrink-0">
                   <div className="text-xs font-medium mb-2">Select Dashboard:</div>
                   <div className="flex gap-2">
                     <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
@@ -562,21 +572,14 @@ export function FloatingChatbot() {
                 </div>
               )}
 
-              {/* Input Box Fixed at Bottom */}
-              <div className="p-3 border-t border-slate-200 bg-white">
+              {/* Fixed Input Box at Bottom */}
+              <div className="p-3 border-t border-slate-200 bg-white flex-shrink-0">
                 {/* Voice Status Indicator */}
                 {isVoiceEnabled && (
                   <div className="mb-2 text-xs text-center">
-                    {isWaitingForWakeWord && (
-                      <span className="text-green-600 animate-pulse">
-                        🎤 Listening for "Hey Intellyca"...
-                      </span>
-                    )}
-                    {isListening && (
-                      <span className="text-red-600 animate-pulse">
-                        🔴 Recording your command...
-                      </span>
-                    )}
+                    <span className="text-green-600 animate-pulse">
+                      🎤 Voice commands enabled - Say "Hey Agent"
+                    </span>
                   </div>
                 )}
                 
@@ -585,7 +588,7 @@ export function FloatingChatbot() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder={isVoiceEnabled ? 'Say "Hey Intellyca" or type here...' : 'Ask Intellyca about your business data...'}
+                    placeholder={isVoiceEnabled ? 'Say "Hey Agent" or type here...' : 'Ask Intellyca about your business data...'}
                     disabled={isLoading}
                     className="flex-1 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg text-sm"
                   />
