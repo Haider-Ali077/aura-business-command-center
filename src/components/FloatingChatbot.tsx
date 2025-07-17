@@ -476,7 +476,7 @@ export function FloatingChatbot() {
 
           {!isMinimized && (
             <>
-              {/* Scrollable Messages Area */}
+              {/* Scrollable Messages Area with Horizontal Scroll */}
               <ScrollArea className="flex-1 bg-gradient-to-b from-slate-50 to-white">
                 <div className="p-3 space-y-3">
                   {messages.map((msg) => (
@@ -486,11 +486,11 @@ export function FloatingChatbot() {
                           {msg.type === 'user' ? <User className="h-3 w-3 text-white" /> : <Bot className="h-3 w-3 text-white" />}
                         </div>
                         <div className={`p-2 rounded-lg shadow-sm ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
-                          <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-xs whitespace-pre-wrap break-words">{msg.content}</p>
                           {msg.chart && (
                             <div className="mt-2">
-                              <div className="w-full h-48 bg-slate-50 rounded-lg p-2 border overflow-auto">
-                                <div className="w-full h-full min-w-[280px]">
+                              <div className="w-full h-48 bg-slate-50 rounded-lg p-2 border overflow-x-auto">
+                                <div className="w-full h-full min-w-[320px]">
                                   <ResponsiveContainer width="100%" height="100%">
                                     {renderChart(msg.chart)}
                                   </ResponsiveContainer>
