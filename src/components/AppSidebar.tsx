@@ -337,15 +337,12 @@ export function AppSidebar() {
       <SidebarContent className="bg-white border-r border-gray-200 transition-all duration-300">
         {/* Header */}
         <div className="py-4 px-3 border-b border-gray-100">
-          <div className="flex items-center ">
-            <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-11" />
-            {/* <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-              <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-10" />
-            </div> */}
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-11 flex-shrink-0" />
             {!collapsed && (
-              <div>
-                <h1 className="font-bold text-lg text-gray-900">Intellyca</h1>
-                <p className="text-gray-500 text-sm">ERP Intelligence</p>
+              <div className="min-w-0">
+                <h1 className="font-bold text-lg text-gray-900 truncate">Intellyca</h1>
+                <p className="text-gray-500 text-sm truncate">ERP Intelligence</p>
               </div>
             )}
           </div>
@@ -369,16 +366,16 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={module.id}>
                       <SidebarMenuButton asChild className="p-0">
-                        <NavLink
-                          to={moduleUrl}
-                          className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none ${
-                            collapsed ? "justify-center px-2" : ""
-                          } ${
-                            active
-                              ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md"
-                              : "text-gray-800 bg-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-indigo-600 hover:text-white"
-                          }`}
-                        >
+                         <NavLink
+                           to={moduleUrl}
+                           className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                             collapsed ? "justify-center px-2" : ""
+                           } ${
+                             active
+                               ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md"
+                               : "text-gray-800 bg-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-indigo-600 hover:text-white"
+                           }`}
+                         >
                           <div
                             className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
                               active ? "bg-white/20" : "bg-white/50"
@@ -386,11 +383,11 @@ export function AppSidebar() {
                           >
                             <IconComponent className="h-5 w-5" />
                           </div>
-                          {!collapsed && (
-                            <span className="font-medium text-sm">
-                              {module.name}
-                            </span>
-                          )}
+                           {!collapsed && (
+                             <span className="font-medium text-sm truncate">
+                               {module.name}
+                             </span>
+                           )}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -408,18 +405,18 @@ export function AppSidebar() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild className="p-0">
-                    <NavLink
-                      to={settingsItem.url}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none ${
-                        collapsed ? "justify-center px-2" : ""
-                      } ${
-                        isActive(settingsItem.url)
-                          ? `bg-gradient-to-r ${settingsItem.gradient} text-white shadow-md`
-                          : `text-gray-800 bg-white hover:bg-gradient-to-r hover:${settingsItem.gradient
-                              .split(" ")
-                              .join(" hover:")} hover:text-white`
-                      }`}
-                    >
+                     <NavLink
+                       to={settingsItem.url}
+                       className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                         collapsed ? "justify-center px-2" : ""
+                       } ${
+                         isActive(settingsItem.url)
+                           ? `bg-gradient-to-r ${settingsItem.gradient} text-white shadow-md`
+                           : `text-gray-800 bg-white hover:bg-gradient-to-r hover:${settingsItem.gradient
+                               .split(" ")
+                               .join(" hover:")} hover:text-white`
+                       }`}
+                     >
                       <div
                         className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
                           isActive(settingsItem.url) ? "bg-white/20" : "bg-white/50"
@@ -427,11 +424,11 @@ export function AppSidebar() {
                       >
                         <settingsItem.icon className="h-5 w-5" />
                       </div>
-                      {!collapsed && (
-                        <span className="font-medium text-sm">
-                          {settingsItem.title}
-                        </span>
-                      )}
+                       {!collapsed && (
+                         <span className="font-medium text-sm truncate">
+                           {settingsItem.title}
+                         </span>
+                       )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -442,8 +439,8 @@ export function AppSidebar() {
 
         {/* Footer */}
         {!collapsed && (
-          <div className="mt-auto p-4 border-t border-gray-100 text-center">
-            <p className="text-gray-500 text-xs">Powered by Technaptix</p>
+          <div className="p-4 border-t border-gray-100 text-center">
+            <p className="text-gray-500 text-xs truncate">Powered by Technaptix</p>
             <p className="text-gray-400 text-xs mt-1">v2.1.0</p>
           </div>
         )}

@@ -22,20 +22,24 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
+    <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-4 md:px-6">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0">
         <SidebarTrigger />
-        <SearchDropdown />
+        <div className="hidden sm:block">
+          <SearchDropdown />
+        </div>
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0">
         <AlertsDropdown />
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="text-sm font-medium">{session?.user.email}</span>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 min-w-0">
+              <User className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm font-medium hidden md:inline-block truncate max-w-32 lg:max-w-none">
+                {session?.user.email}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
