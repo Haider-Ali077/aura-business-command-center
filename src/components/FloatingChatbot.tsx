@@ -97,15 +97,13 @@ export function FloatingChatbot() {
           }
         }
         
-        // If chatbot is open and speech is final, auto-send (optional)
+        // If chatbot is open and speech is final, just set the input (don't auto-send)
         if (isOpen && isFinal && transcript.trim().length > 0) {
           // Don't auto-send if it's just the wake word
           const cleanTranscript = transcript.toLowerCase().trim();
           if (!cleanTranscript.includes('hey intellyca') && !cleanTranscript.includes('intellyca')) {
-            console.log('Auto-sending voice message:', transcript);
-            setTimeout(() => {
-              handleSendMessage();
-            }, 500);
+            console.log('Voice input complete - ready for manual send:', transcript);
+            // Just keep the transcript in the input field for user to review/send manually
           }
         }
       };
