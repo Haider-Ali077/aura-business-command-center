@@ -84,26 +84,30 @@ export function FloatingChatbot() {
         console.log('isFinal:', isFinal);
         console.log('isOpen:', isOpen);
         
-        // Show transcription in input field in real-time
-        setInputValue(transcript);
-        
-        // If not open, check for wake word to open chatbot
-        if (!isOpen) {
-          if (transcript.toLowerCase().includes('hey intellyca') || transcript.toLowerCase().includes('intellyca')) {
-            console.log('Wake word detected! Opening chatbot');
-            setIsOpen(true);
-            setInputValue(''); // Clear the wake word from input
-            return;
+        // Only show transcription in input field when speech is final (not during speaking)
+        if (isFinal) {
+          setInputValue(transcript);
+          
+          // If not open, check for wake word to open chatbot
+          if (!isOpen) {
+            if (transcript.toLowerCase().includes('hey intellyca') || transcript.toLowerCase().includes('intellyca')) {
+              console.log('Wake word detected! Opening chatbot');
+              setIsOpen(true);
+              setInputValue(''); // Clear the wake word from input
+              return;
+            }
           }
-        }
-        
-        // If chatbot is open and speech is final, just set the input (don't auto-send)
-        if (isOpen && isFinal && transcript.trim().length > 0) {
-          // Don't auto-send if it's just the wake word
-          const cleanTranscript = transcript.toLowerCase().trim();
-          if (!cleanTranscript.includes('hey intellyca') && !cleanTranscript.includes('intellyca')) {
-            console.log('Voice input complete - ready for manual send:', transcript);
-            // Just keep the transcript in the input field for user to review/send manually
+          
+          // If chatbot is open and speech is final, just set the input (don't auto-send)
+          if (isOpen && transcript.trim().length > 0) {
+            // Don't show wake word in input
+            const cleanTranscript = transcript.toLowerCase().trim();
+            if (!cleanTranscript.includes('hey intellyca') && !cleanTranscript.includes('intellyca')) {
+              console.log('Voice input complete - ready for manual send:', transcript);
+              // Transcript is already set above
+            } else {
+              setInputValue(''); // Clear wake word
+            }
           }
         }
       };
