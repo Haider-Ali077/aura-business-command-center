@@ -12,8 +12,8 @@ import { useRoleStore } from "@/store/roleStore";
 import { dataService } from "@/services/dataService";
 import {
   BarChart, Bar,
-  LineChart, Line,
-  PieChart, Pie,
+  LineChart, Line, Area,
+  PieChart, Pie, Cell,
   XAxis, YAxis,
   CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -343,70 +343,133 @@ export function FloatingChatbot() {
       [chart.yLabel]: chart.y[idx],
     }));
 
+    // Professional color palette
+    const colors = [
+      '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', 
+      '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
+    ];
+
     switch (chart.chart_type) {
       case 'bar':
         return (
-          <BarChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 40 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <defs>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9}/>
+                <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.7}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
             <XAxis 
               dataKey={chart.xLabel} 
-              tick={{ fontSize: 11 }} 
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
               angle={-45}
               textAnchor="end"
               height={60}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+              tickLine={{ stroke: 'hsl(var(--border))' }}
             />
-            <YAxis tick={{ fontSize: 11 }} />
+            <YAxis 
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+              tickLine={{ stroke: 'hsl(var(--border))' }}
+            />
             <Tooltip 
               contentStyle={{ 
                 fontSize: '12px', 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
+                backgroundColor: 'hsl(var(--popover))', 
+                border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-              }} 
+                boxShadow: '0 10px 30px -10px hsl(var(--foreground) / 0.1)',
+                color: 'hsl(var(--popover-foreground))'
+              }}
+              cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
             />
-            <Bar dataKey={chart.yLabel} fill="#3b82f6" barSize={30} radius={[4, 4, 0, 0]} />
+            <Bar 
+              dataKey={chart.yLabel} 
+              fill="url(#barGradient)" 
+              barSize={30} 
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         );
       case 'line':
         return (
-          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 40 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <defs>
+              <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10B981" stopOpacity={0.3}/>
+                <stop offset="100%" stopColor="#10B981" stopOpacity={0.05}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
             <XAxis 
               dataKey={chart.xLabel} 
-              tick={{ fontSize: 11 }} 
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
               angle={-45}
               textAnchor="end"
               height={60}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+              tickLine={{ stroke: 'hsl(var(--border))' }}
             />
-            <YAxis tick={{ fontSize: 11 }} />
+            <YAxis 
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+              tickLine={{ stroke: 'hsl(var(--border))' }}
+            />
             <Tooltip 
               contentStyle={{ 
                 fontSize: '12px', 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
+                backgroundColor: 'hsl(var(--popover))', 
+                border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-              }} 
+                boxShadow: '0 10px 30px -10px hsl(var(--foreground) / 0.1)',
+                color: 'hsl(var(--popover-foreground))'
+              }}
+              cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted-foreground))' }}
             />
-            <Line type="monotone" dataKey={chart.yLabel} stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} />
+            <Area 
+              type="monotone" 
+              dataKey={chart.yLabel} 
+              fill="url(#lineGradient)" 
+              stroke="none"
+            />
+            <Line 
+              type="monotone" 
+              dataKey={chart.yLabel} 
+              stroke="#10B981" 
+              strokeWidth={3} 
+              dot={{ r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#ffffff' }}
+              activeDot={{ r: 6, fill: '#059669', strokeWidth: 2, stroke: '#ffffff' }}
+            />
           </LineChart>
         );
       case 'pie':
         const pieData = chart.x.map((label, idx) => ({
           name: label,
           value: chart.y[idx],
+          color: colors[idx % colors.length]
         }));
         return (
           <PieChart>
+            <defs>
+              {pieData.map((entry, index) => (
+                <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
+                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.7}/>
+                </linearGradient>
+              ))}
+            </defs>
             <Tooltip 
               contentStyle={{ 
                 fontSize: '12px', 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
+                backgroundColor: 'hsl(var(--popover))', 
+                border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-              }} 
+                boxShadow: '0 10px 30px -10px hsl(var(--foreground) / 0.1)',
+                color: 'hsl(var(--popover-foreground))'
+              }}
+              formatter={(value, name) => [`${value}`, name]}
             />
             <Pie
               data={pieData}
@@ -414,10 +477,15 @@ export function FloatingChatbot() {
               nameKey="name"
               cx="50%"
               cy="50%"
-              outerRadius={80}
-              fill="#3b82f6"
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-            />
+              outerRadius={85}
+              innerRadius={25}
+              paddingAngle={2}
+              label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(1)}%`}
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={`url(#pieGradient-${index})`} />
+              ))}
+            </Pie>
           </PieChart>
         );
       default:
@@ -496,20 +564,23 @@ export function FloatingChatbot() {
                           </div>
                         </div>
                         {message.chart && (
-                          <div className="mt-3 bg-card border border-border rounded-lg p-3 overflow-x-auto">
-                            <h4 className="text-sm font-medium mb-2 text-card-foreground">{message.chart.title}</h4>
-                            <div className="w-full h-48 min-w-[320px]">
+                          <div className="mt-4 bg-card border border-border rounded-lg p-4 overflow-x-auto shadow-sm">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-sm font-semibold text-card-foreground">{message.chart.title}</h4>
+                              <div className="w-2 h-2 bg-primary rounded-full"></div>
+                            </div>
+                            <div className="w-full h-52 min-w-[360px] bg-background/50 rounded-lg p-2">
                               <ResponsiveContainer width="100%" height="100%">
                                 {renderChart(message.chart)}
                               </ResponsiveContainer>
                             </div>
-                            <div className="flex justify-end mt-2">
+                            <div className="flex justify-end mt-3 pt-3 border-t border-border">
                               <Button 
                                 size="sm" 
                                 onClick={() => handleAddToDashboard(message.chart!)}
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 shadow-sm"
                               >
-                                <Plus className="h-3 w-3 mr-1" />
+                                <Plus className="h-3 w-3 mr-1.5" />
                                 Add to Dashboard
                               </Button>
                             </div>
