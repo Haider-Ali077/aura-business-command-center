@@ -436,7 +436,7 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-80 shadow-xl flex flex-col transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
+        <Card className={`w-80 shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
           {/* Fixed Header */}
           <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -477,54 +477,54 @@ export function FloatingChatbot() {
           {!isMinimized && (
             <>
               {/* Scrollable Messages Area with proper horizontal scrolling */}
-              <div className="flex-1 bg-gradient-to-b from-slate-50 to-white overflow-y-auto overflow-x-hidden">
-                <div className="p-3 space-y-3">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`flex max-w-[85%] gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-slate-600 to-slate-700'}`}>
-                          {msg.type === 'user' ? <User className="h-3 w-3 text-white" /> : <Bot className="h-3 w-3 text-white" />}
-                        </div>
-                        <div className={`p-2 rounded-lg shadow-sm min-w-0 ${msg.type === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-800'}`}>
-                          <div className="overflow-x-auto">
-                            <p className="text-xs whitespace-pre-wrap break-words">{msg.content}</p>
-                          </div>
-                          {msg.chart && (
-                            <div className="mt-2">
-                              <div className="w-full h-48 bg-slate-50 rounded-lg p-2 border overflow-x-auto">
-                                <div className="min-w-[320px] h-full">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    {renderChart(msg.chart)}
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
-                              <div className="mt-2 flex justify-end">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleAddToDashboard(msg.chart!)}
-                                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6"
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Add to Dashboard
-                                </Button>
-                              </div>
-                            </div>
+              <div className="flex-1 p-4 overflow-x-auto overflow-y-auto bg-background max-h-96">
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+                      <div className={`max-w-[80%] p-3 rounded-lg overflow-x-auto ${
+                        message.type === 'user' 
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground border border-border'
+                      }`}>
+                        <div className="flex items-start gap-2 mb-2">
+                          {message.type === 'bot' && (
+                            <Bot className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
                           )}
-                          <p className="text-xs mt-1 text-slate-500">{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          <div className="flex-1">
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{message.timestamp.toLocaleTimeString()}</p>
+                          </div>
                         </div>
+                        {message.chart && (
+                          <div className="mt-3 bg-card border border-border rounded-lg p-3 overflow-x-auto">
+                            <h4 className="text-sm font-medium mb-2 text-card-foreground">{message.chart.title}</h4>
+                            <div className="w-full h-48 min-w-[320px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                {renderChart(message.chart)}
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="flex justify-end mt-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleAddToDashboard(message.chart!)}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add to Dashboard
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                   {isLoading && (
-                    <div className="flex gap-2 items-center">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-3 w-3 text-white" />
-                      </div>
-                      <div className="p-2 rounded-lg bg-white border border-slate-200">
+                    <div className="flex justify-start mb-4">
+                      <div className="bg-muted border border-border p-3 rounded-lg">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-100" />
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200" />
+                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce delay-100"></div>
+                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce delay-200"></div>
                         </div>
                       </div>
                     </div>
@@ -533,71 +533,66 @@ export function FloatingChatbot() {
                 </div>
               </div>
 
-              {/* Dashboard Selection Modal */}
-              {showDashboardSelect && pendingChart && (
-                <div className="p-2 border-t border-slate-200 bg-blue-50 flex-shrink-0">
-                  <div className="text-xs font-medium mb-2">Select Dashboard:</div>
-                  <div className="flex gap-2">
-                    <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
-                      <SelectTrigger className="flex-1 h-7 text-xs">
-                        <SelectValue placeholder="Choose dashboard" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAccessibleModules().map((module) => (
-                          <SelectItem key={module.id} value={module.id} className="text-xs">
-                            {module.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      size="sm" 
-                      onClick={() => selectedDashboard && confirmAddToDashboard(pendingChart, selectedDashboard)}
-                      disabled={!selectedDashboard}
-                      className="h-7 px-2 text-xs"
-                    >
-                      Add
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowDashboardSelect(false);
-                        setPendingChart(null);
-                        setSelectedDashboard('');
-                      }}
-                      className="h-7 px-2 text-xs"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Fixed Input Box at Bottom */}
-              <div className="p-2 border-t border-slate-200 bg-white flex-shrink-0">
-                {/* Voice Status Indicator */}
-                {isVoiceEnabled && (
-                  <div className="mb-1 text-xs text-center">
-                    <span className="text-green-600 animate-pulse">
-                      🎤 Voice enabled - Say "Hey Agent"
-                    </span>
-                  </div>
-                )}
-                
+              {/* Input Area */}
+              <div className="p-3 border-t border-border bg-background flex-shrink-0">
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder={isVoiceEnabled ? 'Say "Hey Agent" or type...' : 'Ask Intellyca...'}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask me anything about your business data..."
+                    className="flex-1 text-sm bg-background border-border text-foreground"
                     disabled={isLoading}
-                    className="flex-1 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg text-xs h-8"
                   />
-                  <Button onClick={handleSendMessage} disabled={isLoading} className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg px-3 h-8">
-                    <Send className="h-3 w-3" />
+                  <Button 
+                    onClick={handleSendMessage} 
+                    disabled={isLoading || !inputValue.trim()}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    size="sm"
+                  >
+                    <Send className="h-4 w-4" />
                   </Button>
                 </div>
+                
+                {showDashboardSelect && (
+                  <div className="mt-2 p-3 bg-muted border border-border rounded-lg">
+                    <p className="text-sm font-medium mb-2 text-foreground">Select Dashboard:</p>
+                    <div className="flex gap-2">
+                      <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
+                        <SelectTrigger className="flex-1 text-xs bg-background border-border">
+                          <SelectValue placeholder="Choose dashboard" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAccessibleModules().map((module) => (
+                            <SelectItem key={module.id} value={module.id} className="text-xs">
+                              {module.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        size="sm" 
+                        onClick={() => confirmAddToDashboard(pendingChart!, selectedDashboard)}
+                        disabled={!selectedDashboard}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+                      >
+                        Add
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowDashboardSelect(false);
+                          setPendingChart(null);
+                          setSelectedDashboard('');
+                        }}
+                        className="text-xs"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
