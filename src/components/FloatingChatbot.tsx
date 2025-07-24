@@ -545,7 +545,7 @@ export function FloatingChatbot() {
           {!isMinimized && (
             <>
               {/* Scrollable Messages Area with proper horizontal scrolling */}
-              <div className="flex-1 p-4 overflow-x-auto overflow-y-auto bg-background max-h-96">
+              <div className="flex-1 p-4 overflow-x-auto overflow-y-auto bg-white dark:bg-background max-h-96">
                 <div className="space-y-4">
                   {messages.map((message) => (
                     <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -556,29 +556,29 @@ export function FloatingChatbot() {
                       }`}>
                         <div className="flex items-start gap-2 mb-2">
                           {message.type === 'bot' && (
-                            <Bot className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                            <Bot className="h-4 w-4 mt-0.5 text-blue-600 dark:text-primary flex-shrink-0" />
                           )}
                           <div className="flex-1">
                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{message.timestamp.toLocaleTimeString()}</p>
+                            <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">{message.timestamp.toLocaleTimeString()}</p>
                           </div>
                         </div>
                         {message.chart && (
-                          <div className="mt-4 bg-card border border-border rounded-lg p-4 overflow-x-auto shadow-sm">
+                          <div className="mt-4 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-lg p-4 overflow-x-auto shadow-sm">
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-sm font-semibold text-card-foreground">{message.chart.title}</h4>
-                              <div className="w-2 h-2 bg-primary rounded-full"></div>
+                              <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
+                              <div className="w-2 h-2 bg-blue-600 dark:bg-primary rounded-full"></div>
                             </div>
-                            <div className="w-full h-52 min-w-[360px] bg-background/50 rounded-lg p-2">
+                            <div className="w-full h-52 min-w-[360px] bg-gray-50 dark:bg-background/50 rounded-lg p-2">
                               <ResponsiveContainer width="100%" height="100%">
                                 {renderChart(message.chart)}
                               </ResponsiveContainer>
                             </div>
-                            <div className="flex justify-end mt-3 pt-3 border-t border-border">
+                            <div className="flex justify-end mt-3 pt-3 border-t border-gray-200 dark:border-border">
                               <Button 
                                 size="sm" 
                                 onClick={() => handleAddToDashboard(message.chart!)}
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 shadow-sm"
+                                className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground text-xs px-3 py-1.5 shadow-sm"
                               >
                                 <Plus className="h-3 w-3 mr-1.5" />
                                 Add to Dashboard
@@ -591,11 +591,11 @@ export function FloatingChatbot() {
                   ))}
                   {isLoading && (
                     <div className="flex justify-start mb-4">
-                      <div className="bg-muted border border-border p-3 rounded-lg">
+                      <div className="bg-gray-100 dark:bg-muted border dark:border-border p-3 rounded-lg">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce delay-100"></div>
-                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce delay-200"></div>
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-primary/60 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-primary/60 rounded-full animate-bounce delay-100"></div>
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-primary/60 rounded-full animate-bounce delay-200"></div>
                         </div>
                       </div>
                     </div>
@@ -605,20 +605,20 @@ export function FloatingChatbot() {
               </div>
 
               {/* Input Area */}
-              <div className="p-3 border-t border-border bg-background flex-shrink-0">
+              <div className="p-3 border-t border-gray-200 dark:border-border bg-white dark:bg-background flex-shrink-0">
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Ask me anything about your business data..."
-                    className="flex-1 text-sm bg-background border-border text-foreground"
+                    className="flex-1 text-sm bg-white dark:bg-background border-gray-200 dark:border-border text-gray-900 dark:text-foreground"
                     disabled={isLoading}
                   />
                   <Button 
                     onClick={handleSendMessage} 
                     disabled={isLoading || !inputValue.trim()}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground"
                     size="sm"
                   >
                     <Send className="h-4 w-4" />
@@ -626,11 +626,11 @@ export function FloatingChatbot() {
                 </div>
                 
                 {showDashboardSelect && (
-                  <div className="mt-2 p-3 bg-muted border border-border rounded-lg">
-                    <p className="text-sm font-medium mb-2 text-foreground">Select Dashboard:</p>
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg">
+                    <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">Select Dashboard:</p>
                     <div className="flex gap-2">
                       <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
-                        <SelectTrigger className="flex-1 text-xs bg-background border-border">
+                        <SelectTrigger className="flex-1 text-xs bg-white dark:bg-background border-gray-200 dark:border-border">
                           <SelectValue placeholder="Choose dashboard" />
                         </SelectTrigger>
                         <SelectContent>
@@ -645,7 +645,7 @@ export function FloatingChatbot() {
                         size="sm" 
                         onClick={() => confirmAddToDashboard(pendingChart!, selectedDashboard)}
                         disabled={!selectedDashboard}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+                        className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground text-xs"
                       >
                         Add
                       </Button>
