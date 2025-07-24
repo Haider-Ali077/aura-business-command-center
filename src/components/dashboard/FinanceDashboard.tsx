@@ -87,8 +87,8 @@ export function FinanceDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Finance Analytics</h1>
-            <p className="text-gray-600 mt-2">Financial performance and cash flow analysis</p>
+            <h1 className="text-3xl font-bold text-foreground">Finance Analytics</h1>
+            <p className="text-muted-foreground mt-2">Financial performance and cash flow analysis</p>
           </div>
           <Button 
             onClick={refreshData} 
@@ -106,11 +106,11 @@ export function FinanceDashboard() {
         {metrics.map((metric, index) => (
           <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">{metric.title}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
               <metric.icon className={`h-4 w-4 ${metric.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{metric.value}</div>
+              <div className="text-2xl font-bold text-foreground">{metric.value}</div>
               <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {metric.change > 0 ? '+' : ''}{metric.change}% from last month
               </p>

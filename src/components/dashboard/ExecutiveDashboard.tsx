@@ -78,8 +78,8 @@ export function ExecutiveDashboard() {
       <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Executive Dashboard</h1>
-          <p className="text-gray-600 mt-2">High-level overview of company performance</p>
+          <h1 className="text-3xl font-bold text-foreground">Executive Dashboard</h1>
+          <p className="text-muted-foreground mt-2">High-level overview of company performance</p>
         </div>
         <Button 
           onClick={refreshData} 
@@ -97,11 +97,11 @@ export function ExecutiveDashboard() {
         {kpis.map((kpi, index) => (
           <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">{kpi.title}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
               <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{kpi.value}</div>
+              <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
               <div className="flex items-center mt-1">
                 {kpi.change > 0 ? (
                   <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
