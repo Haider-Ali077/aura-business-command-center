@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff } from "lucide-react";
+import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff, RefreshCw } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useTenantStore } from "@/store/tenantStore";
@@ -38,16 +38,39 @@ interface Message {
 }
 
 export function FloatingChatbot() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  // Load initial state from localStorage if available
+  const loadInitialMessages = () => {
+    try {
+      const saved = localStorage.getItem('intellyca-chat-messages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading chat messages:', error);
+    }
+    
+    return [{
       id: '1',
-      type: 'bot',
+      type: 'bot' as const,
       content: `Hello! I'm Intellyca, your AI-powered business intelligence assistant. What would you like to explore today?`,
       timestamp: new Date(),
-    },
-  ]);
+    }];
+  };
+
+  const [isOpen, setIsOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem('intellyca-chat-open');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(loadInitialMessages);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDashboard, setSelectedDashboard] = useState<string>('');
@@ -67,6 +90,24 @@ export function FloatingChatbot() {
   const { session } = useAuthStore();
   const { currentSession } = useTenantStore();
   const { getAccessibleModules } = useRoleStore();
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    try {
+      localStorage.setItem('intellyca-chat-messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Error saving chat messages:', error);
+    }
+  }, [messages]);
+
+  // Save isOpen state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('intellyca-chat-open', JSON.stringify(isOpen));
+    } catch (error) {
+      console.error('Error saving chat open state:', error);
+    }
+  }, [isOpen]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -274,6 +315,21 @@ export function FloatingChatbot() {
       };
       
       setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const clearChatHistory = () => {
+    const initialMessage = {
+      id: '1',
+      type: 'bot' as const,
+      content: `Hello! I'm Intellyca, your AI-powered business intelligence assistant. What would you like to explore today?`,
+      timestamp: new Date(),
+    };
+    setMessages([initialMessage]);
+    try {
+      localStorage.removeItem('intellyca-chat-messages');
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
     }
   };
 
@@ -532,6 +588,15 @@ export function FloatingChatbot() {
                 {isVoiceEnabled && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearChatHistory}
+                className="text-white p-1"
+                title="Clear chat history"
+              >
+                <RefreshCw className="h-3 w-3" />
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setIsMinimized(!isMinimized)} className="text-white p-0">
                 {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
