@@ -334,15 +334,15 @@ export function AppSidebar() {
       className={`transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}
       collapsible="icon"
     >
-      <SidebarContent className="bg-white border-r border-gray-200 transition-all duration-300">
+      <SidebarContent className="bg-sidebar-background border-r border-sidebar-border transition-all duration-300">
         {/* Header */}
-        <div className="py-4 px-3 border-b border-gray-100">
+        <div className="py-4 px-3 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Intellyca Logo" className="w-6 h-11 flex-shrink-0" />
             {!collapsed && (
               <div className="min-w-0">
-                <h1 className="font-bold text-lg text-gray-900 truncate">Intellyca</h1>
-                <p className="text-gray-500 text-sm truncate">ERP Intelligence</p>
+                <h1 className="font-bold text-lg text-sidebar-foreground truncate">Intellyca</h1>
+                <p className="text-sidebar-foreground/70 text-sm truncate">ERP Intelligence</p>
               </div>
             )}
           </div>
@@ -351,7 +351,7 @@ export function AppSidebar() {
         {/* Role-Based Dashboards */}
         {accessibleModules.length > 0 && (
           <SidebarGroup className="px-3 py-4">
-            <SidebarGroupLabel className="text-gray-600 uppercase tracking-wide text-xs font-medium mb-3">
+            <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wide text-xs font-medium mb-3">
               {!collapsed && "Dashboards"}
             </SidebarGroupLabel>
             
@@ -370,17 +370,17 @@ export function AppSidebar() {
                            to={moduleUrl}
                            className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
                              collapsed ? "justify-center px-2" : ""
-                           } ${
-                             active
-                               ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md"
-                               : "text-gray-800 bg-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-indigo-600 hover:text-white"
-                           }`}
-                         >
-                          <div
-                            className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
-                              active ? "bg-white/20" : "bg-white/50"
+                            } ${
+                              active
+                                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             }`}
-                          >
+                         >
+                           <div
+                             className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                               active ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                             }`}
+                           >
                             <IconComponent className="h-5 w-5" />
                           </div>
                            {!collapsed && (
@@ -409,19 +409,17 @@ export function AppSidebar() {
                        to={settingsItem.url}
                        className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
                          collapsed ? "justify-center px-2" : ""
-                       } ${
-                         isActive(settingsItem.url)
-                           ? `bg-gradient-to-r ${settingsItem.gradient} text-white shadow-md`
-                           : `text-gray-800 bg-white hover:bg-gradient-to-r hover:${settingsItem.gradient
-                               .split(" ")
-                               .join(" hover:")} hover:text-white`
-                       }`}
-                     >
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
-                          isActive(settingsItem.url) ? "bg-white/20" : "bg-white/50"
+                        } ${
+                          isActive(settingsItem.url)
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         }`}
-                      >
+                     >
+                       <div
+                         className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                           isActive(settingsItem.url) ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                         }`}
+                       >
                         <settingsItem.icon className="h-5 w-5" />
                       </div>
                        {!collapsed && (
@@ -439,9 +437,9 @@ export function AppSidebar() {
 
         {/* Footer */}
         {!collapsed && (
-          <div className="p-4 border-t border-gray-100 text-center">
-            <p className="text-gray-500 text-xs truncate">Powered by Technaptix</p>
-            <p className="text-gray-400 text-xs mt-1">v2.1.0</p>
+          <div className="p-4 border-t border-sidebar-border text-center">
+            <p className="text-sidebar-foreground/70 text-xs truncate">Powered by Technaptix</p>
+            <p className="text-sidebar-foreground/50 text-xs mt-1">v2.1.0</p>
           </div>
         )}
       </SidebarContent>
