@@ -548,19 +548,19 @@ export function FloatingChatbot() {
               <div className="flex-1 p-4 overflow-x-auto overflow-y-auto bg-white dark:bg-background max-h-96">
                 <div className="space-y-4">
                   {messages.map((message) => (
-                    <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-                      <div className={`max-w-[80%] p-3 rounded-lg overflow-x-auto ${
-                        message.type === 'user' 
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground border border-border'
-                      }`}>
+                     <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+                       <div className={`max-w-[80%] p-3 rounded-lg overflow-x-auto ${
+                         message.type === 'user' 
+                           ? 'bg-blue-100 text-blue-900 dark:bg-blue-600 dark:text-white'
+                           : 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-muted-foreground border dark:border-border'
+                       }`}>
                         <div className="flex items-start gap-2 mb-2">
                           {message.type === 'bot' && (
                             <Bot className="h-4 w-4 mt-0.5 text-blue-600 dark:text-primary flex-shrink-0" />
                           )}
-                          <div className="flex-1">
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                            <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">{message.timestamp.toLocaleTimeString()}</p>
+                           <div className="flex-1">
+                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                             <p className="text-xs opacity-70 mt-1">{message.timestamp.toLocaleTimeString()}</p>
                           </div>
                         </div>
                         {message.chart && (
