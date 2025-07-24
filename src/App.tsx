@@ -24,12 +24,10 @@ function App() {
 
   if (!session) {
     return (
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <LoginForm />
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoginForm />
         <Toaster />
-      </ThemeProvider>
+      </div>
     );
   }
 
@@ -40,14 +38,11 @@ function App() {
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard/executive" replace />} />
-              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
               <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
               <Route path="/dashboard/finance" element={<FinanceDashboard />} />
               <Route path="/dashboard/sales" element={<SalesDashboard />} />
               <Route path="/dashboard/inventory" element={<InventoryDashboard />} />
               <Route path="/dashboard/hr" element={<HRDashboard />} />
-              {/* <Route path="/analytics" element={<Analytics />} /> */}
-              {/* <Route path="/reports" element={<Reports />} /> */}
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
