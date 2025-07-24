@@ -148,7 +148,7 @@ export function DocumentManagement() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <CardTitle className="text-lg md:text-xl">Document Management</CardTitle>
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-muted-foreground text-sm md:text-base">
               Upload and manage your business documents
             </p>
           </div>
@@ -163,10 +163,10 @@ export function DocumentManagement() {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 text-center hover:border-blue-400 transition-colors">
-          <Upload className="h-8 w-8 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">Upload Documents</h3>
-          <p className="text-gray-600 mb-4 text-sm md:text-base">Drag and drop your files here, or click to browse</p>
+        <div className="border-2 border-dashed border-border rounded-lg p-6 md:p-8 text-center hover:border-primary transition-colors">
+          <Upload className="h-8 w-8 md:h-12 md:w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-base md:text-lg font-medium text-foreground mb-2">Upload Documents</h3>
+          <p className="text-muted-foreground mb-4 text-sm md:text-base">Drag and drop your files here, or click to browse</p>
           <input
             type="file"
             multiple
@@ -177,24 +177,24 @@ export function DocumentManagement() {
             disabled={isLoading}
           />
           <label htmlFor="file-upload">
-            <Button className="bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
               {isLoading ? "Uploading..." : "Choose Files"}
             </Button>
           </label>
-          <p className="text-xs text-gray-500 mt-2">Supports PDF, DOC, DOCX, XLS, XLSX, TXT files</p>
+          <p className="text-xs text-muted-foreground mt-2">Supports PDF, DOC, DOCX, XLS, XLSX, TXT files</p>
         </div>
 
         <div className="space-y-4">
           {documents.map((doc) => (
-            <div key={doc.id} className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border border-gray-200 rounded-lg gap-4">
+            <div key={doc.id} className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border border-border rounded-lg gap-4">
               <div className="flex items-center gap-4 min-w-0 flex-1">
-                <File className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+                <File className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-gray-900 truncate">{doc.name}</h4>
-                  <p className="text-xs md:text-sm text-gray-600">
+                  <h4 className="font-medium text-foreground truncate">{doc.name}</h4>
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {doc.size} • {doc.type} • {doc.uploadDate}
                   </p>
-                  <p className="text-xs text-gray-500">Uploaded by: {doc.uploadedBy}</p>
+                  <p className="text-xs text-muted-foreground">Uploaded by: {doc.uploadedBy}</p>
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">
@@ -215,7 +215,7 @@ export function DocumentManagement() {
             </div>
           ))}
           {documents.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No documents available.
             </div>
           )}
