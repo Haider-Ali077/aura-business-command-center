@@ -268,7 +268,16 @@ export function FloatingChatbot() {
 
   const confirmAddToDashboard = async (chart: ChartData, dashboardId: string) => {
     try {
-      if (!session?.user.tenant_id) throw new Error('No tenant session');
+      if (!session?.user.tenant_id) {
+        console.error('No tenant session found');
+        return;
+      }
+
+      const tenantId = parseInt(session.user.tenant_id);
+      if (isNaN(tenantId)) {
+        console.error('Invalid tenant ID:', session.user.tenant_id);
+        return;
+      }
 
       // Add widget to selected dashboard
       const newWidget = {
@@ -285,7 +294,7 @@ export function FloatingChatbot() {
         }
       };
       
-      await addWidget(newWidget, parseInt(session.user.tenant_id), dashboardId);
+      await addWidget(newWidget, tenantId, dashboardId);
       
       // Show success message
       const dashboardName = getAccessibleModules().find(m => m.id === dashboardId)?.name || dashboardId;
