@@ -33,7 +33,7 @@ export function ExecutiveDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(parseInt(session.user.tenant_id), 'executive');
+      fetchWidgets(session.user.tenant_id, 'executive');
     }
   }, [session]);
 

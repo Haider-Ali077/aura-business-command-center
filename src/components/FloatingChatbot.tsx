@@ -273,12 +273,6 @@ export function FloatingChatbot() {
         return;
       }
 
-      const tenantId = parseInt(session.user.tenant_id);
-      if (isNaN(tenantId)) {
-        console.error('Invalid tenant ID:', session.user.tenant_id);
-        return;
-      }
-
       // Add widget to selected dashboard
       const newWidget = {
         id: `chart-${Date.now()}`,
@@ -294,7 +288,7 @@ export function FloatingChatbot() {
         }
       };
       
-      await addWidget(newWidget, tenantId, dashboardId);
+      await addWidget(newWidget, session.user.tenant_id, dashboardId);
       
       // Show success message
       const dashboardName = getAccessibleModules().find(m => m.id === dashboardId)?.name || dashboardId;

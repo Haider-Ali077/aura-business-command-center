@@ -42,7 +42,7 @@ const Analytics = () => {
       sqlQuery: `SELECT 'Sample' as name, 100 as value`
     };
     if (session?.user.tenant_id) {
-      addWidget(newWidget, Number(session.user.tenant_id), dashboard);
+      addWidget(newWidget, session.user.tenant_id, dashboard);
     }
   };
 

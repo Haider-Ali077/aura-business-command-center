@@ -35,7 +35,7 @@ export function HRDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(parseInt(session.user.tenant_id), 'hr');
+      fetchWidgets(session.user.tenant_id, 'hr');
     }
   }, [session]);
 

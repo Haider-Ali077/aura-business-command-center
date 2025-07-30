@@ -34,7 +34,7 @@ export function SalesDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(parseInt(session.user.tenant_id), 'sales');
+      fetchWidgets(session.user.tenant_id, 'sales');
     }
   }, [session]);
 

@@ -121,8 +121,8 @@ export interface Widget {
 interface WidgetStore {
   widgets: Widget[];
   loading: boolean;
-  fetchWidgets: (tenantId: number, dashboard: string) => Promise<void>;
-  addWidget: (widget: Widget, tenantId: number, dashboard: string) => Promise<void>;
+  fetchWidgets: (tenantId: string, dashboard: string) => Promise<void>;
+  addWidget: (widget: Widget, tenantId: string, dashboard: string) => Promise<void>;
   removeWidget: (id: string) => void;
   updateWidget: (id: string, updates: Partial<Widget>) => void;
   moveWidget: (id: string, position: { x: number; y: number }) => void;

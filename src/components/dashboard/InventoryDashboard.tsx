@@ -34,7 +34,7 @@ export function InventoryDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(parseInt(session.user.tenant_id), 'inventory');
+      fetchWidgets(session.user.tenant_id, 'inventory');
     }
   }, [session]);
 
