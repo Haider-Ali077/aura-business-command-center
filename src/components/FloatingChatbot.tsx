@@ -408,82 +408,82 @@ export function FloatingChatbot() {
     switch (chart.chart_type) {
       case 'bar':
         return (
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-            <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9}/>
-                <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.7}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-            <XAxis 
-              dataKey={chart.xLabel} 
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
-              angle={-45}
-              textAnchor="end"
-              height={60}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickLine={{ stroke: 'hsl(var(--border))' }}
-            />
-            <YAxis 
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickLine={{ stroke: 'hsl(var(--border))' }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                fontSize: '12px', 
-                backgroundColor: 'hsl(var(--popover))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 10px 30px -10px hsl(var(--foreground) / 0.1)',
-                color: 'hsl(var(--popover-foreground))'
-              }}
-              cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
-            />
-            <Bar 
-              dataKey={chart.yLabel} 
-              fill="url(#barGradient)" 
-              barSize={30} 
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 40 }}>
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9}/>
+                  <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.7}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+              <XAxis 
+                dataKey={chart.xLabel} 
+                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} 
+                angle={-35}
+                textAnchor="end"
+                height={35}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
+              />
+              <YAxis 
+                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  fontSize: '10px', 
+                  backgroundColor: 'hsl(var(--popover))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)',
+                  color: 'hsl(var(--popover-foreground))'
+                }}
+                cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
+              />
+              <Bar 
+                dataKey={chart.yLabel} 
+                fill="url(#barGradient)" 
+                barSize={20} 
+                radius={[2, 2, 0, 0]}
+              />
+            </BarChart>
         );
       case 'line':
         return (
-          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-            <defs>
-              <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10B981" stopOpacity={0.3}/>
-                <stop offset="100%" stopColor="#10B981" stopOpacity={0.05}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-            <XAxis 
-              dataKey={chart.xLabel} 
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
-              angle={-45}
-              textAnchor="end"
-              height={60}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickLine={{ stroke: 'hsl(var(--border))' }}
-            />
-            <YAxis 
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickLine={{ stroke: 'hsl(var(--border))' }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                fontSize: '12px', 
-                backgroundColor: 'hsl(var(--popover))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 10px 30px -10px hsl(var(--foreground) / 0.1)',
-                color: 'hsl(var(--popover-foreground))'
-              }}
-              cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted-foreground))' }}
-            />
+            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 40 }}>
+              <defs>
+                <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity={0.3}/>
+                  <stop offset="100%" stopColor="#10B981" stopOpacity={0.05}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+              <XAxis 
+                dataKey={chart.xLabel} 
+                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} 
+                angle={-35}
+                textAnchor="end"
+                height={35}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
+              />
+              <YAxis 
+                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  fontSize: '10px', 
+                  backgroundColor: 'hsl(var(--popover))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)',
+                  color: 'hsl(var(--popover-foreground))'
+                }}
+                cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted-foreground))' }}
+              />
             <Area 
               type="monotone" 
               dataKey={chart.yLabel} 
@@ -516,27 +516,27 @@ export function FloatingChatbot() {
                 </linearGradient>
               ))}
             </defs>
-            <Tooltip 
-              contentStyle={{ 
-                fontSize: '12px', 
-                backgroundColor: 'hsl(var(--popover))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 10px 30px -10px hsl(var(--foreground) / 0.1)',
-                color: 'hsl(var(--popover-foreground))'
-              }}
-              formatter={(value, name) => [`${value}`, name]}
-            />
+              <Tooltip 
+                contentStyle={{ 
+                  fontSize: '10px', 
+                  backgroundColor: 'hsl(var(--popover))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px hsl(var(--foreground) / 0.1)',
+                  color: 'hsl(var(--popover-foreground))'
+                }}
+                formatter={(value, name) => [`${value}`, name]}
+              />
             <Pie
               data={pieData}
               dataKey="value"
               nameKey="name"
               cx="50%"
               cy="50%"
-              outerRadius={85}
-              innerRadius={25}
-              paddingAngle={2}
-              label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(1)}%`}
+              outerRadius={50}
+              innerRadius={15}
+              paddingAngle={1}
+              label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
             >
               {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={`url(#pieGradient-${index})`} />
@@ -622,40 +622,35 @@ export function FloatingChatbot() {
                              <p className="text-xs text-blue-100 mt-1 opacity-80">{message.timestamp.toLocaleTimeString()}</p>
                            </div>
                          ) : (
-                           // Bot message - clean style with avatar
-                           <div className="flex items-start gap-3">
-                             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                               <Bot className="h-4 w-4 text-white" />
-                             </div>
-                              <div className="flex-1">
-                                <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
-                                  <p className="text-sm text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-2 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
-                                </div>
-                                {message.chart && (
-                                  <div className="mt-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-4 shadow-sm">
-                                    <div className="flex items-center justify-between mb-3">
-                                      <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
-                                      <div className="w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                                    </div>
-                                    <div className="w-full h-48 bg-gray-50/50 dark:bg-background/30 rounded-lg p-3">
-                                      <ResponsiveContainer width="100%" height="100%">
-                                        {renderChart(message.chart)}
-                                      </ResponsiveContainer>
-                                    </div>
-                                    <div className="flex justify-end mt-3 pt-3 border-t border-gray-100 dark:border-border">
-                                      <Button 
-                                        size="sm" 
-                                        onClick={() => handleAddToDashboard(message.chart!)}
-                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full"
-                                      >
-                                        <Plus className="h-3 w-3 mr-1.5" />
-                                        Add to Dashboard
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+            // Bot message - clean style without avatar
+                            <div className="w-full">
+                               <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
+                                 <p className="text-sm text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                 <p className="text-xs text-gray-500 dark:text-muted-foreground mt-2 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                               </div>
+                               {message.chart && (
+                                 <div className="mt-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-3 shadow-sm">
+                                   <div className="flex items-center justify-between mb-2">
+                                     <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
+                                     <div className="w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                   </div>
+                                   <div className="w-full h-40 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                       {renderChart(message.chart)}
+                                     </ResponsiveContainer>
+                                   </div>
+                                   <div className="flex justify-end mt-2 pt-2 border-t border-gray-100 dark:border-border">
+                                     <Button 
+                                       size="sm" 
+                                       onClick={() => handleAddToDashboard(message.chart!)}
+                                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full"
+                                     >
+                                       <Plus className="h-3 w-3 mr-1.5" />
+                                       Add to Dashboard
+                                     </Button>
+                                   </div>
+                                 </div>
+                               )}
                             </div>
                           )}
                         </div>
