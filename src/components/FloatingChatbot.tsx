@@ -399,10 +399,10 @@ export function FloatingChatbot() {
       [chart.yLabel]: chart.y[idx],
     }));
 
-    // Professional color palette
+    // SAP Joule AI inspired color palette
     const colors = [
-      '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', 
-      '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
+      '#6366F1', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', 
+      '#EF4444', '#EC4899', '#84CC16', '#F97316', '#3B82F6'
     ];
 
     switch (chart.chart_type) {
@@ -609,52 +609,59 @@ export function FloatingChatbot() {
 
           {!isMinimized && (
             <>
-              {/* Scrollable Messages Area with proper horizontal scrolling */}
-              <div className="flex-1 p-4 overflow-x-auto overflow-y-auto bg-white dark:bg-background max-h-96">
-                <div className="space-y-4">
+              {/* Messages Area - SAP Joule AI Style */}
+              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
+                <div className="space-y-3">
                   {messages.map((message) => (
-                     <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-                       <div className={`max-w-[80%] p-3 rounded-lg overflow-x-auto ${
-                         message.type === 'user' 
-                           ? 'bg-blue-100 text-blue-900 dark:bg-blue-600 dark:text-white'
-                           : 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-muted-foreground border dark:border-border'
-                       }`}>
-                        <div className="flex items-start gap-2 mb-2">
-                          {message.type === 'bot' && (
-                            <Bot className="h-4 w-4 mt-0.5 text-blue-600 dark:text-primary flex-shrink-0" />
+                     <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                       <div className={`max-w-[85%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                         {message.type === 'user' ? (
+                           // User message bubble - SAP Joule style
+                           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-4 py-3 shadow-sm">
+                             <p className="text-sm font-medium leading-relaxed">{message.content}</p>
+                             <p className="text-xs text-blue-100 mt-1 opacity-80">{message.timestamp.toLocaleTimeString()}</p>
+                           </div>
+                         ) : (
+                           // Bot message - clean style with avatar
+                           <div className="flex items-start gap-3">
+                             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                               <Bot className="h-4 w-4 text-white" />
+                             </div>
+                              <div className="flex-1">
+                                <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
+                                  <p className="text-sm text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-2 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                                </div>
+                                {message.chart && (
+                                  <div className="mt-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-4 shadow-sm">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
+                                      <div className="w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                    </div>
+                                    <div className="w-full h-48 bg-gray-50/50 dark:bg-background/30 rounded-lg p-3">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        {renderChart(message.chart)}
+                                      </ResponsiveContainer>
+                                    </div>
+                                    <div className="flex justify-end mt-3 pt-3 border-t border-gray-100 dark:border-border">
+                                      <Button 
+                                        size="sm" 
+                                        onClick={() => handleAddToDashboard(message.chart!)}
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full"
+                                      >
+                                        <Plus className="h-3 w-3 mr-1.5" />
+                                        Add to Dashboard
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           )}
-                           <div className="flex-1">
-                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                             <p className="text-xs opacity-70 mt-1">{message.timestamp.toLocaleTimeString()}</p>
-                          </div>
                         </div>
-                        {message.chart && (
-                          <div className="mt-4 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-lg p-4 overflow-x-auto shadow-sm">
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
-                              <div className="w-2 h-2 bg-blue-600 dark:bg-primary rounded-full"></div>
-                            </div>
-                            <div className="w-full h-52 min-w-[360px] bg-gray-50 dark:bg-background/50 rounded-lg p-2">
-                              <ResponsiveContainer width="100%" height="100%">
-                                {renderChart(message.chart)}
-                              </ResponsiveContainer>
-                            </div>
-                            <div className="flex justify-end mt-3 pt-3 border-t border-gray-200 dark:border-border">
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleAddToDashboard(message.chart!)}
-                                className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground text-xs px-3 py-1.5 shadow-sm"
-                              >
-                                <Plus className="h-3 w-3 mr-1.5" />
-                                Add to Dashboard
-                              </Button>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                  {isLoading && (
+                   ))}
+                   {isLoading && (
                     <div className="flex justify-start mb-4">
                       <div className="bg-gray-100 dark:bg-muted border dark:border-border p-3 rounded-lg">
                         <div className="flex space-x-1">
