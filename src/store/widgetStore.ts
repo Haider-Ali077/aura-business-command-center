@@ -137,7 +137,14 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   fetchWidgets: async (tenantId, dashboard) => {
     set({ loading: true });
     try {
-      const res = await fetch(`https://api.intellyca.com/widgets?tenant_id=${tenantId}&dashboard=${dashboard}`);
+      const res = await fetch('http://127.0.0.1:8000/widgetfetch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tenant_id: tenantId,
+        dashboard: dashboard,
+      }),
+    });
       const data = await res.json();
       const transformed = data.map((w: any) => ({
         ...w,
@@ -152,35 +159,40 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   },
 
   addWidget: async (widget, tenantId, dashboard) => {
-    try {
-      const payload = {
-        tenant_id: tenantId,
-        dashboard,
-        title: widget.title,
-        type: widget.type,
-        span: widget.span,
-        position_x: widget.position.x,
-        position_y: widget.position.y,
-        size_width: widget.size.width,
-        size_height: widget.size.height,
-        sql_query: widget.sqlQuery || '',
-      };
-      
-      const res = await fetch('https://api.intellyca.com/widgets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      
-      if (res.ok) {
-        set((state) => ({
-          widgets: [...state.widgets, widget],
-        }));
-      }
-    } catch (err) {
-      console.error("Failed to add widget", err);
+  try {
+    const payload = {
+      tenant_id: tenantId,
+      dashboard,
+      title: widget.title,
+      type: widget.type,
+      span: widget.span,
+      position_x: widget.position?.x ?? 0,
+      position_y: widget.position?.y ?? 0,
+      size_width: widget.size?.width ?? 1,
+      size_height: widget.size?.height ?? 1,
+      sql_query: widget.sqlQuery || '',
+    };
+
+    console.log("Final payload for backend:", payload); // Debug
+
+    const res = await fetch('http://127.0.0.1:8000/widgets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      set((state) => ({
+        widgets: [...state.widgets, widget],
+      }));
+    } else {
+      const errorText = await res.text();
+      console.error("Failed response:", errorText);
     }
-  },
+  } catch (err) {
+    console.error("Failed to add widget", err);
+  }
+},
 
   refreshData: async () => {
     const { widgets } = get();
@@ -189,7 +201,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       widgets.map(async (widget) => {
         if (widget.sqlQuery) {
           try {
-            const res = await fetch('https://api.intellyca.com/execute-sql', {
+            const res = await fetch('http://127.0.0.1:8000/execute-sql', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ query: widget.sqlQuery }),
