@@ -5,7 +5,7 @@ import { persist } from 'zustand/middleware';
 export interface User {
   user_id: number;
   email: string;
-  tenant_id: string; // This is the tenant name from the database query
+  tenant_id: number; // This is the tenant ID as an integer from the database
   role_name: string; // This is the role name from the database query
   is_active: boolean;
 }
