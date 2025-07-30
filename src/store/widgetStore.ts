@@ -130,18 +130,6 @@ interface WidgetStore {
   refreshData: () => Promise<void>;
 }
 
-// Helper function to convert string tenant ID to integer
-const getTenantIdAsNumber = (tenantId: string): number => {
-  // Simple mapping - you may need to adjust this based on your backend requirements
-  const tenantMap: { [key: string]: number } = {
-    'Company_A': 1,
-    'Company_B': 2,
-    'Company_C': 3,
-    // Add more mappings as needed
-  };
-  return tenantMap[tenantId] || 1; // Default to 1 if not found
-};
-
 export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   widgets: [],
   loading: false,
@@ -153,7 +141,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        tenant_id: getTenantIdAsNumber(tenantId),
+        tenant_id: tenantId,
         dashboard: dashboard,
       }),
     });
@@ -173,7 +161,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   addWidget: async (widget, tenantId, dashboard) => {
   try {
     const payload = {
-      tenant_id: getTenantIdAsNumber(tenantId),
+      tenant_id: tenantId,
       dashboard,
       title: widget.title,
       type: widget.type,
