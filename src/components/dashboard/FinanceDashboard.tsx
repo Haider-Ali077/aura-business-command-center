@@ -5,7 +5,7 @@ import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, Cartesia
 import { DollarSign, TrendingUp, CreditCard, PiggyBank, Calculator, Calendar, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
-import { useTenantStore } from "@/store/tenantStore";
+import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 
 interface FinanceMetric {
@@ -29,13 +29,13 @@ export function FinanceDashboard() {
   const [arAgingData, setArAgingData] = useState<ChartData[]>([]);
   
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
-  const { currentSession } = useTenantStore();
+  const { session } = useAuthStore();
 
   useEffect(() => {
-    if (currentSession?.tenantId) {
-      fetchWidgets(currentSession.tenantId, 'finance');
+    if (session?.user.tenant_id) {
+      fetchWidgets(parseInt(session.user.tenant_id), 'finance');
     }
-  }, [currentSession]);
+  }, [session]);
 
   useEffect(() => {
     setMetrics([

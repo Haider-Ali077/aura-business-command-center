@@ -5,7 +5,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { TrendingUp, Target, Users, Award, MapPin, Calendar, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
-import { useTenantStore } from "@/store/tenantStore";
+import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 
 interface SalesMetric {
@@ -30,13 +30,13 @@ export function SalesDashboard() {
   const [topCustomers, setTopCustomers] = useState<ChartData[]>([]);
   
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
-  const { currentSession } = useTenantStore();
+  const { session } = useAuthStore();
 
   useEffect(() => {
-    if (currentSession?.tenantId) {
-      fetchWidgets(currentSession.tenantId, 'sales');
+    if (session?.user.tenant_id) {
+      fetchWidgets(parseInt(session.user.tenant_id), 'sales');
     }
-  }, [currentSession]);
+  }, [session]);
 
   useEffect(() => {
     setMetrics([

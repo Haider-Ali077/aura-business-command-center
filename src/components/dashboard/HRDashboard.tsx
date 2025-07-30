@@ -5,7 +5,7 @@ import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, X
 import { Users, UserPlus, UserMinus, Clock, Target, TrendingUp, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
-import { useTenantStore } from "@/store/tenantStore";
+import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 
 interface HRMetric {
@@ -31,13 +31,13 @@ export function HRDashboard() {
   const [diversityData, setDiversityData] = useState<ChartData[]>([]);
   
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
-  const { currentSession } = useTenantStore();
+  const { session } = useAuthStore();
 
   useEffect(() => {
-    if (currentSession?.tenantId) {
-      fetchWidgets(currentSession.tenantId, 'hr');
+    if (session?.user.tenant_id) {
+      fetchWidgets(parseInt(session.user.tenant_id), 'hr');
     }
-  }, [currentSession]);
+  }, [session]);
 
   useEffect(() => {
     setMetrics([

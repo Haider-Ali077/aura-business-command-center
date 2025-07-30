@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, BarChart3, LineChart, PieChart, AreaChart } from "lucide-react";
 import { useRoleStore } from "@/store/roleStore";
-import { useTenantStore } from "@/store/tenantStore";
+import { useAuthStore } from "@/store/authStore";
 
 const availableWidgets = [
   { id: 'revenue', title: 'Revenue Trends', type: 'line', icon: LineChart, description: 'Track revenue over time' },
@@ -24,7 +24,7 @@ export function AddWidgetDialog({ onAddWidget }: AddWidgetDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedDashboard, setSelectedDashboard] = useState<string>("");
   const { getAccessibleModules } = useRoleStore();
-  const { currentSession } = useTenantStore();
+  const { session } = useAuthStore();
   
   const accessibleModules = getAccessibleModules();
 

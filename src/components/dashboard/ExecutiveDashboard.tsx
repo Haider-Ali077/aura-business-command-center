@@ -5,7 +5,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Package, UserCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { useWidgetStore } from "@/store/widgetStore";
-import { useTenantStore } from "@/store/tenantStore";
+import { useAuthStore } from "@/store/authStore";
 import { Layout } from "@/components/Layout";
 
 interface ExecutiveKPI {
@@ -29,13 +29,13 @@ export function ExecutiveDashboard() {
   const [trendData, setTrendData] = useState<ChartData[]>([]);
   
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
-  const { currentSession } = useTenantStore();
+  const { session } = useAuthStore();
 
   useEffect(() => {
-    if (currentSession?.tenantId) {
-      fetchWidgets(currentSession.tenantId, 'executive');
+    if (session?.user.tenant_id) {
+      fetchWidgets(parseInt(session.user.tenant_id), 'executive');
     }
-  }, [currentSession]);
+  }, [session]);
 
   useEffect(() => {
     // Mock data - replace with actual API calls

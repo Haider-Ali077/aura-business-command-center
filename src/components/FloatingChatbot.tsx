@@ -7,7 +7,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff, RefreshCw } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
-import { useTenantStore } from "@/store/tenantStore";
 import { useRoleStore } from "@/store/roleStore";
 import { dataService } from "@/services/dataService";
 import {
@@ -88,7 +87,6 @@ export function FloatingChatbot() {
 
   const { addWidget } = useWidgetStore();
   const { session } = useAuthStore();
-  const { currentSession } = useTenantStore();
   const { getAccessibleModules } = useRoleStore();
 
   // Save messages to localStorage whenever messages change
@@ -270,7 +268,7 @@ export function FloatingChatbot() {
 
   const confirmAddToDashboard = async (chart: ChartData, dashboardId: string) => {
     try {
-      if (!currentSession?.tenantId) throw new Error('No tenant session');
+      if (!session?.user.tenant_id) throw new Error('No tenant session');
 
       // Add widget to selected dashboard
       const newWidget = {
@@ -287,7 +285,7 @@ export function FloatingChatbot() {
         }
       };
       
-      await addWidget(newWidget, currentSession.tenantId, dashboardId);
+      await addWidget(newWidget, parseInt(session.user.tenant_id), dashboardId);
       
       // Show success message
       const dashboardName = getAccessibleModules().find(m => m.id === dashboardId)?.name || dashboardId;
