@@ -6,6 +6,7 @@ export interface User {
   user_id: number;
   email: string;
   tenant_id: number; // This is the tenant ID as an integer from the database
+  tenant_name: string;
   role_name: string; // This is the role name from the database query
   is_active: boolean;
 }

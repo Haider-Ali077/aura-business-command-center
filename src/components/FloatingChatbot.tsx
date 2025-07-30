@@ -356,7 +356,7 @@ export function FloatingChatbot() {
         body: JSON.stringify({ 
           prompt: userMessage.content,
           user_id: session.user.user_id,
-          tenant_name: session.user.tenant_id,
+          tenant_name: session.user.tenant_name,
           role_name: session.user.role_name,
           token: session.token
         }),
