@@ -76,13 +76,15 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey="name" 
-              tick={{ fontSize: 12 }}
-              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis 
               tickFormatter={formatYAxisLabel}
-              tick={{ fontSize: 12 }}
-              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
             <Line 
@@ -103,13 +105,15 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey="name" 
-              tick={{ fontSize: 12 }}
-              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis 
               tickFormatter={formatYAxisLabel}
-              tick={{ fontSize: 12 }}
-              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar 
@@ -127,13 +131,15 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey="name" 
-              tick={{ fontSize: 12 }}
-              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis 
               tickFormatter={formatYAxisLabel}
-              tick={{ fontSize: 12 }}
-              axisLine={{ stroke: '#E5E7EB' }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area 
