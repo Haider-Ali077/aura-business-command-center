@@ -35,6 +35,25 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  
+  // Get optimized layout for different chart types
+  const getOptimizedLayout = (type: string) => {
+    switch (type) {
+      case 'pie':
+        return { span: 1, height: 300 };
+      case 'table':
+        return { span: 2, height: 400 };
+      case 'line':
+      case 'area':
+        return { span: 2, height: 320 };
+      case 'bar':
+        return { span: 1, height: 320 };
+      default:
+        return { span: 1, height: 300 };
+    }
+  };
+  
+  const optimizedLayout = getOptimizedLayout(widget.type);
 
   useEffect(() => {
     if (widget.sqlQuery) {
@@ -69,8 +88,12 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   return (
     <Card 
       className={`h-full w-full group transition-all duration-200 ${
-        isMaximized ? 'fixed inset-4 z-50 bg-white dark:bg-gray-800' : ''
+        isMaximized ? 'fixed inset-4 z-50 bg-background border-border' : ''
       }`}
+      style={{ 
+        height: isMaximized ? 'auto' : `${optimizedLayout.height}px`,
+        gridColumn: `span ${optimizedLayout.span}`
+      }}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <WidgetHeader

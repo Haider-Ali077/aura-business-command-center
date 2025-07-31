@@ -65,32 +65,61 @@ class SqlService {
       
       sqlResult.columns.forEach((column, index) => {
         const columnName = column.toLowerCase();
-        const value = row[index];
+        let value = row[index];
         
-        // Map data to standardized keys for chart rendering
+        // Handle the first column (name/label)
         if (index === 0) {
-          item.name = String(value);
+          let nameValue = String(value);
+          
+          // Convert numeric months to month names
+          if (typeof value === 'number' && value >= 1 && value <= 12) {
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            nameValue = monthNames[value - 1];
+          }
+          
+          // Handle date formatting
+          if (value && typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+            const date = new Date(value);
+            nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          }
+          
+          item.name = nameValue;
         }
         
-        // Store original column name
+        // Store original column value
         item[columnName] = value;
         
-        // Map to standardized keys based on common patterns
-        if (columnName.includes('revenue') || columnName.includes('sales') || columnName.includes('amount') || columnName.includes('cost')) {
-          item.value = value;
-          item.revenue = value;
-        }
-        if (columnName.includes('customer') || columnName.includes('count')) {
-          item.customers = value;
-          item.value = value;
-        }
-        if (columnName.includes('visit') || columnName.includes('traffic')) {
-          item.visits = value;
-          item.value = value;
-        }
-        if (columnName.includes('payment')) {
-          item.payments = value;
-          item.value = value;
+        // Auto-detect primary data key for charts
+        if (index > 0 && typeof value === 'number') {
+          // If we haven't set a primary value yet, use this numeric column
+          if (!item.value) {
+            item.value = value;
+          }
+          
+          // Map based on common column patterns
+          if (columnName.includes('revenue') || columnName.includes('sales') || 
+              columnName.includes('amount') || columnName.includes('total')) {
+            item.value = value;
+            item.revenue = value;
+          } else if (columnName.includes('customer') || columnName.includes('count') || 
+                     columnName.includes('qty') || columnName.includes('quantity')) {
+            if (!item.value || columnName.includes('customer')) {
+              item.value = value;
+            }
+            item.customers = value;
+          } else if (columnName.includes('visit') || columnName.includes('traffic') || 
+                     columnName.includes('view')) {
+            if (!item.value) {
+              item.value = value;
+            }
+            item.visits = value;
+          } else if (columnName.includes('payment') || columnName.includes('transaction')) {
+            if (!item.value) {
+              item.value = value;
+            }
+            item.payments = value;
+          }
         }
       });
       
