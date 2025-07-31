@@ -71,6 +71,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   // Debug: Log the data structure to console
   console.log('Chart data for debugging:', data);
   console.log('DataKey:', dataKey);
+  console.log('First item keys:', data.length > 0 ? Object.keys(data[0]) : 'No data');
   
   switch (type) {
     case 'line':
