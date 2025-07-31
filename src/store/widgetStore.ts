@@ -147,10 +147,32 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       }),
     });
       const data = await res.json();
-      const transformed = data.map((w: any) => ({
-        ...w,
-        position: { x: w.position_x, y: w.position_y },
-        size: { width: w.size_width, height: w.size_height },
+      const transformed = await Promise.all(data.map(async (w: any) => {
+        const widget = {
+          ...w,
+          position: { x: w.position_x, y: w.position_y },
+          size: { width: w.size_width, height: w.size_height },
+        };
+        
+        // Fetch chart data for widgets with SQL queries
+        if (widget.sqlQuery) {
+          try {
+            const chartRes = await fetch('http://127.0.0.1:8000/execute-sql', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                query: widget.sqlQuery,
+                database_name: `Company_${String.fromCharCode(65 + tenantId - 1)}` // Convert 1->Company_A, 2->Company_B, etc.
+              }),
+            });
+            const chartData = await chartRes.json();
+            widget.config = { ...widget.config, chartData };
+          } catch (err) {
+            console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
+          }
+        }
+        
+        return widget;
       }));
       set({ widgets: transformed, loading: false });
     } catch (err) {
@@ -198,6 +220,12 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
 
   refreshData: async () => {
     const { widgets } = get();
+    // Get current tenant info from auth store
+    const authStore = await import('@/store/authStore');
+    const session = authStore.useAuthStore.getState().session;
+    
+    if (!session) return;
+    
     // Refresh data for all widgets with SQL queries
     const updatedWidgets = await Promise.all(
       widgets.map(async (widget) => {
@@ -207,7 +235,10 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
             // const res = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: widget.sqlQuery }),
+              body: JSON.stringify({ 
+                query: widget.sqlQuery,
+                database_name: session.user.database_name || `Company_${String.fromCharCode(65 + session.user.tenant_id - 1)}`
+              }),
             });
             const data = await res.json();
             return { ...widget, config: { ...widget.config, chartData: data } };

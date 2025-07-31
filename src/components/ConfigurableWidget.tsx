@@ -49,8 +49,13 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
     
     setIsLoading(true);
     try {
-      const result = await sqlService.getChartData(widget.sqlQuery);
-      setChartData(result);
+      // Use chart data from widget config if available, otherwise fetch fresh data
+      if (widget.config?.chartData) {
+        setChartData(widget.config.chartData);
+      } else {
+        const result = await sqlService.getChartData(widget.sqlQuery);
+        setChartData(result);
+      }
     } catch (error) {
       console.error('Error fetching chart data:', error);
       setChartData(data);

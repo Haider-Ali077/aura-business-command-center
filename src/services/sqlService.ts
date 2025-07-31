@@ -12,7 +12,7 @@ export interface ChartData {
 }
 
 class SqlService {
-  async runSql(query: string): Promise<SqlResult> {
+  async runSql(query: string, databaseName?: string): Promise<SqlResult> {
     try {
       const authStore = useAuthStore.getState();
       const session = authStore.session;
@@ -21,16 +21,14 @@ class SqlService {
         throw new Error('No active session');
       }
 
-      const response = await fetch('/runsql', {
+      const response = await fetch('http://127.0.0.1:8000/execute-sql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           query,
-          tenant_name: session.user.tenant_id,
-          user_id: session.user.user_id,
-          token: session.token
+          database_name: databaseName || session.user.database_name
         }),
       });
 
@@ -39,6 +37,14 @@ class SqlService {
       }
 
       const data = await response.json();
+      
+      // Handle new API response format - data is array of objects
+      if (Array.isArray(data) && data.length > 0) {
+        const columns = Object.keys(data[0]);
+        const rows = data.map(row => columns.map(col => row[col]));
+        return { columns, rows };
+      }
+      
       return {
         columns: data.columns || data.cols || [],
         rows: data.rows || data.data || []
@@ -69,8 +75,8 @@ class SqlService {
     });
   }
 
-  async getChartData(query: string): Promise<ChartData[]> {
-    const result = await this.runSql(query);
+  async getChartData(query: string, databaseName?: string): Promise<ChartData[]> {
+    const result = await this.runSql(query, databaseName);
     return this.convertToChartData(result);
   }
 }
