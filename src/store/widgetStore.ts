@@ -137,8 +137,8 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   fetchWidgets: async (tenantId, dashboard) => {
     set({ loading: true });
     try {
-      const res = await fetch('http://127.0.0.1:8000/widgetfetch', {
-      // const res = await fetch('https://sql-database-agent.onrender.com/widgetfetch', {
+      // const res = await fetch('http://127.0.0.1:8000/widgetfetch', {
+      const res = await fetch('https://sql-database-agent.onrender.com/widgetfetch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -162,7 +162,8 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
             const session = authStore.useAuthStore.getState().session;
             const databaseName = session?.user.tenant_name || `Company_${String.fromCharCode(65 + tenantId - 1)}`;
             
-            const chartRes = await fetch('http://127.0.0.1:8000/execute-sql', {
+            // const chartRes = await fetch('http://127.0.0.1:8000/execute-sql', {
+              const chartRes = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
@@ -203,8 +204,8 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
 
     console.log("Final payload for backend:", payload); // Debug
 
-    const res = await fetch('http://127.0.0.1:8000/widgets', {
-    // const res = await fetch('https://sql-database-agent.onrender.com/widgets', {
+    // const res = await fetch('http://127.0.0.1:8000/widgets', {
+    const res = await fetch('https://sql-database-agent.onrender.com/widgets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -236,8 +237,8 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       widgets.map(async (widget) => {
         if (widget.sqlQuery) {
           try {
-            const res = await fetch('http://127.0.0.1:8000/execute-sql', {
-            // const res = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
+            // const res = await fetch('http://127.0.0.1:8000/execute-sql', {
+            const res = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
