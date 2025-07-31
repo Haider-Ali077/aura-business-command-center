@@ -102,8 +102,70 @@ class SqlService {
     });
   }
 
+  // New method to handle data that's already in object format
+  convertObjectArrayToChartData(dataArray: any[]): ChartData[] {
+    if (!Array.isArray(dataArray) || dataArray.length === 0) {
+      return [];
+    }
+
+    return dataArray.map(item => {
+      const chartItem: ChartData = { name: '' };
+      const keys = Object.keys(item);
+      
+      // First key becomes the name/label
+      if (keys.length > 0) {
+        const firstKey = keys[0];
+        let nameValue = String(item[firstKey]);
+        
+        // Handle month conversion
+        if (typeof item[firstKey] === 'number' && item[firstKey] >= 1 && item[firstKey] <= 12 && 
+            firstKey.toLowerCase().includes('month')) {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          nameValue = monthNames[item[firstKey] - 1];
+        }
+        
+        // Handle date formatting
+        if (typeof item[firstKey] === 'string' && item[firstKey].match(/^\d{4}-\d{2}-\d{2}/)) {
+          const date = new Date(item[firstKey]);
+          nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        chartItem.name = nameValue;
+      }
+      
+      // Store all properties
+      Object.keys(item).forEach(key => {
+        chartItem[key] = item[key];
+      });
+      
+      // Last key with numeric value becomes the primary value
+      const numericKeys = keys.filter(key => typeof item[key] === 'number');
+      if (numericKeys.length > 0) {
+        const lastNumericKey = numericKeys[numericKeys.length - 1];
+        chartItem.value = item[lastNumericKey];
+      }
+      
+      return chartItem;
+    });
+  }
+
   async getChartData(query: string, databaseName?: string): Promise<ChartData[]> {
     const result = await this.runSql(query, databaseName);
+    
+    // Check if data is already in object format (from new API response)
+    if (result.columns && result.rows && result.rows.length > 0) {
+      // Convert back to object format to use the new conversion method
+      const objectArray = result.rows.map(row => {
+        const obj: any = {};
+        result.columns.forEach((col, index) => {
+          obj[col] = row[index];
+        });
+        return obj;
+      });
+      return this.convertObjectArrayToChartData(objectArray);
+    }
+    
     return this.convertToChartData(result);
   }
 }
