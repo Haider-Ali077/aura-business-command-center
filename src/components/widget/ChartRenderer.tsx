@@ -25,6 +25,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   
   switch (type) {
     case 'line':
+      const lineDataKey = data.length > 0 ? Object.keys(data[0]).find(key => key !== 'name') || 'value' : 'value';
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
           <LineChart data={data}>
@@ -32,11 +33,12 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2} />
+            <Line type="monotone" dataKey={lineDataKey} stroke="#3B82F6" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       );
     case 'bar':
+      const barDataKey = data.length > 0 ? Object.keys(data[0]).find(key => key !== 'name') || 'value' : 'value';
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart data={data}>
@@ -44,11 +46,12 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="customers" fill="#10B981" />
+            <Bar dataKey={barDataKey} fill="#10B981" />
           </BarChart>
         </ResponsiveContainer>
       );
     case 'area':
+      const areaDataKey = data.length > 0 ? Object.keys(data[0]).find(key => key !== 'name') || 'value' : 'value';
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
           <AreaChart data={data}>
@@ -56,24 +59,25 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Area type="monotone" dataKey="visits" stackId="1" stroke="#8884d8" fill="#8884d8" />
+            <Area type="monotone" dataKey={areaDataKey} stackId="1" stroke="#8884d8" fill="#8884d8" />
           </AreaChart>
         </ResponsiveContainer>
       );
     case 'pie':
+      const pieDataKey = data.length > 0 ? Object.keys(data[0]).find(key => key !== 'name') || 'value' : 'value';
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie
-              data={data.slice(0, 4)}
+              data={data.slice(0, 8)}
               cx="50%"
               cy="50%"
               labelLine={false}
               outerRadius={Math.min(chartHeight / 4, 80)}
               fill="#8884d8"
-              dataKey="revenue"
+              dataKey={pieDataKey}
             >
-              {data.slice(0, 4).map((entry, index) => (
+              {data.slice(0, 8).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

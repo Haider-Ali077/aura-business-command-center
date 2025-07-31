@@ -64,10 +64,33 @@ class SqlService {
       const item: ChartData = { name: '' };
       
       sqlResult.columns.forEach((column, index) => {
-        item[column.toLowerCase()] = row[index];
+        const columnName = column.toLowerCase();
+        const value = row[index];
         
+        // Map data to standardized keys for chart rendering
         if (index === 0) {
-          item.name = String(row[index]);
+          item.name = String(value);
+        }
+        
+        // Store original column name
+        item[columnName] = value;
+        
+        // Map to standardized keys based on common patterns
+        if (columnName.includes('revenue') || columnName.includes('sales') || columnName.includes('amount') || columnName.includes('cost')) {
+          item.value = value;
+          item.revenue = value;
+        }
+        if (columnName.includes('customer') || columnName.includes('count')) {
+          item.customers = value;
+          item.value = value;
+        }
+        if (columnName.includes('visit') || columnName.includes('traffic')) {
+          item.visits = value;
+          item.value = value;
+        }
+        if (columnName.includes('payment')) {
+          item.payments = value;
+          item.value = value;
         }
       });
       
