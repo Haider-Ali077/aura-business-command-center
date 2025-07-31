@@ -28,7 +28,7 @@ class SqlService {
         },
         body: JSON.stringify({ 
           query,
-          database_name: databaseName || session.user.database_name
+          database_name: databaseName || session.user.tenant_name
         }),
       });
 

@@ -157,12 +157,17 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
         // Fetch chart data for widgets with SQL queries
         if (widget.sqlQuery) {
           try {
+            // Get tenant name from auth store for database name
+            const authStore = await import('@/store/authStore');
+            const session = authStore.useAuthStore.getState().session;
+            const databaseName = session?.user.tenant_name || `Company_${String.fromCharCode(65 + tenantId - 1)}`;
+            
             const chartRes = await fetch('http://127.0.0.1:8000/execute-sql', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                 query: widget.sqlQuery,
-                database_name: `Company_${String.fromCharCode(65 + tenantId - 1)}` // Convert 1->Company_A, 2->Company_B, etc.
+                database_name: databaseName
               }),
             });
             const chartData = await chartRes.json();
@@ -237,7 +242,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                 query: widget.sqlQuery,
-                database_name: session.user.database_name || `Company_${String.fromCharCode(65 + session.user.tenant_id - 1)}`
+                database_name: session.user.tenant_name
               }),
             });
             const data = await res.json();
