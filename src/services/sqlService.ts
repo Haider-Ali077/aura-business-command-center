@@ -21,7 +21,8 @@ class SqlService {
         throw new Error('No active session');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/execute-sql', {
+      // const response = await fetch('http://127.0.0.1:8000/execute-sql', {
+      const response = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
