@@ -12,7 +12,7 @@ export interface ChartData {
 }
 
 class SqlService {
-  async runSql(query: string, databaseName?: string): Promise<SqlResult> {
+  async runSql(query: string, databaseName?: string): Promise<SqlResult | any[]> {
     try {
       const authStore = useAuthStore.getState();
       const session = authStore.session;
@@ -38,7 +38,12 @@ class SqlService {
 
       const data = await response.json();
       
-      // Handle new API response format - data is array of objects
+      // Return raw data if it's already an array of objects
+      if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+        return data;
+      }
+      
+      // Handle legacy format - data is array of objects
       if (Array.isArray(data) && data.length > 0) {
         const columns = Object.keys(data[0]);
         const rows = data.map(row => columns.map(col => row[col]));
@@ -154,15 +159,15 @@ class SqlService {
     const result = await this.runSql(query, databaseName);
     
     // Handle new API response format - data is already objects
-    if (Array.isArray(result) && result.length > 0) {
+    if (Array.isArray(result)) {
       return result.map(item => ({
         ...item,
         name: String(item[Object.keys(item)[0]]) // First key becomes the name/label
       }));
     }
     
-    // Check if data is already in object format (from SQL rows)
-    if (result.columns && result.rows && result.rows.length > 0) {
+    // Handle legacy SqlResult format
+    if (result && 'columns' in result && 'rows' in result && result.rows.length > 0) {
       const objectArray = result.rows.map(row => {
         const obj: any = {};
         result.columns.forEach((col, index) => {
@@ -176,7 +181,7 @@ class SqlService {
       }));
     }
     
-    return this.convertToChartData(result);
+    return [];
   }
 }
 
