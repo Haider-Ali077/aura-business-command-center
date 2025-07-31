@@ -259,38 +259,20 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
 },
 
   refreshData: async () => {
-    const { widgets } = get();
     // Get current tenant info from auth store
     const authStore = await import('@/store/authStore');
     const session = authStore.useAuthStore.getState().session;
     
     if (!session) return;
     
-    // Refresh data for all widgets with SQL queries
-    const updatedWidgets = await Promise.all(
-      widgets.map(async (widget) => {
-        if (widget.sqlQuery) {
-          try {
-            // const res = await fetch('http://127.0.0.1:8000/execute-sql', {
-            const res = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                query: widget.sqlQuery,
-                database_name: session.user.tenant_name
-              }),
-            });
-            const data = await res.json();
-            return { ...widget, config: { ...widget.config, chartData: data } };
-          } catch (err) {
-            console.error(`Failed to refresh data for widget ${widget.id}`, err);
-            return widget;
-          }
-        }
-        return widget;
-      })
-    );
-    set({ widgets: updatedWidgets });
+    // Get current dashboard from the route or store the current dashboard
+    const currentPath = window.location.pathname;
+    const dashboardType = currentPath.split('/').pop() || 'executive';
+    
+    console.log('Refreshing data for dashboard:', dashboardType, 'tenant:', session.user.tenant_id);
+    
+    // Re-fetch widgets from backend to get latest configuration and data
+    await get().fetchWidgets(session.user.tenant_id, dashboardType);
   },
 
   removeWidget: (id) =>
