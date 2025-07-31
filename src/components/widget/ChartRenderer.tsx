@@ -43,7 +43,8 @@ interface ChartRendererProps {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRendererProps) => {
-  const chartHeight = isMaximized ? 400 : 250;
+  // Match default dashboard chart heights - fixed 300px like the rest
+  const chartHeight = isMaximized ? 400 : 300;
   
   // Auto-detect the primary data key for charts
   const getDataKey = (data: ChartData[]) => {

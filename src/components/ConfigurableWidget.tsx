@@ -87,12 +87,12 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
 
   return (
     <Card 
-      className={`h-full w-full group transition-all duration-200 ${
+      className={`group transition-all duration-200 ${
         isMaximized ? 'fixed inset-4 z-50 bg-background border-border' : ''
       }`}
       style={{ 
-        height: isMaximized ? 'auto' : `${optimizedLayout.height}px`,
-        gridColumn: `span ${optimizedLayout.span}`
+        gridColumn: `span ${optimizedLayout.span}`,
+        minHeight: isMaximized ? 'auto' : '400px'
       }}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -105,15 +105,13 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           onToggleMaximize={() => setIsMaximized(!isMaximized)}
         />
       </CardHeader>
-      <CardContent className="flex-1 p-4 pt-0 h-full">
-        <div className="h-full">
-          <ChartRenderer
-            type={widget.type}
-            data={displayData}
-            isLoading={isLoading}
-            isMaximized={isMaximized}
-          />
-        </div>
+      <CardContent className="p-4 pt-0">
+        <ChartRenderer
+          type={widget.type}
+          data={displayData}
+          isLoading={isLoading}
+          isMaximized={isMaximized}
+        />
       </CardContent>
       
       {isMaximized && (
