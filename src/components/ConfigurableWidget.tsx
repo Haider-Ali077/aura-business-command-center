@@ -39,17 +39,14 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   // Get optimized layout for different chart types
   const getOptimizedLayout = (type: string) => {
     switch (type) {
-      case 'pie':
-        return { span: 1, height: 300 };
       case 'table':
-        return { span: 2, height: 400 };
-      case 'line':
       case 'area':
-        return { span: 2, height: 320 };
+        return { span: 2, height: 400 }; // Full width for tables and area charts
+      case 'pie':
       case 'bar':
-        return { span: 1, height: 320 };
+      case 'line':
       default:
-        return { span: 1, height: 300 };
+        return { span: 1, height: 300 }; // Half width (2 per row) for other charts
     }
   };
   

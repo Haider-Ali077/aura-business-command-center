@@ -181,10 +181,11 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ payload, percent }) => `${payload[labelKey]} ${(percent * 100).toFixed(0)}%`}
               outerRadius={Math.min(chartHeight / 3, 100)}
               fill="#8884d8"
               dataKey={dataKey}
+              nameKey={labelKey}
             >
               {data.slice(0, 6).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
