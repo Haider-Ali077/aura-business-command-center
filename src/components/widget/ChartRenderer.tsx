@@ -197,27 +197,29 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
       );
     case 'table':
       return (
-        <div className="h-full overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {data.length > 0 && Object.keys(data[0]).map((key) => (
-                  <TableHead key={key} className="text-xs">{key}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row, index) => (
-                <TableRow key={index}>
-                  {Object.values(row).map((value, cellIndex) => (
-                    <TableCell key={cellIndex} className="text-xs">
-                      {typeof value === 'number' ? value.toLocaleString() : String(value)}
-                    </TableCell>
+        <div className="overflow-x-auto">
+          <div className={`overflow-y-auto ${data.length > 8 ? 'max-h-80' : ''}`}>
+            <Table>
+              <TableHeader className="sticky top-0 bg-background">
+                <TableRow>
+                  {data.length > 0 && Object.keys(data[0]).map((key) => (
+                    <TableHead key={key} className="text-xs">{key}</TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {data.map((row, index) => (
+                  <TableRow key={index}>
+                    {Object.values(row).map((value, cellIndex) => (
+                      <TableCell key={cellIndex} className="text-xs">
+                        {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       );
     default:
