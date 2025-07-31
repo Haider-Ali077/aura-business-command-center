@@ -67,15 +67,13 @@ class SqlService {
         const columnName = column.toLowerCase();
         let value = row[index];
         
-        // Handle the first column or name-like columns
-        if (index === 0 || columnName.includes('name') || 
-            columnName.includes('warehouse') || columnName.includes('location') ||
-            columnName.includes('supplier') || columnName.includes('category')) {
+        // Always set name from first column, regardless of type
+        if (index === 0) {
           let nameValue = String(value);
           
           // Convert numeric months to month names
           if (typeof value === 'number' && value >= 1 && value <= 12 && 
-              (columnName.includes('month') || index === 0)) {
+              columnName.includes('month')) {
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             nameValue = monthNames[value - 1];
@@ -87,10 +85,7 @@ class SqlService {
             nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           }
           
-          // Always set name from first column or name-like columns
-          if (index === 0 || !item.name) {
-            item.name = nameValue;
-          }
+          item.name = nameValue;
         }
         
         // Store original column value with proper key
