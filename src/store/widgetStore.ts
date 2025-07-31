@@ -137,6 +137,8 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   fetchWidgets: async (tenantId, dashboard) => {
     set({ loading: true });
     try {
+      console.log('Fetching widgets with tenantId:', tenantId, 'type:', typeof tenantId);
+      
       // const res = await fetch('http://127.0.0.1:8000/widgetfetch', {
       const res = await fetch('https://sql-database-agent.onrender.com/widgetfetch', {
       method: 'POST',
@@ -146,7 +148,22 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
         dashboard: dashboard,
       }),
     });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('API Error:', errorData);
+        throw new Error(`API Error: ${JSON.stringify(errorData)}`);
+      }
+      
       const data = await res.json();
+      console.log('Received widget data:', data);
+      
+      if (!Array.isArray(data)) {
+        console.error('Expected array but got:', typeof data, data);
+        set({ widgets: [], loading: false });
+        return;
+      }
+      
       const transformed = await Promise.all(data.map(async (w: any) => {
         const widget = {
           ...w,
