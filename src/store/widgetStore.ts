@@ -171,28 +171,45 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
           size: { width: w.size_width, height: w.size_height },
         };
         
+        console.log(`Processing widget ${widget.id}:`, widget.title, 'SQL Query:', widget.sqlQuery || widget.sql_query);
+        
         // Fetch chart data for widgets with SQL queries
-        if (widget.sqlQuery) {
+        const sqlQuery = widget.sqlQuery || widget.sql_query;
+        if (sqlQuery) {
+          console.log(`Fetching chart data for widget ${widget.id} with query:`, sqlQuery);
           try {
             // Get tenant name from auth store for database name
             const authStore = await import('@/store/authStore');
             const session = authStore.useAuthStore.getState().session;
             const databaseName = session?.user.tenant_name || `Company_${String.fromCharCode(65 + tenantId - 1)}`;
             
+            console.log(`Making execute-sql request for widget ${widget.id} with database:`, databaseName);
+            
             // const chartRes = await fetch('http://127.0.0.1:8000/execute-sql', {
               const chartRes = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
-                query: widget.sqlQuery,
+                query: sqlQuery,
                 database_name: databaseName
               }),
             });
+            
+            if (!chartRes.ok) {
+              const errorData = await chartRes.json();
+              console.error(`Chart data API error for widget ${widget.id}:`, errorData);
+              throw new Error(`Chart API Error: ${JSON.stringify(errorData)}`);
+            }
+            
             const chartData = await chartRes.json();
+            console.log(`Received chart data for widget ${widget.id}:`, chartData);
             widget.config = { ...widget.config, chartData };
+            widget.sqlQuery = sqlQuery; // Ensure sqlQuery is set correctly
           } catch (err) {
             console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
           }
+        } else {
+          console.log(`Widget ${widget.id} has no SQL query`);
         }
         
         return widget;
