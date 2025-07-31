@@ -38,8 +38,8 @@ export const useAuthStore = create<AuthStore>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          // const response = await fetch('http://localhost:8000/api/auth/login', {
-            const response = await fetch('https://sql-database-agent.onrender.com/api/auth/login', {
+          const response = await fetch('http://localhost:8000/api/auth/login', {
+            // const response = await fetch('https://sql-database-agent.onrender.com/api/auth/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
