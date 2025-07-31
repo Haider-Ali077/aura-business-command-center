@@ -153,9 +153,16 @@ class SqlService {
   async getChartData(query: string, databaseName?: string): Promise<ChartData[]> {
     const result = await this.runSql(query, databaseName);
     
-    // Check if data is already in object format (from new API response)
+    // Handle new API response format - data is already objects
+    if (Array.isArray(result) && result.length > 0) {
+      return result.map(item => ({
+        ...item,
+        name: String(item[Object.keys(item)[0]]) // First key becomes the name/label
+      }));
+    }
+    
+    // Check if data is already in object format (from SQL rows)
     if (result.columns && result.rows && result.rows.length > 0) {
-      // Convert back to object format to use the new conversion method
       const objectArray = result.rows.map(row => {
         const obj: any = {};
         result.columns.forEach((col, index) => {
@@ -163,7 +170,10 @@ class SqlService {
         });
         return obj;
       });
-      return this.convertObjectArrayToChartData(objectArray);
+      return objectArray.map(item => ({
+        ...item,
+        name: String(item[Object.keys(item)[0]]) // First key becomes the name/label
+      }));
     }
     
     return this.convertToChartData(result);
