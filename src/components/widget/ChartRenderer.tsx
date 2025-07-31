@@ -46,6 +46,18 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   // Match default dashboard chart heights - fixed 300px like the rest
   const chartHeight = isMaximized ? 400 : 300;
   
+  // Convert numeric month to month name
+  const formatMonthData = (data: ChartData[]) => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return data.map(item => {
+      if (item.month && typeof item.month === 'number') {
+        return { ...item, month: monthNames[item.month - 1] || item.month };
+      }
+      return item;
+    });
+  };
+
   // Auto-detect the label key for X-axis (first non-numeric key)
   const getLabelKey = (data: ChartData[]) => {
     if (data.length === 0) return 'name';
@@ -78,20 +90,22 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
     );
   }
   
-  const dataKey = getDataKey(data);
-  const labelKey = getLabelKey(data);
+  // Format month data before processing
+  const formattedData = formatMonthData(data);
+  const dataKey = getDataKey(formattedData);
+  const labelKey = getLabelKey(formattedData);
   
   // Debug: Log the data structure to console
-  console.log('Chart data for debugging:', data);
+  console.log('Chart data for debugging:', formattedData);
   console.log('DataKey:', dataKey);
   console.log('LabelKey:', labelKey);
-  console.log('First item keys:', data.length > 0 ? Object.keys(data[0]) : 'No data');
+  console.log('First item keys:', formattedData.length > 0 ? Object.keys(formattedData[0]) : 'No data');
   
   switch (type) {
     case 'line':
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey={labelKey}
@@ -120,7 +134,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
     case 'bar':
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey={labelKey} 
@@ -146,7 +160,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
     case 'area':
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <AreaChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
               dataKey={labelKey}
@@ -177,7 +191,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
         <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie
-              data={data.slice(0, 6)}
+              data={formattedData.slice(0, 6)}
               cx="50%"
               cy="50%"
               labelLine={false}
@@ -187,7 +201,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
               dataKey={dataKey}
               nameKey={labelKey}
             >
-              {data.slice(0, 6).map((entry, index) => (
+              {formattedData.slice(0, 6).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -202,13 +216,13 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <Table>
               <TableHeader className="sticky top-0 bg-background">
                 <TableRow>
-                  {data.length > 0 && Object.keys(data[0]).map((key) => (
+                  {formattedData.length > 0 && Object.keys(formattedData[0]).map((key) => (
                     <TableHead key={key} className="text-xs">{key}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((row, index) => (
+                {formattedData.map((row, index) => (
                   <TableRow key={index}>
                     {Object.values(row).map((value, cellIndex) => (
                       <TableCell key={cellIndex} className="text-xs">

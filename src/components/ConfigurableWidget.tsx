@@ -40,13 +40,13 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   const getOptimizedLayout = (type: string) => {
     switch (type) {
       case 'table':
-      case 'area':
-      case 'line':
-        return { span: 2, height: 400 }; // Full width for tables, area, and line charts
+        return { span: 2, height: 400 }; // Full width for tables only
       case 'pie':
       case 'bar':
+      case 'area':
+      case 'line':
       default:
-        return { span: 1, height: 300 }; // Half width (2 per row) for other charts
+        return { span: 1, height: 300 }; // Half width (2 per row) for all other charts
     }
   };
   
