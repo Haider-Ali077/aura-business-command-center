@@ -158,16 +158,23 @@ class SqlService {
   async getChartData(query: string, databaseName?: string): Promise<ChartData[]> {
     const result = await this.runSql(query, databaseName);
     
+    console.log('SQL Result type:', Array.isArray(result) ? 'Array' : 'Object');
+    console.log('SQL Result:', result);
+    
     // Handle new API response format - data is already objects
     if (Array.isArray(result)) {
-      return result.map(item => ({
+      console.log('Processing as array of objects');
+      const chartData = result.map(item => ({
         ...item,
         name: String(item[Object.keys(item)[0]]) // First key becomes the name/label
       }));
+      console.log('Converted chart data:', chartData);
+      return chartData;
     }
     
     // Handle legacy SqlResult format
     if (result && 'columns' in result && 'rows' in result && result.rows.length > 0) {
+      console.log('Processing as SqlResult format');
       const objectArray = result.rows.map(row => {
         const obj: any = {};
         result.columns.forEach((col, index) => {
@@ -175,10 +182,12 @@ class SqlService {
         });
         return obj;
       });
-      return objectArray.map(item => ({
+      const chartData = objectArray.map(item => ({
         ...item,
         name: String(item[Object.keys(item)[0]]) // First key becomes the name/label
       }));
+      console.log('Converted chart data from SqlResult:', chartData);
+      return chartData;
     }
     
     return [];
