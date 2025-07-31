@@ -46,12 +46,24 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   // Match default dashboard chart heights - fixed 300px like the rest
   const chartHeight = isMaximized ? 400 : 300;
   
+  // Auto-detect the label key for X-axis (first non-numeric key)
+  const getLabelKey = (data: ChartData[]) => {
+    if (data.length === 0) return 'name';
+    
+    const firstItem = data[0];
+    const keys = Object.keys(firstItem);
+    
+    // Find the first non-numeric key for labels
+    const labelKey = keys.find(key => typeof firstItem[key] !== 'number');
+    return labelKey || 'name';
+  };
+  
   // Auto-detect the primary data key for charts
   const getDataKey = (data: ChartData[]) => {
     if (data.length === 0) return 'value';
     
     const firstItem = data[0];
-    const keys = Object.keys(firstItem).filter(key => key !== 'name');
+    const keys = Object.keys(firstItem);
     
     // Find the first numeric key, or fall back to 'value'
     const numericKey = keys.find(key => typeof firstItem[key] === 'number');
@@ -67,10 +79,12 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   }
   
   const dataKey = getDataKey(data);
+  const labelKey = getLabelKey(data);
   
   // Debug: Log the data structure to console
   console.log('Chart data for debugging:', data);
   console.log('DataKey:', dataKey);
+  console.log('LabelKey:', labelKey);
   console.log('First item keys:', data.length > 0 ? Object.keys(data[0]) : 'No data');
   
   switch (type) {
@@ -80,7 +94,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
-              dataKey="name" 
+              dataKey={labelKey}
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               axisLine={false}
               tickLine={false}
@@ -109,7 +123,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
           <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
-              dataKey="name" 
+              dataKey={labelKey} 
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               axisLine={false}
               tickLine={false}
@@ -135,7 +149,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
           <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
-              dataKey="name" 
+              dataKey={labelKey}
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               axisLine={false}
               tickLine={false}
