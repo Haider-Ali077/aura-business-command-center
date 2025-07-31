@@ -62,12 +62,13 @@ class SqlService {
 
     return sqlResult.rows.map(row => {
       const item: ChartData = { name: '' };
+      const lastColumnIndex = sqlResult.columns.length - 1;
       
       sqlResult.columns.forEach((column, index) => {
         const columnName = column.toLowerCase();
         let value = row[index];
         
-        // Always set name from first column, regardless of type
+        // Set name from first column
         if (index === 0) {
           let nameValue = String(value);
           
@@ -88,35 +89,12 @@ class SqlService {
           item.name = nameValue;
         }
         
-        // Store original column value with proper key
-        item[column] = value; // Use original column name, not lowercase
+        // Store all column values with original column names
+        item[column] = value;
         
-        // Auto-detect primary data key for charts
-        if (typeof value === 'number') {
-          // If this is the main numeric column, set as value
-          if (index === 1 || // Second column is often the main value
-              !item.value || // No value set yet
-              columnName.includes('stock') || columnName.includes('quantity') ||
-              columnName.includes('revenue') || columnName.includes('sales') || 
-              columnName.includes('amount') || columnName.includes('total')) {
-            item.value = value;
-          }
-          
-          // Map based on common column patterns for better detection
-          if (columnName.includes('revenue') || columnName.includes('sales') || 
-              columnName.includes('amount') || columnName.includes('total')) {
-            item.value = value;
-            item.revenue = value;
-          } else if (columnName.includes('stock') || columnName.includes('inventory') ||
-                     columnName.includes('quantity') || columnName.includes('qty')) {
-            item.value = value;
-            item.stock = value;
-          } else if (columnName.includes('customer') || columnName.includes('count')) {
-            if (!item.value || columnName.includes('customer')) {
-              item.value = value;
-            }
-            item.customers = value;
-          }
+        // Set the last column as the primary value (most common pattern)
+        if (index === lastColumnIndex && typeof value === 'number') {
+          item.value = value;
         }
       });
       
