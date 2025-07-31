@@ -40,7 +40,7 @@ interface ChartRendererProps {
   isMaximized: boolean;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const COLORS = ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'];
 
 export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRendererProps) => {
   // Match default dashboard chart heights - fixed 300px like the rest
@@ -77,21 +77,21 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <XAxis 
               dataKey="name" 
               tick={{ fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
+              axisLine={{ stroke: '#E5E7EB' }}
             />
             <YAxis 
               tickFormatter={formatYAxisLabel}
               tick={{ fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
+              axisLine={{ stroke: '#E5E7EB' }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Line 
               type="monotone" 
               dataKey={dataKey} 
-              stroke="hsl(var(--primary))" 
+              stroke="#3B82F6" 
               strokeWidth={3}
-              dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+              dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -104,17 +104,17 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <XAxis 
               dataKey="name" 
               tick={{ fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
+              axisLine={{ stroke: '#E5E7EB' }}
             />
             <YAxis 
               tickFormatter={formatYAxisLabel}
               tick={{ fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
+              axisLine={{ stroke: '#E5E7EB' }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar 
               dataKey={dataKey} 
-              fill="hsl(var(--primary))"
+              fill="#3B82F6"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
@@ -128,20 +128,20 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
             <XAxis 
               dataKey="name" 
               tick={{ fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
+              axisLine={{ stroke: '#E5E7EB' }}
             />
             <YAxis 
               tickFormatter={formatYAxisLabel}
               tick={{ fontSize: 12 }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
+              axisLine={{ stroke: '#E5E7EB' }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area 
               type="monotone" 
               dataKey={dataKey} 
               stackId="1" 
-              stroke="hsl(var(--primary))" 
-              fill="hsl(var(--primary) / 0.2)"
+              stroke="#3B82F6" 
+              fill="rgba(59, 130, 246, 0.2)"
               strokeWidth={2}
             />
           </AreaChart>

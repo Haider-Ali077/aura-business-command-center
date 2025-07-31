@@ -67,12 +67,15 @@ class SqlService {
         const columnName = column.toLowerCase();
         let value = row[index];
         
-        // Handle the first column (name/label)
-        if (index === 0) {
+        // Handle the first column or name-like columns
+        if (index === 0 || columnName.includes('name') || 
+            columnName.includes('warehouse') || columnName.includes('location') ||
+            columnName.includes('supplier') || columnName.includes('category')) {
           let nameValue = String(value);
           
           // Convert numeric months to month names
-          if (typeof value === 'number' && value >= 1 && value <= 12) {
+          if (typeof value === 'number' && value >= 1 && value <= 12 && 
+              (columnName.includes('month') || index === 0)) {
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             nameValue = monthNames[value - 1];
@@ -84,41 +87,40 @@ class SqlService {
             nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           }
           
-          item.name = nameValue;
+          // Always set name from first column or name-like columns
+          if (index === 0 || !item.name) {
+            item.name = nameValue;
+          }
         }
         
-        // Store original column value
-        item[columnName] = value;
+        // Store original column value with proper key
+        item[column] = value; // Use original column name, not lowercase
         
         // Auto-detect primary data key for charts
-        if (index > 0 && typeof value === 'number') {
-          // If we haven't set a primary value yet, use this numeric column
-          if (!item.value) {
+        if (typeof value === 'number') {
+          // If this is the main numeric column, set as value
+          if (index === 1 || // Second column is often the main value
+              !item.value || // No value set yet
+              columnName.includes('stock') || columnName.includes('quantity') ||
+              columnName.includes('revenue') || columnName.includes('sales') || 
+              columnName.includes('amount') || columnName.includes('total')) {
             item.value = value;
           }
           
-          // Map based on common column patterns
+          // Map based on common column patterns for better detection
           if (columnName.includes('revenue') || columnName.includes('sales') || 
               columnName.includes('amount') || columnName.includes('total')) {
             item.value = value;
             item.revenue = value;
-          } else if (columnName.includes('customer') || columnName.includes('count') || 
-                     columnName.includes('qty') || columnName.includes('quantity')) {
+          } else if (columnName.includes('stock') || columnName.includes('inventory') ||
+                     columnName.includes('quantity') || columnName.includes('qty')) {
+            item.value = value;
+            item.stock = value;
+          } else if (columnName.includes('customer') || columnName.includes('count')) {
             if (!item.value || columnName.includes('customer')) {
               item.value = value;
             }
             item.customers = value;
-          } else if (columnName.includes('visit') || columnName.includes('traffic') || 
-                     columnName.includes('view')) {
-            if (!item.value) {
-              item.value = value;
-            }
-            item.visits = value;
-          } else if (columnName.includes('payment') || columnName.includes('transaction')) {
-            if (!item.value) {
-              item.value = value;
-            }
-            item.payments = value;
           }
         }
       });
