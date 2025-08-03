@@ -1,6 +1,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { API_BASE_URL } from '@/config/api';
 
 export interface User {
   user_id: number;
@@ -21,11 +22,14 @@ interface AuthStore {
   session: AuthSession | null;
   isLoading: boolean;
   error: string | null;
+  lastActivity: number;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: () => boolean;
   isSessionExpired: () => boolean;
   clearError: () => void;
+  updateActivity: () => void;
+  checkInactivity: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -34,12 +38,12 @@ export const useAuthStore = create<AuthStore>()(
       session: null,
       isLoading: false,
       error: null,
+      lastActivity: Date.now(),
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          // const response = await fetch('http://localhost:8000/api/auth/login', {
-            const response = await fetch('https://sql-database-agent.onrender.com/api/auth/login', {
+          const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -61,7 +65,7 @@ export const useAuthStore = create<AuthStore>()(
             expiresAt
           };
 
-          set({ session, isLoading: false });
+          set({ session, isLoading: false, lastActivity: Date.now() });
         } catch (error) {
           set({ 
             error: error instanceof Error ? error.message : 'Login failed', 
@@ -71,7 +75,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        set({ session: null, error: null });
+        set({ session: null, error: null, lastActivity: Date.now() });
       },
 
       isAuthenticated: () => {
@@ -89,11 +93,25 @@ export const useAuthStore = create<AuthStore>()(
       clearError: () => {
         set({ error: null });
       },
+
+      updateActivity: () => {
+        set({ lastActivity: Date.now() });
+      },
+
+      checkInactivity: () => {
+        const { lastActivity, session } = get();
+        const thirtyMinutes = 30 * 60 * 1000; // 30 minutes in milliseconds
+        
+        if (session && Date.now() - lastActivity > thirtyMinutes) {
+          get().logout();
+        }
+      },
     }),
     {
       name: 'auth-session',
       partialize: (state) => ({
         session: state.session,
+        lastActivity: state.lastActivity,
       }),
     }
   )

@@ -15,12 +15,16 @@ import { HRDashboard } from "@/components/dashboard/HRDashboard";
 import NotFound from '@/pages/NotFound';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/authStore';
+import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 import './App.css';
 
 const queryClient = new QueryClient();
 
 function App() {
   const { session } = useAuthStore();
+  
+  // Initialize inactivity timer
+  useInactivityTimer();
 
   if (!session) {
     return (

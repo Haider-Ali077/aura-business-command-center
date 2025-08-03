@@ -17,6 +17,7 @@ import {
   CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { API_BASE_URL } from '@/config/api';
 
 interface ChartData {
   chart_type: string;
@@ -349,8 +350,7 @@ export function FloatingChatbot() {
     setIsLoading(true);
 
     try {
-      // const res = await fetch('http://localhost:8000/ask', {
-      const res = await fetch('https://sql-database-agent.onrender.com/ask', {
+      const res = await fetch(`${API_BASE_URL}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -387,12 +387,39 @@ export function FloatingChatbot() {
       };
 
       setMessages(prev => [...prev, botMessage]);
+
+      // Save conversation to database
+      await saveConversation(userMessage.content, data.response);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const saveConversation = async (userPrompt: string, apiResponse: string) => {
+    try {
+      const authStore = useAuthStore.getState();
+      const session = authStore.session;
+      
+      if (!session) return;
+
+      await fetch(`${API_BASE_URL}/save-response`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: session.user.user_id,
+          user_prompt: userPrompt,
+          api_response: apiResponse
+        }),
+      });
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+    }
+  };
+
 
   const renderChart = (chart: ChartData) => {
     const chartData = chart.x.map((label, idx) => ({

@@ -1,5 +1,6 @@
 
 import { useAuthStore } from '@/store/authStore';
+import { API_BASE_URL } from '@/config/api';
 
 export interface SqlResult {
   columns: string[];
@@ -21,8 +22,7 @@ class SqlService {
         throw new Error('No active session');
       }
 
-      // const response = await fetch('http://127.0.0.1:8000/execute-sql', {
-      const response = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
+      const response = await fetch(`${API_BASE_URL}/execute-sql`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

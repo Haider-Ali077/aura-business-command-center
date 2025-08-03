@@ -102,6 +102,8 @@
 
 
 import { create } from 'zustand';
+import { sqlService } from '@/services/sqlService';
+import { API_BASE_URL } from '@/config/api';
 
 export interface Widget {
   id: string;
@@ -139,8 +141,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
     try {
       console.log('Fetching widgets with tenantId:', tenantId, 'type:', typeof tenantId);
       
-      // const res = await fetch('http://127.0.0.1:8000/widgetfetch', {
-      const res = await fetch('https://sql-database-agent.onrender.com/widgetfetch', {
+      const res = await fetch(`${API_BASE_URL}/widgetfetch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -185,8 +186,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
             
             console.log(`Making execute-sql request for widget ${widget.id} with database:`, databaseName);
             
-            // const chartRes = await fetch('http://127.0.0.1:8000/execute-sql', {
-              const chartRes = await fetch('https://sql-database-agent.onrender.com/execute-sql', {
+            const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
@@ -238,8 +238,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
 
     console.log("Final payload for backend:", payload); // Debug
 
-    // const res = await fetch('http://127.0.0.1:8000/widgets', {
-    const res = await fetch('https://sql-database-agent.onrender.com/widgets', {
+    const res = await fetch(`${API_BASE_URL}/widgets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

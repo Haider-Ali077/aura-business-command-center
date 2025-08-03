@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/store/authStore";
+import { API_BASE_URL } from '@/config/api';
 
 // export interface DashboardData {
 //   revenue: number;
@@ -91,8 +92,7 @@ class DataService {
     try {
       const requestBody = await this.getRequestBody();
 
-      // const response = await fetch("http://localhost:8000/api/dashboard", {
-      const response = await fetch("https://sql-database-agent.onrender.com/api/dashboard", {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -186,7 +186,7 @@ class DataService {
     try {
       const requestBody = await this.getRequestBody();
 
-      const response = await fetch("http://localhost:8000/api/analytics", {
+      const response = await fetch(`${API_BASE_URL}/api/analytics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -255,7 +255,7 @@ class DataService {
       const requestBody = await this.getRequestBody();
 
       const response = await fetch(
-        "http://localhost:8000/api/analytics/charts",
+        `${API_BASE_URL}/api/analytics/charts`,
         {
           method: "POST",
           headers: {
@@ -280,7 +280,7 @@ class DataService {
     try {
       const requestBody = await this.getRequestBody();
 
-      const response = await fetch("http://localhost:8000/api/chat/agent", {
+      const response = await fetch(`${API_BASE_URL}/api/chat/agent`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
