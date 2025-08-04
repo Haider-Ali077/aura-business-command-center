@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/config/api";
 
 export function PasswordChange() {
   const { session } = useAuthStore();
@@ -26,18 +27,15 @@ export function PasswordChange() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/change-password', {
+      const response = await fetch(`${API_BASE_URL}/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
           user_id: session?.user.user_id,
-          tenant_name: session?.user.tenant_id,
-          role_name: session?.user.role_name,
-          token: session?.token
+          old_password: passwordData.currentPassword,
+          new_password: passwordData.newPassword
         }),
       });
 
