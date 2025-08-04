@@ -401,6 +401,9 @@ export function FloatingChatbot() {
     try {
       const authStore = useAuthStore.getState();
       const session = authStore.session;
+      console.log("Session user_id: ",session.user.user_id)
+      console.log("prompt: ",userPrompt)
+      console.log("response: ",apiResponse)
       
       if (!session) return;
 
@@ -411,8 +414,8 @@ export function FloatingChatbot() {
         },
         body: JSON.stringify({
           user_id: session.user.user_id,
-          user_prompt: userPrompt,
-          api_response: apiResponse
+          prompt: userPrompt,
+          response: apiResponse.toString()
         }),
       });
     } catch (error) {
