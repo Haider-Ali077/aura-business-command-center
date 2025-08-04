@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Settings } from "lucide-react";
+import { API_BASE_URL } from "@/config/api";
+import { toast } from "sonner";
 
 interface Widget {
   id: string;
@@ -28,15 +29,32 @@ interface WidgetConfigDialogProps {
 
 export const WidgetConfigDialog = ({ widget, onUpdate }: WidgetConfigDialogProps) => {
   const [configOpen, setConfigOpen] = useState(false);
-  const [timePeriod, setTimePeriod] = useState(widget.config?.timePeriod || '6months');
-  const [sqlQuery, setSqlQuery] = useState(widget.sqlQuery || '');
+  const [title, setTitle] = useState(widget.title);
 
-  const handleConfigSave = () => {
-    onUpdate(widget.id, {
-      config: { ...widget.config, timePeriod },
-      sqlQuery: sqlQuery
-    });
-    setConfigOpen(false);
+  const handleConfigSave = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/widgets/update-title`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: widget.id,
+          title: title
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update title');
+      }
+
+      onUpdate(widget.id, { title });
+      setConfigOpen(false);
+      toast.success('Title updated successfully');
+    } catch (error) {
+      console.error('Error updating title:', error);
+      toast.error('Failed to update title');
+    }
   };
 
   return (
@@ -52,30 +70,13 @@ export const WidgetConfigDialog = ({ widget, onUpdate }: WidgetConfigDialogProps
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">SQL Query</label>
-            <Textarea
-              value={sqlQuery}
-              onChange={(e) => setSqlQuery(e.target.value)}
-              placeholder="SELECT * FROM your_table"
-              rows={4}
+            <label className="block text-sm font-medium mb-2">Chart Title</label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter chart title"
             />
           </div>
-          {widget.title.toLowerCase().includes('revenue') && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Time Period</label>
-              <Select value={timePeriod} onValueChange={setTimePeriod}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3months">Last 3 Months</SelectItem>
-                  <SelectItem value="6months">Last 6 Months</SelectItem>
-                  <SelectItem value="1year">Last Year</SelectItem>
-                  <SelectItem value="2years">Last 2 Years</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setConfigOpen(false)}>
               Cancel

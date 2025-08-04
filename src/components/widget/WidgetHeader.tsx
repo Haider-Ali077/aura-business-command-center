@@ -1,8 +1,11 @@
 
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GripHorizontal, Maximize2, X } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Maximize2, X } from "lucide-react";
 import { WidgetConfigDialog } from "./WidgetConfigDialog";
+import { API_BASE_URL } from "@/config/api";
+import { toast } from "sonner";
 
 interface Widget {
   id: string;
@@ -36,10 +39,33 @@ export const WidgetHeader = ({
   onRemove,
   onToggleMaximize
 }: WidgetHeaderProps) => {
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/widgets/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: widget.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete widget');
+      }
+
+      onRemove(widget.id);
+      toast.success('Widget deleted successfully');
+    } catch (error) {
+      console.error('Error deleting widget:', error);
+      toast.error('Failed to delete widget');
+    }
+  };
+
   return (
     <div className="flex flex-row items-center justify-between pb-2">
       <CardTitle className="text-lg flex items-center gap-2">
-        <GripHorizontal className="h-4 w-4 text-gray-400" />
         {widget.title}
         {widget.config?.timePeriod && (
           <span className="text-sm text-gray-500 ml-2">({timePeriod})</span>
@@ -54,13 +80,28 @@ export const WidgetHeader = ({
           <Maximize2 className="h-4 w-4" />
         </Button>
         <WidgetConfigDialog widget={widget} onUpdate={onUpdate} />
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onRemove(widget.id)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Widget</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this widget? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
