@@ -36,7 +36,16 @@ export function ExecutiveDashboard() {
     if (!session?.user.tenant_id) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/kpis?tenant_id=${session.user.tenant_id}&dashboard=executive`);
+      const response = await fetch(`${API_BASE_URL}/kpis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: session.user.tenant_id,
+          dashboard: 'executive'
+        })
+      });
       if (response.ok) {
         const kpiData = await response.json();
         
