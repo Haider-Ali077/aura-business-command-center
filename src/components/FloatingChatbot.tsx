@@ -123,21 +123,37 @@ export function FloatingChatbot() {
       recognitionRef.current.lang = 'en-US';
       
       recognitionRef.current.onresult = (event: any) => {
-        const last = event.results.length - 1;
-        const transcript = event.results[last][0].transcript;
-        const isFinal = event.results[last].isFinal;
+        let finalTranscript = '';
+        let interimTranscript = '';
         
-        console.log('Speech recognition transcript:', transcript);
-        console.log('isFinal:', isFinal);
+        // Process all results
+        for (let i = 0; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        // Combine final and interim transcripts for display
+        const fullTranscript = finalTranscript + interimTranscript;
+        
+        console.log('Speech recognition transcript:', fullTranscript);
+        console.log('finalTranscript:', finalTranscript);
+        console.log('interimTranscript:', interimTranscript);
         console.log('isOpen:', isOpen);
         
-        // Only show transcription in input field when speech is final (not during speaking)
-        if (isFinal) {
-          setInputValue(transcript);
-          
+        // Always show transcription in input field (both interim and final)
+        if (fullTranscript.trim()) {
+          setInputValue(fullTranscript);
+        }
+        
+        // Only process final transcripts for wake word detection and completion
+        if (finalTranscript.trim()) {
           // If not open, check for wake word to open chatbot
           if (!isOpen) {
-            if (transcript.toLowerCase().includes('hey agent')) {
+            if (finalTranscript.toLowerCase().includes('hey agent')) {
               console.log('Wake word detected! Opening chatbot');
               setIsOpen(true);
               setInputValue(''); // Clear the wake word from input
@@ -145,13 +161,13 @@ export function FloatingChatbot() {
             }
           }
           
-          // If chatbot is open and speech is final, just set the input (don't auto-send)
-          if (isOpen && transcript.trim().length > 0) {
+          // If chatbot is open and speech is final, process the input
+          if (isOpen) {
             // Don't show wake word in input
-            const cleanTranscript = transcript.toLowerCase().trim();
+            const cleanTranscript = finalTranscript.toLowerCase().trim();
             if (!cleanTranscript.includes('hey agent')) {
-              console.log('Voice input complete - ready for manual send:', transcript);
-              // Transcript is already set above
+              console.log('Voice input complete - ready for manual send:', finalTranscript);
+              setInputValue(finalTranscript); // Set only final transcript without interim
             } else {
               setInputValue(''); // Clear wake word
             }
