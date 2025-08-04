@@ -7,11 +7,12 @@ import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
+import { API_BASE_URL } from "@/config/api";
 
 interface SalesMetric {
   title: string;
   value: string;
-  change: number;
+  change: number | null;
   icon: any;
   color: string;
 }
@@ -32,21 +33,76 @@ export function SalesDashboard() {
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
 
+  const fetchKPIData = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/kpis?tenant_id=${session.user.tenant_id}&dashboard=sales`);
+      if (response.ok) {
+        const kpiData = await response.json();
+        
+        if (kpiData.length > 0) {
+          const mappedKpis = kpiData.map((kpi: any) => ({
+            title: kpi.title,
+            value: kpi.value,
+            change: kpi.change,
+            icon: getIconByName(kpi.icon),
+            color: kpi.color
+          }));
+          setMetrics(mappedKpis);
+        } else {
+          setMetrics([
+            { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
+            { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
+            { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
+            { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
+            { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
+            { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
+          ]);
+        }
+      } else {
+        setMetrics([
+          { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
+          { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
+          { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
+          { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
+          { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
+          { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
+      setMetrics([
+        { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
+        { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
+        { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
+        { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
+        { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
+        { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
+      ]);
+    }
+  };
+
+  const getIconByName = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      'TrendingUp': TrendingUp,
+      'Target': Target,
+      'Users': Users,
+      'Award': Award,
+      'MapPin': MapPin,
+      'Calendar': Calendar,
+    };
+    return iconMap[iconName] || TrendingUp;
+  };
+
   useEffect(() => {
     if (session?.user.tenant_id) {
       fetchWidgets(session.user.tenant_id, 'sales');
+      fetchKPIData();
     }
   }, [session]);
 
   useEffect(() => {
-    setMetrics([
-      { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
-      { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
-      { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
-      { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
-      { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
-      { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
-    ]);
 
     setFunnelData([
       { stage: 'Leads', count: 2847, value: 2847, color: '#3B82F6' },
@@ -118,9 +174,11 @@ export function SalesDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-              <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metric.change > 0 ? '+' : ''}{metric.change}% from last month
-              </p>
+              {metric.change !== null && (
+                <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {metric.change > 0 ? '+' : ''}{metric.change}% from last month
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}

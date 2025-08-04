@@ -7,11 +7,12 @@ import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
+import { API_BASE_URL } from "@/config/api";
 
 interface HRMetric {
   title: string;
   value: string;
-  change: number;
+  change: number | null;
   icon: any;
   color: string;
 }
@@ -33,21 +34,76 @@ export function HRDashboard() {
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
 
+  const fetchKPIData = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/kpis?tenant_id=${session.user.tenant_id}&dashboard=hr`);
+      if (response.ok) {
+        const kpiData = await response.json();
+        
+        if (kpiData.length > 0) {
+          const mappedKpis = kpiData.map((kpi: any) => ({
+            title: kpi.title,
+            value: kpi.value,
+            change: kpi.change,
+            icon: getIconByName(kpi.icon),
+            color: kpi.color
+          }));
+          setMetrics(mappedKpis);
+        } else {
+          setMetrics([
+            { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
+            { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
+            { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
+            { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
+            { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
+            { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
+          ]);
+        }
+      } else {
+        setMetrics([
+          { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
+          { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
+          { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
+          { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
+          { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
+          { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
+      setMetrics([
+        { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
+        { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
+        { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
+        { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
+        { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
+        { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
+      ]);
+    }
+  };
+
+  const getIconByName = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      'Users': Users,
+      'UserPlus': UserPlus,
+      'UserMinus': UserMinus,
+      'Clock': Clock,
+      'Target': Target,
+      'TrendingUp': TrendingUp,
+    };
+    return iconMap[iconName] || Users;
+  };
+
   useEffect(() => {
     if (session?.user.tenant_id) {
       fetchWidgets(session.user.tenant_id, 'hr');
+      fetchKPIData();
     }
   }, [session]);
 
   useEffect(() => {
-    setMetrics([
-      { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
-      { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
-      { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
-      { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
-      { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
-      { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
-    ]);
 
     setHeadcountData([
       { month: 'Jan', total: 1150, hires: 25, departures: 18, netGrowth: 7 },
@@ -130,9 +186,11 @@ export function HRDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-              <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metric.change > 0 ? '+' : ''}{metric.change}% from last month
-              </p>
+              {metric.change !== null && (
+                <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {metric.change > 0 ? '+' : ''}{metric.change}% from last month
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}

@@ -7,11 +7,12 @@ import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
+import { API_BASE_URL } from "@/config/api";
 
 interface InventoryMetric {
   title: string;
   value: string;
-  change: number;
+  change: number | null;
   icon: any;
   color: string;
 }
@@ -32,21 +33,76 @@ export function InventoryDashboard() {
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
 
+  const fetchKPIData = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/kpis?tenant_id=${session.user.tenant_id}&dashboard=inventory`);
+      if (response.ok) {
+        const kpiData = await response.json();
+        
+        if (kpiData.length > 0) {
+          const mappedKpis = kpiData.map((kpi: any) => ({
+            title: kpi.title,
+            value: kpi.value,
+            change: kpi.change,
+            icon: getIconByName(kpi.icon),
+            color: kpi.color
+          }));
+          setMetrics(mappedKpis);
+        } else {
+          setMetrics([
+            { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
+            { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
+            { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
+            { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
+            { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
+            { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
+          ]);
+        }
+      } else {
+        setMetrics([
+          { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
+          { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
+          { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
+          { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
+          { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
+          { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
+      setMetrics([
+        { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
+        { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
+        { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
+        { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
+        { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
+        { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
+      ]);
+    }
+  };
+
+  const getIconByName = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      'Package': Package,
+      'TrendingDown': TrendingDown,
+      'AlertTriangle': AlertTriangle,
+      'Clock': Clock,
+      'Truck': Truck,
+      'BarChart3': BarChart3,
+    };
+    return iconMap[iconName] || Package;
+  };
+
   useEffect(() => {
     if (session?.user.tenant_id) {
       fetchWidgets(session.user.tenant_id, 'inventory');
+      fetchKPIData();
     }
   }, [session]);
 
   useEffect(() => {
-    setMetrics([
-      { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
-      { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
-      { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
-      { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
-      { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
-      { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
-    ]);
 
     setStockLevels([
       { category: 'Electronics', current: 2450, minimum: 500, maximum: 3000, status: 'Normal' },
@@ -120,9 +176,11 @@ export function InventoryDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-              <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metric.change > 0 ? '+' : ''}{metric.change}% from last month
-              </p>
+              {metric.change !== null && (
+                <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {metric.change > 0 ? '+' : ''}{metric.change}% from last month
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
