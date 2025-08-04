@@ -7,11 +7,12 @@ import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { Layout } from "@/components/Layout";
+import { API_BASE_URL } from "@/config/api";
 
 interface ExecutiveKPI {
   title: string;
   value: string;
-  change: number;
+  change: number | null;
   icon: any;
   color: string;
 }
@@ -31,24 +32,77 @@ export function ExecutiveDashboard() {
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
 
+  const fetchKPIData = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/kpis?tenant_id=${session.user.tenant_id}&dashboard=executive`);
+      if (response.ok) {
+        const kpiData = await response.json();
+        
+        if (kpiData.length > 0) {
+          // Map API data to component format
+          const mappedKpis = kpiData.map((kpi: any) => ({
+            title: kpi.title,
+            value: kpi.value,
+            change: kpi.change,
+            icon: getIconByName(kpi.icon),
+            color: kpi.color
+          }));
+          setKpis(mappedKpis);
+        } else {
+          // Fallback to dummy data
+          setKpis([
+            { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
+            { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
+            { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
+            { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
+          ]);
+        }
+      } else {
+        // Fallback to dummy data on error
+        setKpis([
+          { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
+          { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
+          { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
+          { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
+      // Fallback to dummy data
+      setKpis([
+        { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
+        { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
+        { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
+        { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
+      ]);
+    }
+  };
+
+  const getIconByName = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      'DollarSign': DollarSign,
+      'Users': Users,
+      'ShoppingCart': ShoppingCart,
+      'Package': Package,
+      'UserCheck': UserCheck,
+      'AlertTriangle': AlertTriangle,
+    };
+    return iconMap[iconName] || DollarSign;
+  };
+
   useEffect(() => {
     if (session?.user.tenant_id) {
       console.log('Session user data:', session.user);
       console.log('Tenant ID:', session.user.tenant_id, 'Type:', typeof session.user.tenant_id);
       fetchWidgets(session.user.tenant_id, 'executive');
+      fetchKPIData();
     }
   }, [session]);
 
   useEffect(() => {
-    // Mock data - replace with actual API calls
-    setKpis([
-      { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
-      // { title: 'Active Customers', value: '1,284', change: 8.3, icon: Users, color: 'text-blue-600' },
-      { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
-      { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
-      { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
-      //{ title: 'Open Issues', value: '23', change: -15.4, icon: AlertTriangle, color: 'text-red-600' }
-    ]);
+    // Chart data - keep as mock data
 
     setRevenueData([
       { name: 'Jan', revenue: 65000, expenses: 45000, profit: 20000 },
@@ -104,16 +158,18 @@ export function ExecutiveDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
-              <div className="flex items-center mt-1">
-                {kpi.change > 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
-                )}
-                <span className={`text-xs ${kpi.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Math.abs(kpi.change)}% from last month
-                </span>
-              </div>
+              {kpi.change !== null && (
+                <div className="flex items-center mt-1">
+                  {kpi.change > 0 ? (
+                    <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                  )}
+                  <span className={`text-xs ${kpi.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {Math.abs(kpi.change)}% from last month
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
