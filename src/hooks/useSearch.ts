@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useWidgetStore } from '@/store/widgetStore';
 import { useRoleStore } from '@/store/roleStore';
@@ -42,6 +43,9 @@ export function useSearch(query: string) {
         data: widget
       }));
 
+    // Get accessible dashboard IDs
+    const accessibleDashboardIds = accessibleModules.map(m => m.id);
+
     // Search dashboard names (only accessible ones)
     const allDashboards = [
       { id: 'executive', title: 'Executive Dashboard', type: 'dashboard' as const, url: '/dashboard/executive' },
@@ -52,20 +56,13 @@ export function useSearch(query: string) {
     ];
 
     const dashboardResults = allDashboards
-      .filter(dashboard => {
-        // Always include executive dashboard
-        if (dashboard.id === 'executive') return true;
-        // Check if user has access to this dashboard
-        return accessibleModules.some(module => module.id === dashboard.id);
-      })
+      .filter(dashboard => accessibleDashboardIds.includes(dashboard.id))
       .filter(dashboard => 
         dashboard.title.toLowerCase().includes(query.toLowerCase())
       );
 
     // Search charts/cards (only from accessible dashboards)
     const chartResults: SearchResult[] = [];
-    const accessibleDashboardIds = accessibleModules.map(m => m.id);
-    accessibleDashboardIds.push('executive'); // Always include executive
 
     // Add default charts/cards for accessible dashboards
     const defaultCharts = {
