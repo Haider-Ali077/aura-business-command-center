@@ -183,7 +183,7 @@ export function SalesDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-              {metric.change !== null && (
+              {metric.change !== null && metric.change !== 0 && (
                 <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {metric.change > 0 ? '+' : ''}{metric.change}% from last month
                 </p>
@@ -210,8 +210,9 @@ export function SalesDashboard() {
         </div>
       )}
 
-      {/* Default Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Default Charts Grid - Only show if no dynamic widgets */}
+      {widgets.length === 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Funnel */}
         <Card>
           <CardHeader>
@@ -295,10 +296,12 @@ export function SalesDashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      )}
 
-      {/* Top Customers Table */}
-      <Card>
+      {/* Top Customers Table - Only show if no dynamic widgets */}
+      {widgets.length === 0 && (
+        <Card>
         <CardHeader>
           <CardTitle>Top Customers by Revenue</CardTitle>
         </CardHeader>
@@ -335,6 +338,7 @@ export function SalesDashboard() {
           </div>
         </CardContent>
       </Card>
+      )}
       </div>
     </Layout>
   );

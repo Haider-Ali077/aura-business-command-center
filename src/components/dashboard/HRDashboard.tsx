@@ -195,7 +195,7 @@ export function HRDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-              {metric.change !== null && (
+              {metric.change !== null && metric.change !== 0 && (
                 <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {metric.change > 0 ? '+' : ''}{metric.change}% from last month
                 </p>
@@ -222,8 +222,9 @@ export function HRDashboard() {
         </div>
       )}
 
-      {/* Default Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Default Charts Grid - Only show if no dynamic widgets */}
+      {widgets.length === 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Headcount Growth */}
         <Card>
           <CardHeader>
@@ -309,10 +310,12 @@ export function HRDashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      )}
 
-      {/* Hiring Pipeline Table */}
-      <Card>
+      {/* Hiring Pipeline Table - Only show if no dynamic widgets */}
+      {widgets.length === 0 && (
+        <Card>
         <CardHeader>
           <CardTitle>Current Hiring Pipeline</CardTitle>
         </CardHeader>
@@ -345,6 +348,7 @@ export function HRDashboard() {
           </div>
         </CardContent>
       </Card>
+      )}
       </div>
     </Layout>
   );

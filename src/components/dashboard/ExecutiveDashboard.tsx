@@ -167,7 +167,7 @@ export function ExecutiveDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
-              {kpi.change !== null && (
+              {kpi.change !== null && kpi.change !== 0 && (
                 <div className="flex items-center mt-1">
                   {kpi.change > 0 ? (
                     <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
@@ -201,8 +201,9 @@ export function ExecutiveDashboard() {
         </div>
       )}
 
-      {/* Default Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Default Charts Grid - Only show if no dynamic widgets */}
+      {widgets.length === 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue vs Expenses */}
         <Card>
           <CardHeader>
@@ -268,7 +269,8 @@ export function ExecutiveDashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      )}
       </div>
     </Layout>
   );

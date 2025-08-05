@@ -15,35 +15,35 @@ export const dashboardModules: DashboardModule[] = [
     name: 'Executive Summary',
     icon: 'BarChart3',
     description: 'High-level KPIs across departments',
-    roles: ['CEO', 'CFO', 'COO', 'Executive', 'Manager']
+    roles: ['Admin']
   },
   {
     id: 'finance',
     name: 'Finance Analytics',
     icon: 'DollarSign',
     description: 'Revenue, expenses, profit margins, cash flow',
-    roles: ['CFO', 'Finance Manager', 'Finance Analyst', 'Accountant']
+    roles: ['CFO']
   },
   {
     id: 'sales',
     name: 'Sales & CRM',
     icon: 'TrendingUp',
     description: 'Sales funnel, lead conversion, revenue tracking',
-    roles: ['Sales Manager', 'Sales Rep', 'CRM Manager', 'VP Sales']
+    roles: ['CEO']
   },
   {
     id: 'inventory',
     name: 'Inventory & Supply Chain',
     icon: 'Package',
     description: 'Stock levels, turnover, supplier metrics',
-    roles: ['Inventory Manager', 'Supply Chain Manager', 'Operations']
+    roles: ['CFO']
   },
   {
     id: 'hr',
     name: 'Human Resources',
     icon: 'Users',
     description: 'Headcount, attrition, productivity metrics',
-    roles: ['HR Manager', 'HR Analyst', 'People Operations']
+    roles: ['CFO']
   }
 ];
 
@@ -59,15 +59,13 @@ export const useRoleStore = create<RoleStore>(() => ({
     const userRole = session?.user?.role_name || '';
     
     return dashboardModules.filter(module => 
-      module.roles.includes(userRole) || userRole === 'Admin'
+      module.roles.includes(userRole)
     );
   },
 
   hasModuleAccess: (moduleId: string) => {
     const { session } = useAuthStore.getState();
     const userRole = session?.user?.role_name || '';
-    
-    if (userRole === 'Admin') return true;
     
     const module = dashboardModules.find(m => m.id === moduleId);
     return module ? module.roles.includes(userRole) : false;
