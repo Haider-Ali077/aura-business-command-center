@@ -17,6 +17,7 @@ import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/authStore';
 import { useRoleStore } from '@/store/roleStore';
 import { useInactivityTimer } from '@/hooks/useInactivityTimer';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -39,7 +40,7 @@ function App() {
 
   // Get the first accessible dashboard for the user
   const accessibleModules = getAccessibleModules();
-  const defaultDashboard = accessibleModules.length > 0 ? `/dashboard/${accessibleModules[0].id}` : '/dashboard/executive';
+  const defaultDashboard = accessibleModules.length > 0 ? `/dashboard/${accessibleModules[0].id}` : '/settings';
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -48,11 +49,46 @@ function App() {
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
               <Route path="/" element={<Navigate to={defaultDashboard} replace />} />
-              <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
-              <Route path="/dashboard/finance" element={<FinanceDashboard />} />
-              <Route path="/dashboard/sales" element={<SalesDashboard />} />
-              <Route path="/dashboard/inventory" element={<InventoryDashboard />} />
-              <Route path="/dashboard/hr" element={<HRDashboard />} />
+              <Route 
+                path="/dashboard/executive" 
+                element={
+                  <ProtectedRoute moduleId="executive">
+                    <ExecutiveDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/finance" 
+                element={
+                  <ProtectedRoute moduleId="finance">
+                    <FinanceDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/sales" 
+                element={
+                  <ProtectedRoute moduleId="sales">
+                    <SalesDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/inventory" 
+                element={
+                  <ProtectedRoute moduleId="inventory">
+                    <InventoryDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/hr" 
+                element={
+                  <ProtectedRoute moduleId="hr">
+                    <HRDashboard />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
