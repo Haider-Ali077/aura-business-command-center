@@ -10,6 +10,8 @@ export interface User {
   tenant_name: string; // This is also the database name for SQL queries
   role_name: string; // This is the role name from the database query
   is_active: boolean;
+  user_name?: string;
+  profile_picture?: string | null;
 }
 
 export interface AuthSession {
@@ -30,6 +32,7 @@ interface AuthStore {
   clearError: () => void;
   updateActivity: () => void;
   checkInactivity: () => void;
+  updateProfilePicture: (profilePicture: string | null) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -104,6 +107,21 @@ export const useAuthStore = create<AuthStore>()(
         
         if (session && Date.now() - lastActivity > thirtyMinutes) {
           get().logout();
+        }
+      },
+
+      updateProfilePicture: (profilePicture: string | null) => {
+        const currentSession = get().session;
+        if (currentSession) {
+          set({
+            session: {
+              ...currentSession,
+              user: {
+                ...currentSession.user,
+                profile_picture: profilePicture
+              }
+            }
+          });
         }
       },
     }),

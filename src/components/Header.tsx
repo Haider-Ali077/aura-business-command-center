@@ -1,6 +1,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Search, User, LogOut } from "lucide-react";
 import { useAuthStore } from '@/store/authStore';
 import { SearchDropdown } from "@/components/SearchDropdown";
@@ -21,6 +22,19 @@ export function Header() {
     logout();
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const profilePictureUrl = session?.user.profile_picture 
+    ? `data:image/jpeg;base64,${session.user.profile_picture}`
+    : undefined;
+
   return (
     <header className="h-16 border-b border-border bg-background flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center gap-2 md:gap-4 min-w-0">
@@ -35,10 +49,15 @@ export function Header() {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 min-w-0">
-              <User className="h-4 w-4 flex-shrink-0" />
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 min-w-0 h-auto py-1">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={profilePictureUrl} alt="Profile picture" />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                  {getInitials(session?.user.user_name || session?.user.email || '')}
+                </AvatarFallback>
+              </Avatar>
               <span className="text-sm font-medium hidden md:inline-block truncate max-w-32 lg:max-w-none">
-                {session?.user.email}
+                {session?.user.user_name || session?.user.email}
               </span>
             </Button>
           </DropdownMenuTrigger>
