@@ -38,10 +38,16 @@ interface Message {
 }
 
 export function FloatingChatbot() {
-  // Load initial state from localStorage if available
+  // Get user-specific localStorage keys
+  const getUserStorageKey = (key: string) => {
+    const userId = session?.user?.user_id || 'anonymous';
+    return `intellyca-${userId}-${key}`;
+  };
+
+  // Load initial state from localStorage if available (user-specific)
   const loadInitialMessages = () => {
     try {
-      const saved = localStorage.getItem('intellyca-chat-messages');
+      const saved = localStorage.getItem(getUserStorageKey('chat-messages'));
       if (saved) {
         const parsed = JSON.parse(saved);
         return parsed.map((msg: any) => ({
@@ -63,7 +69,7 @@ export function FloatingChatbot() {
 
   const [isOpen, setIsOpen] = useState(() => {
     try {
-      const saved = localStorage.getItem('intellyca-chat-open');
+      const saved = localStorage.getItem(getUserStorageKey('chat-open'));
       return saved ? JSON.parse(saved) : false;
     } catch {
       return false;
@@ -90,23 +96,23 @@ export function FloatingChatbot() {
   const { session } = useAuthStore();
   const { getAccessibleModules } = useRoleStore();
 
-  // Save messages to localStorage whenever messages change
+  // Save messages to localStorage whenever messages change (user-specific)
   useEffect(() => {
     try {
-      localStorage.setItem('intellyca-chat-messages', JSON.stringify(messages));
+      localStorage.setItem(getUserStorageKey('chat-messages'), JSON.stringify(messages));
     } catch (error) {
       console.error('Error saving chat messages:', error);
     }
-  }, [messages]);
+  }, [messages, session?.user?.user_id]);
 
-  // Save isOpen state to localStorage
+  // Save isOpen state to localStorage (user-specific)
   useEffect(() => {
     try {
-      localStorage.setItem('intellyca-chat-open', JSON.stringify(isOpen));
+      localStorage.setItem(getUserStorageKey('chat-open'), JSON.stringify(isOpen));
     } catch (error) {
       console.error('Error saving chat open state:', error);
     }
-  }, [isOpen]);
+  }, [isOpen, session?.user?.user_id]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -345,7 +351,7 @@ export function FloatingChatbot() {
     };
     setMessages([initialMessage]);
     try {
-      localStorage.removeItem('intellyca-chat-messages');
+      localStorage.removeItem(getUserStorageKey('chat-messages'));
     } catch (error) {
       console.error('Error clearing chat history:', error);
     }

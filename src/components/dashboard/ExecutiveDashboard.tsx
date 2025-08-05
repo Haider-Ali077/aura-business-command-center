@@ -187,7 +187,14 @@ export function ExecutiveDashboard() {
       {/* Dynamic Widgets */}
       {widgets.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {widgets.map((widget) => (
+          {widgets
+            .sort((a, b) => {
+              // Sort so tables come last
+              if (a.type === 'table' && b.type !== 'table') return 1;
+              if (a.type !== 'table' && b.type === 'table') return -1;
+              return 0;
+            })
+            .map((widget) => (
             <ConfigurableWidget 
               key={widget.id} 
               widget={widget}

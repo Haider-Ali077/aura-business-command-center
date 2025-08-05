@@ -15,6 +15,7 @@ import { HRDashboard } from "@/components/dashboard/HRDashboard";
 import NotFound from '@/pages/NotFound';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/authStore';
+import { useRoleStore } from '@/store/roleStore';
 import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 import './App.css';
 
@@ -22,6 +23,7 @@ const queryClient = new QueryClient();
 
 function App() {
   const { session } = useAuthStore();
+  const { getAccessibleModules } = useRoleStore();
   
   // Initialize inactivity timer
   useInactivityTimer();
@@ -35,13 +37,17 @@ function App() {
     );
   }
 
+  // Get the first accessible dashboard for the user
+  const accessibleModules = getAccessibleModules();
+  const defaultDashboard = accessibleModules.length > 0 ? `/dashboard/${accessibleModules[0].id}` : '/dashboard/executive';
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <Router>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard/executive" replace />} />
+              <Route path="/" element={<Navigate to={defaultDashboard} replace />} />
               <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
               <Route path="/dashboard/finance" element={<FinanceDashboard />} />
               <Route path="/dashboard/sales" element={<SalesDashboard />} />
