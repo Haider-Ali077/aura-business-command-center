@@ -7,6 +7,7 @@ import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { Layout } from "@/components/Layout";
+import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
 
 interface ExecutiveKPI {
@@ -28,6 +29,8 @@ export function ExecutiveDashboard() {
   const [revenueData, setRevenueData] = useState<ChartData[]>([]);
   const [departmentData, setDepartmentData] = useState<ChartData[]>([]);
   const [trendData, setTrendData] = useState<ChartData[]>([]);
+  const [isLoadingKpis, setIsLoadingKpis] = useState(true);
+  const [isLoadingCharts, setIsLoadingCharts] = useState(true);
   
   const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
@@ -35,6 +38,7 @@ export function ExecutiveDashboard() {
   const fetchKPIData = async () => {
     if (!session?.user.tenant_id) return;
     
+    setIsLoadingKpis(true);
     try {
       const response = await fetch(`${API_BASE_URL}/kpis`, {
         method: 'POST',
@@ -48,6 +52,9 @@ export function ExecutiveDashboard() {
       });
       if (response.ok) {
         const kpiData = await response.json();
+        
+        // Simulate loading delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         if (kpiData.length > 0) {
           // Map API data to component format
@@ -86,6 +93,8 @@ export function ExecutiveDashboard() {
         { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
         { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
       ]);
+    } finally {
+      setIsLoadingKpis(false);
     }
   };
 
@@ -112,30 +121,36 @@ export function ExecutiveDashboard() {
 
   useEffect(() => {
     // Chart data - keep as mock data
+    setIsLoadingCharts(true);
+    
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      setRevenueData([
+        { name: 'Jan', revenue: 65000, expenses: 45000, profit: 20000 },
+        { name: 'Feb', revenue: 72000, expenses: 48000, profit: 24000 },
+        { name: 'Mar', revenue: 68000, expenses: 46000, profit: 22000 },
+        { name: 'Apr', revenue: 78000, expenses: 52000, profit: 26000 },
+        { name: 'May', revenue: 85000, expenses: 55000, profit: 30000 },
+        { name: 'Jun', revenue: 92000, expenses: 58000, profit: 34000 }
+      ]);
 
-    setRevenueData([
-      { name: 'Jan', revenue: 65000, expenses: 45000, profit: 20000 },
-      { name: 'Feb', revenue: 72000, expenses: 48000, profit: 24000 },
-      { name: 'Mar', revenue: 68000, expenses: 46000, profit: 22000 },
-      { name: 'Apr', revenue: 78000, expenses: 52000, profit: 26000 },
-      { name: 'May', revenue: 85000, expenses: 55000, profit: 30000 },
-      { name: 'Jun', revenue: 92000, expenses: 58000, profit: 34000 }
-    ]);
+      setDepartmentData([
+        { name: 'Sales', value: 35, color: '#3B82F6' },
+        { name: 'Marketing', value: 25, color: '#10B981' },
+        { name: 'Operations', value: 20, color: '#F59E0B' },
+        { name: 'HR', value: 12, color: '#EF4444' },
+        { name: 'IT', value: 8, color: '#8B5CF6' }
+      ]);
 
-    setDepartmentData([
-      { name: 'Sales', value: 35, color: '#3B82F6' },
-      { name: 'Marketing', value: 25, color: '#10B981' },
-      { name: 'Operations', value: 20, color: '#F59E0B' },
-      { name: 'HR', value: 12, color: '#EF4444' },
-      { name: 'IT', value: 8, color: '#8B5CF6' }
-    ]);
-
-    setTrendData([
-      { name: 'Q1', sales: 245000, orders: 850, customers: 320 },
-      { name: 'Q2', sales: 285000, orders: 920, customers: 380 },
-      { name: 'Q3', sales: 320000, orders: 1100, customers: 450 },
-      { name: 'Q4', sales: 375000, orders: 1280, customers: 520 }
-    ]);
+      setTrendData([
+        { name: 'Q1', sales: 245000, orders: 850, customers: 320 },
+        { name: 'Q2', sales: 285000, orders: 920, customers: 380 },
+        { name: 'Q3', sales: 320000, orders: 1100, customers: 450 },
+        { name: 'Q4', sales: 375000, orders: 1280, customers: 520 }
+      ]);
+      
+      setIsLoadingCharts(false);
+    }, 1000);
   }, []);
 
   return (
@@ -151,135 +166,146 @@ export function ExecutiveDashboard() {
             refreshData();
             fetchKPIData();
           }} 
-          disabled={loading}
+          disabled={loading || isLoadingKpis}
           className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${(loading || isLoadingKpis) ? 'animate-spin' : ''}`} />
           Refresh Data
         </Button>
       </div>
 
       {/* KPI Cards Grid */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"> */}
-      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
-        {kpis.map((kpi, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-              <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
-              {kpi.change !== null && kpi.change !== 0 && (
-                <div className="flex items-center mt-1">
-                  {kpi.change > 0 ? (
-                    <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
-                  )}
-                  <span className={`text-xs ${kpi.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {Math.abs(kpi.change)}% from last month
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Dynamic Widgets */}
-      {widgets.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {widgets
-            .sort((a, b) => {
-              // Sort so tables come last
-              if (a.type === 'table' && b.type !== 'table') return 1;
-              if (a.type !== 'table' && b.type === 'table') return -1;
-              return 0;
-            })
-            .map((widget) => (
-            <ConfigurableWidget 
-              key={widget.id} 
-              widget={widget}
-              data={widget.config?.chartData || []}
-              onRemove={() => {}}
-              onUpdate={() => {}}
-              onMove={() => {}}
-              onResize={() => {}}
-            />
+      {isLoadingKpis ? (
+        <LoadingSkeleton variant="kpi" count={4} />
+      ) : (
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+          {kpis.map((kpi, index) => (
+            <Card key={index} className="hover:shadow-md transition-shadow animate-fade-in">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
+                {kpi.change !== null && kpi.change !== 0 && (
+                  <div className="flex items-center mt-1">
+                    {kpi.change > 0 ? (
+                      <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                    )}
+                    <span className={`text-xs ${kpi.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {Math.abs(kpi.change)}% from last month
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
+      {/* Dynamic Widgets */}
+      <LoadingOverlay isLoading={loading}>
+        {widgets.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {widgets
+              .sort((a, b) => {
+                // Sort so tables come last
+                if (a.type === 'table' && b.type !== 'table') return 1;
+                if (a.type !== 'table' && b.type === 'table') return -1;
+                return 0;
+              })
+              .map((widget) => (
+              <ConfigurableWidget 
+                key={widget.id} 
+                widget={widget}
+                data={widget.config?.chartData || []}
+                onRemove={() => {}}
+                onUpdate={() => {}}
+                onMove={() => {}}
+                onResize={() => {}}
+              />
+            ))}
+          </div>
+        )}
+      </LoadingOverlay>
+
       {/* Default Charts Grid - Only show if no dynamic widgets */}
       {!loading && widgets.length === 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue vs Expenses */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue vs Expenses Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, '']} />
-                <Bar dataKey="revenue" fill="#3B82F6" name="Revenue" />
-                <Bar dataKey="expenses" fill="#EF4444" name="Expenses" />
-                <Bar dataKey="profit" fill="#10B981" name="Profit" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <>
+          {isLoadingCharts ? (
+            <LoadingSkeleton variant="chart" count={3} />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Revenue vs Expenses */}
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Revenue vs Expenses Trend</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, '']} />
+                      <Bar dataKey="revenue" fill="#3B82F6" name="Revenue" />
+                      <Bar dataKey="expenses" fill="#EF4444" name="Expenses" />
+                      <Bar dataKey="profit" fill="#10B981" name="Profit" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
 
-        {/* Department Budget Allocation */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Department Budget Allocation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={departmentData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}%`}
-                >
-                  {departmentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${value}%`, 'Budget']} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+              {/* Department Budget Allocation */}
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Department Budget Allocation</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={departmentData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}%`}
+                      >
+                        {departmentData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value}%`, 'Budget']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
 
-        {/* Quarterly Performance Trends */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Quarterly Performance Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="sales" stroke="#3B82F6" strokeWidth={3} name="Sales ($)" />
-                <Line type="monotone" dataKey="orders" stroke="#10B981" strokeWidth={3} name="Orders" />
-                <Line type="monotone" dataKey="customers" stroke="#F59E0B" strokeWidth={3} name="Customers" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        </div>
+              {/* Quarterly Performance Trends */}
+              <Card className="lg:col-span-2 animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Quarterly Performance Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={trendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="sales" stroke="#3B82F6" strokeWidth={3} name="Sales ($)" />
+                      <Line type="monotone" dataKey="orders" stroke="#10B981" strokeWidth={3} name="Orders" />
+                      <Line type="monotone" dataKey="customers" stroke="#F59E0B" strokeWidth={3} name="Customers" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
       )}
       </div>
     </Layout>
