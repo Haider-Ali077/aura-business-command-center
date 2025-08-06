@@ -38,6 +38,10 @@ interface Message {
 }
 
 export function FloatingChatbot() {
+  const { session } = useAuthStore();
+  const { addWidget } = useWidgetStore();
+  const { getAccessibleModules } = useRoleStore();
+
   // Get user-specific localStorage keys
   const getUserStorageKey = (key: string) => {
     const userId = session?.user?.user_id || 'anonymous';
@@ -92,9 +96,6 @@ export function FloatingChatbot() {
   const restartTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { addWidget } = useWidgetStore();
-  const { session } = useAuthStore();
-  const { getAccessibleModules } = useRoleStore();
 
   // Save messages to localStorage whenever messages change (user-specific)
   useEffect(() => {
