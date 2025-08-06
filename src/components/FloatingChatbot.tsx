@@ -437,7 +437,8 @@ export function FloatingChatbot() {
         body: JSON.stringify({
           user_id: session.user.user_id,
           prompt: userPrompt,
-          response: apiResponse.toString()
+          // response: apiResponse.toString()
+          response: typeof apiResponse === 'object' ? JSON.stringify(apiResponse) : apiResponse
         }),
       });
     } catch (error) {
