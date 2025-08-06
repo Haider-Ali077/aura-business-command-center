@@ -48,6 +48,12 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   
   // Convert numeric month to month name
   const formatMonthData = (data: ChartData[]) => {
+    // Safety check: ensure data is an array
+    if (!Array.isArray(data)) {
+      console.warn('ChartRenderer: data is not an array:', data);
+      return [];
+    }
+    
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     return data.map(item => {
@@ -60,9 +66,11 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
 
   // Auto-detect the label key for X-axis (first non-numeric key)
   const getLabelKey = (data: ChartData[]) => {
-    if (data.length === 0) return 'name';
+    if (!Array.isArray(data) || data.length === 0) return 'name';
     
     const firstItem = data[0];
+    if (!firstItem || typeof firstItem !== 'object') return 'name';
+    
     const keys = Object.keys(firstItem);
     
     // Find the first non-numeric key for labels
@@ -72,9 +80,11 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
   
   // Auto-detect the primary data key for charts
   const getDataKey = (data: ChartData[]) => {
-    if (data.length === 0) return 'value';
+    if (!Array.isArray(data) || data.length === 0) return 'value';
     
     const firstItem = data[0];
+    if (!firstItem || typeof firstItem !== 'object') return 'value';
+    
     const keys = Object.keys(firstItem);
     
     // Find the first numeric key, or fall back to 'value'
@@ -90,8 +100,11 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
     );
   }
   
+  // Ensure data is an array before processing
+  const safeData = Array.isArray(data) ? data : [];
+  
   // Format month data before processing
-  const formattedData = formatMonthData(data);
+  const formattedData = formatMonthData(safeData);
   const dataKey = getDataKey(formattedData);
   const labelKey = getLabelKey(formattedData);
   
