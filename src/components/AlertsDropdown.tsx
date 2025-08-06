@@ -87,11 +87,6 @@ export function AlertsDropdown() {
       userAlerts.push(...moduleAlerts);
     });
 
-    // Always include executive alerts for all users
-    if (!accessibleModules.some(m => m.id === 'executive')) {
-      userAlerts.push(...alertsByDashboard.executive);
-    }
-
     return userAlerts;
   };
 
