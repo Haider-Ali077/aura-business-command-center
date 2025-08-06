@@ -175,7 +175,10 @@ export function HRDashboard() {
             <p className="text-muted-foreground mt-2">Employee metrics, hiring, and performance insights</p>
           </div>
           <Button 
-            onClick={refreshData} 
+            onClick={() => {
+              refreshData();
+              fetchKPIData();
+            }} 
             disabled={loading}
             className="flex items-center gap-2"
           >
@@ -230,7 +233,7 @@ export function HRDashboard() {
       )}
 
       {/* Default Charts Grid - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Headcount Growth */}
         <Card>
@@ -321,7 +324,7 @@ export function HRDashboard() {
       )}
 
       {/* Hiring Pipeline Table - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <Card>
         <CardHeader>
           <CardTitle>Current Hiring Pipeline</CardTitle>

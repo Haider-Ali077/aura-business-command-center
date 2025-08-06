@@ -147,7 +147,10 @@ export function ExecutiveDashboard() {
           <p className="text-muted-foreground mt-2">High-level overview of company performance</p>
         </div>
         <Button 
-          onClick={refreshData} 
+          onClick={() => {
+            refreshData();
+            fetchKPIData();
+          }} 
           disabled={loading}
           className="flex items-center gap-2"
         >
@@ -209,7 +212,7 @@ export function ExecutiveDashboard() {
       )}
 
       {/* Default Charts Grid - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue vs Expenses */}
         <Card>

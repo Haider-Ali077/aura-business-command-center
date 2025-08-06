@@ -163,7 +163,10 @@ export function SalesDashboard() {
             <p className="text-muted-foreground mt-2">Sales performance, pipeline, and customer insights</p>
           </div>
           <Button 
-            onClick={refreshData} 
+            onClick={() => {
+              refreshData();
+              fetchKPIData();
+            }} 
             disabled={loading}
             className="flex items-center gap-2"
           >
@@ -218,7 +221,7 @@ export function SalesDashboard() {
       )}
 
       {/* Default Charts Grid - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Funnel */}
         <Card>
@@ -307,7 +310,7 @@ export function SalesDashboard() {
       )}
 
       {/* Top Customers Table - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <Card>
         <CardHeader>
           <CardTitle>Top Customers by Revenue</CardTitle>

@@ -165,7 +165,10 @@ export function InventoryDashboard() {
             <p className="text-muted-foreground mt-2">Stock levels, turnover, and supply chain performance</p>
           </div>
           <Button 
-            onClick={refreshData} 
+            onClick={() => {
+              refreshData();
+              fetchKPIData();
+            }} 
             disabled={loading}
             className="flex items-center gap-2"
           >
@@ -220,7 +223,7 @@ export function InventoryDashboard() {
       )}
 
       {/* Default Charts Grid - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Stock Levels by Category */}
         <Card>
@@ -307,7 +310,7 @@ export function InventoryDashboard() {
       )}
 
       {/* Supplier Performance Table - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <Card>
         <CardHeader>
           <CardTitle>Supplier Performance Metrics</CardTitle>

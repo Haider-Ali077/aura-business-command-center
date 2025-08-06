@@ -156,7 +156,10 @@ export function FinanceDashboard() {
             <p className="text-muted-foreground mt-2">Financial performance and cash flow analysis</p>
           </div>
           <Button 
-            onClick={refreshData} 
+            onClick={() => {
+              refreshData();
+              fetchKPIData();
+            }} 
             disabled={loading}
             className="flex items-center gap-2"
           >
@@ -211,7 +214,7 @@ export function FinanceDashboard() {
       )}
 
       {/* Default Charts Grid - Only show if no dynamic widgets */}
-      {widgets.length === 0 && (
+      {!loading && widgets.length === 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cash Flow Analysis */}
         <Card>
