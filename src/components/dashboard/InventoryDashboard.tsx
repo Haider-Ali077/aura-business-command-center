@@ -109,7 +109,12 @@ export function InventoryDashboard() {
       fetchWidgets(session.user.tenant_id, 'inventory');
       fetchKPIData();
     }
-  }, [session]);
+  }, [session, fetchWidgets]);
+
+  // Listen for changes in widgets array to trigger re-renders when new widgets are added
+  useEffect(() => {
+    console.log('Widgets updated in InventoryDashboard:', widgets.length);
+  }, [widgets]);
 
   useEffect(() => {
 

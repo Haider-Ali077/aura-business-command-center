@@ -65,16 +65,19 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
     
     setIsLoading(true);
     try {
-      // Use chart data from widget config if available, otherwise fetch fresh data
+      // Always fetch fresh data using SQL query to ensure consistency
+      console.log('Fetching fresh data for widget:', widget.title, 'Query:', widget.sqlQuery);
+      const result = await sqlService.getChartData(widget.sqlQuery);
+      console.log('Fresh data result for', widget.title, ':', result);
+      setChartData(result);
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+      // Fallback to pre-configured data or passed data
       if (widget.config?.chartData) {
         setChartData(widget.config.chartData);
       } else {
-        const result = await sqlService.getChartData(widget.sqlQuery);
-        setChartData(result);
+        setChartData(data);
       }
-    } catch (error) {
-      console.error('Error fetching chart data:', error);
-      setChartData(data);
     } finally {
       setIsLoading(false);
     }

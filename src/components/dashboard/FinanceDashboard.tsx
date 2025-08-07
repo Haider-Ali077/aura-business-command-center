@@ -108,7 +108,12 @@ export function FinanceDashboard() {
       fetchWidgets(session.user.tenant_id, 'finance');
       fetchKPIData();
     }
-  }, [session]);
+  }, [session, fetchWidgets]);
+
+  // Listen for changes in widgets array to trigger re-renders when new widgets are added
+  useEffect(() => {
+    console.log('Widgets updated in FinanceDashboard:', widgets.length);
+  }, [widgets]);
 
   useEffect(() => {
 

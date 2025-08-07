@@ -245,15 +245,19 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
     });
 
     if (res.ok) {
-      set((state) => ({
-        widgets: [...state.widgets, widget],
-      }));
+      const result = await res.json();
+      console.log("Widget added successfully, refreshing dashboard...");
+      
+      // Refresh the entire widget list to get the new widget with proper data
+      await get().fetchWidgets(tenantId, dashboard);
     } else {
       const errorText = await res.text();
       console.error("Failed response:", errorText);
+      throw new Error(`Failed to add widget: ${errorText}`);
     }
   } catch (err) {
     console.error("Failed to add widget", err);
+    throw err;
   }
 },
 

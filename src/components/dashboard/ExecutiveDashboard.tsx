@@ -117,7 +117,12 @@ export function ExecutiveDashboard() {
       fetchWidgets(session.user.tenant_id, 'executive');
       fetchKPIData();
     }
-  }, [session]);
+  }, [session, fetchWidgets]);
+
+  // Listen for changes in widgets array to trigger re-renders when new widgets are added
+  useEffect(() => {
+    console.log('Widgets updated in ExecutiveDashboard:', widgets.length);
+  }, [widgets]);
 
   useEffect(() => {
     // Chart data - keep as mock data
