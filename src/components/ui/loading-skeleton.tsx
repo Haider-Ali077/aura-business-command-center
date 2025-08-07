@@ -28,7 +28,7 @@ export function LoadingSkeleton({ className, variant = 'card', count = 1 }: Load
 
   if (variant === 'chart') {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {skeletons.map((_, index) => (
           <div key={index} className="bg-card border rounded-lg p-6 animate-fade-in">
             <div className="h-6 bg-muted rounded animate-pulse w-48 mb-4"></div>

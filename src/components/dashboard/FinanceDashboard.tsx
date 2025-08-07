@@ -191,7 +191,7 @@ export function FinanceDashboard() {
 
       {/* Dynamic Widgets */}
       {widgets.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {widgets
             .sort((a, b) => {
               // Sort so tables come last
@@ -215,7 +215,7 @@ export function FinanceDashboard() {
 
       {/* Default Charts Grid - Only show if no dynamic widgets */}
       {!loading && widgets.length === 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* Cash Flow Analysis */}
         <Card>
           <CardHeader>
