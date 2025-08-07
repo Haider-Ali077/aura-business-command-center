@@ -319,7 +319,7 @@ export function FloatingChatbot() {
       const successMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'bot',
-        content: `✅ Chart "${chart.title}" has been added to your ${dashboardName} dashboard!`,
+        content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard!`,
         timestamp: new Date(),
       };
       
