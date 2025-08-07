@@ -208,7 +208,7 @@ export function ExecutiveDashboard() {
       {/* Dynamic Widgets */}
       <LoadingOverlay isLoading={loading}>
         {widgets.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {widgets
               .sort((a, b) => {
                 // Sort so tables come last
@@ -217,7 +217,7 @@ export function ExecutiveDashboard() {
                 return 0;
               })
               .map((widget) => (
-              <ConfigurableWidget 
+              <ConfigurableWidget
                 key={widget.id} 
                 widget={widget}
                 data={widget.config?.chartData || []}

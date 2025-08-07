@@ -40,13 +40,13 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   const getOptimizedLayout = (type: string) => {
     switch (type) {
       case 'table':
-        return { span: 2, height: 400 }; // Full width for tables only
+        return { span: 'md:col-span-2', height: 400 }; // Full width for tables on medium screens and up
       case 'pie':
       case 'bar':
       case 'area':
       case 'line':
       default:
-        return { span: 1, height: 300 }; // Half width (2 per row) for all other charts
+        return { span: 'col-span-1', height: 300 }; // Single column on mobile, half width on larger screens
     }
   };
   
@@ -84,11 +84,10 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
 
   return (
     <Card 
-      className={`group transition-all duration-200 ${
+      className={`group transition-all duration-200 ${optimizedLayout.span} ${
         isMaximized ? 'fixed inset-4 z-50 bg-background border-border' : ''
       }`}
       style={{ 
-        gridColumn: `span ${optimizedLayout.span}`,
         minHeight: isMaximized ? 'auto' : '400px'
       }}
     >

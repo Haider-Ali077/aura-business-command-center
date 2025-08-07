@@ -224,13 +224,13 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
       );
     case 'table':
       return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 md:mx-0">
           <div className={`overflow-y-auto ${data.length > 8 ? 'max-h-80' : ''}`}>
             <Table>
               <TableHeader className="sticky top-0 bg-background">
                 <TableRow>
                   {formattedData.length > 0 && Object.keys(formattedData[0]).map((key) => (
-                    <TableHead key={key} className="text-xs">{key}</TableHead>
+                    <TableHead key={key} className="text-xs px-2 md:px-4">{key}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -238,7 +238,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
                 {formattedData.map((row, index) => (
                   <TableRow key={index}>
                     {Object.values(row).map((value, cellIndex) => (
-                      <TableCell key={cellIndex} className="text-xs">
+                      <TableCell key={cellIndex} className="text-xs px-2 md:px-4">
                         {typeof value === 'number' ? value.toLocaleString() : String(value)}
                       </TableCell>
                     ))}
