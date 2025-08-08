@@ -670,7 +670,7 @@ export function FloatingChatbot() {
                 <div className="space-y-3">
                   {messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`max-w-[85%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                       <div className={`${message.chart ? 'max-w-[95%]' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                          {message.type === 'user' ? (
                            // User message bubble - SAP Joule style
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm">
@@ -682,7 +682,9 @@ export function FloatingChatbot() {
                             <div className="w-full">
                <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
                                  <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                                 <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                                 {!message.chart && (
+                                   <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                                 )}
                                </div>
                                {message.chart && (
                                  <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-2 shadow-sm">
