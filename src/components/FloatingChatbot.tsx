@@ -670,7 +670,7 @@ export function FloatingChatbot() {
                 <div className="space-y-3">
                   {messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`${message.chart ? 'max-w-[98%]' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                       <div className={`${message.chart ? 'max-w-[90%]' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                          {message.type === 'user' ? (
                            // User message bubble - SAP Joule style
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm">
@@ -689,12 +689,12 @@ export function FloatingChatbot() {
                   </div>
                 )}
                                {message.chart && (
-                                 <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-1.5 shadow-sm">
-                                   <div className="flex items-center justify-between mb-1">
-                                     <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
-                                     <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                                   </div>
-                                   <div className="w-full h-36 bg-gray-50/50 dark:bg-background/30 rounded-lg p-1">
+                                  <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-1 shadow-sm">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
+                                      <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                    </div>
+                                    <div className="w-full h-36 bg-gray-50/50 dark:bg-background/30 rounded-lg p-0.5">
                                      <ResponsiveContainer width="100%" height="100%">
                                        {renderChart(message.chart)}
                                      </ResponsiveContainer>
