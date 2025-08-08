@@ -679,13 +679,15 @@ export function FloatingChatbot() {
                             </div>
                          ) : (
             // Bot message - clean style without avatar
-                            <div className="w-full">
-               <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
-                                 <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                                 {!message.chart && (
-                                   <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
-                                 )}
-                               </div>
+                             <div className="w-full">
+                {message.content.trim() && (
+                  <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
+                    <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    {!message.chart && (
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                    )}
+                  </div>
+                )}
                                {message.chart && (
                                  <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-2 shadow-sm">
                                    <div className="flex items-center justify-between mb-1">
