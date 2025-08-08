@@ -87,9 +87,18 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
     
     const keys = Object.keys(firstItem);
     
-    // Find the first numeric key, or fall back to 'value'
-    const numericKey = keys.find(key => typeof firstItem[key] === 'number');
-    return numericKey || keys[0] || 'value';
+    // Prioritize common value field names first
+    const priorityKeys = ['value', 'amount', 'total', 'count', 'revenue', 'sales', 'gross_amount', 'net_amount'];
+    const priorityKey = keys.find(key => 
+      typeof firstItem[key] === 'number' && 
+      priorityKeys.some(p => key.toLowerCase().includes(p))
+    );
+    
+    if (priorityKey) return priorityKey;
+    
+    // If no priority key found, get the last numeric key (avoid dates/years which are usually first)
+    const numericKeys = keys.filter(key => typeof firstItem[key] === 'number');
+    return numericKeys[numericKeys.length - 1] || numericKeys[0] || 'value';
   };
   
   if (isLoading) {
