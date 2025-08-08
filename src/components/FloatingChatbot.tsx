@@ -670,7 +670,7 @@ export function FloatingChatbot() {
                 <div className="space-y-3">
                   {messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`${message.chart ? 'max-w-[95%]' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                       <div className={`${message.chart ? 'max-w-[98%]' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                          {message.type === 'user' ? (
                            // User message bubble - SAP Joule style
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm">
