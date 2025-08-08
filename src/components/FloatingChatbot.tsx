@@ -689,7 +689,7 @@ export function FloatingChatbot() {
                   </div>
                 )}
                                {message.chart && (
-                                 <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-2 shadow-sm">
+                                 <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-1.5 shadow-sm">
                                    <div className="flex items-center justify-between mb-1">
                                      <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
                                      <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
