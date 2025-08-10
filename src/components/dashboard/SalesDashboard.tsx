@@ -109,8 +109,21 @@ export function SalesDashboard() {
       'Award': Award,
       'MapPin': MapPin,
       'Calendar': Calendar,
+      // Add case variations for better matching
+      'trendingup': TrendingUp,
+      'target': Target,
+      'users': Users,
+      'award': Award,
+      'mappin': MapPin,
+      'calendar': Calendar,
+      'TRENDINGUP': TrendingUp,
+      'TARGET': Target,
+      'USERS': Users,
+      'AWARD': Award,
+      'MAPPIN': MapPin,
+      'CALENDAR': Calendar,
     };
-    return iconMap[iconName] || TrendingUp;
+    return iconMap[iconName] || iconMap[iconName?.toLowerCase()] || iconMap[iconName?.toUpperCase()] || TrendingUp;
   };
 
   useEffect(() => {
@@ -179,7 +192,7 @@ export function SalesDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Sales & CRM Analytics</h1>
+            <h1 className="text-3xl font-bold text-foreground">Sales</h1>
             <p className="text-muted-foreground mt-2">Sales performance, pipeline, and customer insights</p>
           </div>
           <Button 

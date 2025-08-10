@@ -100,8 +100,21 @@ export function InventoryDashboard() {
       'Clock': Clock,
       'Truck': Truck,
       'BarChart3': BarChart3,
+      // Add case variations for better matching
+      'package': Package,
+      'trendingdown': TrendingDown,
+      'alerttriangle': AlertTriangle,
+      'clock': Clock,
+      'truck': Truck,
+      'barchart3': BarChart3,
+      'PACKAGE': Package,
+      'TRENDINGDOWN': TrendingDown,
+      'ALERTTRIANGLE': AlertTriangle,
+      'CLOCK': Clock,
+      'TRUCK': Truck,
+      'BARCHART3': BarChart3,
     };
-    return iconMap[iconName] || Package;
+    return iconMap[iconName] || iconMap[iconName?.toLowerCase()] || iconMap[iconName?.toUpperCase()] || Package;
   };
 
   useEffect(() => {

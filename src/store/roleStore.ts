@@ -26,9 +26,16 @@ export const dashboardModules: DashboardModule[] = [
   },
   {
     id: 'sales',
-    name: 'Sales & CRM',
+    name: 'Sales',
     icon: 'TrendingUp',
     description: 'Sales funnel, lead conversion, revenue tracking',
+    roles: ['CEO']
+  },
+  {
+    id: 'purchase',
+    name: 'Purchase',
+    icon: 'ShoppingCart',
+    description: 'Purchase orders, supplier management, procurement',
     roles: ['CEO']
   },
   {
@@ -36,7 +43,7 @@ export const dashboardModules: DashboardModule[] = [
     name: 'Inventory & Supply Chain',
     icon: 'Package',
     description: 'Stock levels, turnover, supplier metrics',
-    roles: ['CFO']
+    roles: ['CEO']
   },
   {
     id: 'hr',

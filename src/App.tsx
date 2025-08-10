@@ -10,6 +10,7 @@ import Settings from '@/pages/Settings';
 import { ExecutiveDashboard } from "@/components/dashboard/ExecutiveDashboard";
 import { FinanceDashboard } from "@/components/dashboard/FinanceDashboard";
 import { SalesDashboard } from "@/components/dashboard/SalesDashboard";
+import PurchaseDashboard from "@/components/dashboard/PurchaseDashboard";
 import { InventoryDashboard } from "@/components/dashboard/InventoryDashboard";
 import { HRDashboard } from "@/components/dashboard/HRDashboard";
 import NotFound from '@/pages/NotFound';
@@ -70,6 +71,14 @@ function App() {
                 element={
                   <ProtectedRoute moduleId="sales">
                     <SalesDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/purchase" 
+                element={
+                  <ProtectedRoute moduleId="purchase">
+                    <PurchaseDashboard />
                   </ProtectedRoute>
                 } 
               />
