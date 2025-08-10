@@ -223,56 +223,60 @@ const PurchaseDashboard = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Dashboard</h1>
-            <p className="text-gray-600 dark:text-gray-400">Purchase orders, supplier management, and procurement analytics</p>
+            <h1 className="text-3xl font-bold text-foreground">Purchase Dashboard</h1>
+            <p className="text-muted-foreground mt-2">Purchase orders, supplier management, and procurement analytics</p>
           </div>
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button 
+            onClick={handleRefresh} 
+            disabled={isLoadingMetrics || isLoadingCharts}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${(isLoadingMetrics || isLoadingCharts) ? 'animate-spin' : ''}`} />
+            Refresh Data
           </Button>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {isLoadingMetrics ? (
-            Array.from({ length: 4 }).map((_, i) => (
+        {/* Purchase Metrics */}
+        {isLoadingMetrics ? (
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+            {Array.from({ length: 4 }).map((_, i) => (
               <LoadingSkeleton key={i} className="h-32" />
-            ))
-          ) : (
-            metrics.map((metric, index) => {
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+            {metrics.map((metric, index) => {
               const IconComponent = metric.icon;
               return (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{metric.title}</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{metric.value}</p>
-                        {metric.change && (
-                          <p className={`text-sm ${metric.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                            {metric.change}
-                          </p>
-                        )}
-                      </div>
-                      <IconComponent className={`h-8 w-8 ${metric.color}`} />
-                    </div>
+                <Card key={index} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
+                    <IconComponent className={`h-4 w-4 ${metric.color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">{metric.value}</div>
+                    {metric.change && (
+                      <p className={`text-xs mt-1 ${metric.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                        {metric.change} from last month
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
 
         {/* Dynamic Widgets */}
-        {!loading && widgets.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {widgets.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {widgets.map((widget) => (
               <ConfigurableWidget
                 key={widget.id}
                 widget={widget}
-                data={[]}
+                data={widget.config?.chartData || []}
                 onRemove={() => {}}
                 onUpdate={() => {}}
                 onMove={() => {}}
@@ -283,120 +287,112 @@ const PurchaseDashboard = () => {
         )}
 
         {/* Default Charts - only show if no dynamic widgets */}
-        {(!loading && widgets.length === 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Monthly Spending Trend */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Spending Trend</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingCharts ? (
-                  <LoadingSkeleton className="h-80" />
-                ) : (
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={spendingData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']} />
-                        <Line type="monotone" dataKey="amount" stroke="#8884d8" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        {widgets.length === 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            {isLoadingCharts ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <LoadingSkeleton key={i} className="h-80" />
+              ))
+            ) : (
+              <>
+                {/* Monthly Spending Trend */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monthly Spending Trend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={spendingData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']} />
+                          <Line type="monotone" dataKey="amount" stroke="#8884d8" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Spending by Category */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Spending by Category</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingCharts ? (
-                  <LoadingSkeleton className="h-80" />
-                ) : (
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={supplierData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {supplierData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                {/* Spending by Category */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Spending by Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={supplierData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {supplierData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Budget vs Actual */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget vs Actual Spending</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingCharts ? (
-                  <LoadingSkeleton className="h-80" />
-                ) : (
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="category" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                        <Bar dataKey="budget" fill="#8884d8" name="Budget" />
-                        <Bar dataKey="actual" fill="#82ca9d" name="Actual" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                {/* Budget vs Actual */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Budget vs Actual Spending</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={categoryData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="category" />
+                          <YAxis />
+                          <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                          <Bar dataKey="budget" fill="#8884d8" name="Budget" />
+                          <Bar dataKey="actual" fill="#82ca9d" name="Actual" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Delivery Performance */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Delivery Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingCharts ? (
-                  <LoadingSkeleton className="h-80" />
-                ) : (
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={performanceData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="onTime" stackId="a" fill="#82ca9d" name="On Time %" />
-                        <Bar dataKey="delayed" stackId="a" fill="#ff7300" name="Delayed %" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                {/* Delivery Performance */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Delivery Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={performanceData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="onTime" stackId="a" fill="#82ca9d" name="On Time %" />
+                          <Bar dataKey="delayed" stackId="a" fill="#ff7300" name="Delayed %" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         )}
 
         {/* Top Suppliers Table - only show if no dynamic widgets */}
-        {(!loading && widgets.length === 0) && (
+        {widgets.length === 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Top Suppliers</CardTitle>
@@ -407,7 +403,7 @@ const PurchaseDashboard = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-800">
+                    <thead className="text-xs text-muted-foreground uppercase bg-muted">
                       <tr>
                         <th className="px-6 py-3">Supplier</th>
                         <th className="px-6 py-3">Total Amount</th>
@@ -417,8 +413,8 @@ const PurchaseDashboard = () => {
                     </thead>
                     <tbody>
                       {topSuppliers.map((supplier, index) => (
-                        <tr key={index} className="bg-white dark:bg-gray-900 border-b dark:border-gray-700">
-                          <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        <tr key={index} className="bg-background border-b border-border">
+                          <td className="px-6 py-4 font-medium text-foreground">
                             {supplier.name}
                           </td>
                           <td className="px-6 py-4">{supplier.amount}</td>
