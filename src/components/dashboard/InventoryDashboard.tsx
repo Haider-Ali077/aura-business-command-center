@@ -30,7 +30,7 @@ export function InventoryDashboard() {
   const [supplierData, setSupplierData] = useState<ChartData[]>([]);
   const [demandForecast, setDemandForecast] = useState<ChartData[]>([]);
   
-  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { widgets, fetchWidgets, loading, refreshData, removeWidget } = useWidgetStore();
   const { session } = useAuthStore();
 
   const fetchKPIData = async () => {
@@ -231,7 +231,10 @@ export function InventoryDashboard() {
               key={widget.id} 
               widget={widget}
               data={widget.config?.chartData || []}
-              onRemove={() => {}}
+              onRemove={(id) => {
+                removeWidget(id);
+                refreshData();
+              }}
               onUpdate={() => {}}
               onMove={() => {}}
               onResize={() => {}}

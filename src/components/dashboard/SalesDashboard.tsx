@@ -33,7 +33,7 @@ export function SalesDashboard() {
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   const [isLoadingCharts, setIsLoadingCharts] = useState(true);
   
-  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
+  const { widgets, fetchWidgets, loading, refreshData, removeWidget } = useWidgetStore();
   const { session } = useAuthStore();
 
   const fetchKPIData = async () => {
@@ -248,7 +248,10 @@ export function SalesDashboard() {
                 key={widget.id} 
                 widget={widget}
                 data={widget.config?.chartData || []}
-                onRemove={() => {}}
+                onRemove={(id) => {
+                  removeWidget(id);
+                  refreshData();
+                }}
                 onUpdate={() => {}}
                 onMove={() => {}}
                 onResize={() => {}}

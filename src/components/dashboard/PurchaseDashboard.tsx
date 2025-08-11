@@ -32,7 +32,7 @@ const PurchaseDashboard = () => {
   const [performanceData, setPerformanceData] = useState<ChartData[]>([]);
   const [topSuppliers, setTopSuppliers] = useState<ChartData[]>([]);
   const { session } = useAuthStore();
-  const { widgets, loading, fetchWidgets } = useWidgetStore();
+  const { widgets, loading, fetchWidgets, refreshData, removeWidget } = useWidgetStore();
 
   const getIconByName = (iconName: string) => {
     const iconMap: { [key: string]: any } = {
@@ -211,13 +211,8 @@ const PurchaseDashboard = () => {
   const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
   const handleRefresh = () => {
-    setIsLoadingMetrics(true);
-    setIsLoadingCharts(true);
-    // Simulate refresh
-    setTimeout(() => {
-      setIsLoadingMetrics(false);
-      setIsLoadingCharts(false);
-    }, 1000);
+    refreshData();
+    fetchKPIData();
   };
 
   return (
@@ -230,10 +225,10 @@ const PurchaseDashboard = () => {
           </div>
           <Button 
             onClick={handleRefresh} 
-            disabled={isLoadingMetrics || isLoadingCharts}
+            disabled={loading || isLoadingMetrics}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${(isLoadingMetrics || isLoadingCharts) ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${(loading || isLoadingMetrics) ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
         </div>
@@ -272,12 +267,22 @@ const PurchaseDashboard = () => {
         {/* Dynamic Widgets */}
         {widgets.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {widgets.map((widget) => (
+            {widgets
+              .sort((a, b) => {
+                // Sort so tables come last
+                if (a.type === 'table' && b.type !== 'table') return 1;
+                if (a.type !== 'table' && b.type === 'table') return -1;
+                return 0;
+              })
+              .map((widget) => (
               <ConfigurableWidget
                 key={widget.id}
                 widget={widget}
                 data={widget.config?.chartData || []}
-                onRemove={() => {}}
+                onRemove={(id) => {
+                  removeWidget(id);
+                  refreshData();
+                }}
                 onUpdate={() => {}}
                 onMove={() => {}}
                 onResize={() => {}}
