@@ -253,8 +253,8 @@ const PurchaseDashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                     {metric.change && (
-                      <p className={`text-xs mt-1 ${metric.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                        {metric.change} from last month
+                      <p className={`text-xs mt-1 ${Number(metric.change) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {Number(metric.change) > 0 ? '+' : ''}{metric.change} from last month
                       </p>
                     )}
                   </CardContent>
