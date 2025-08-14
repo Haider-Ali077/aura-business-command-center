@@ -400,7 +400,7 @@ export function AppSidebar() {
         )}
 
         {/* Admin Section */}
-        {hasModuleAccess('admin') && (
+        {session?.user?.role_name === 'Admin' && (
           <SidebarGroup className="px-3 py-4">
             <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wide text-xs font-medium mb-3">
               {!collapsed && "Administration"}
