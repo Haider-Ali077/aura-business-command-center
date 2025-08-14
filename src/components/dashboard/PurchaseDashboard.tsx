@@ -35,74 +35,34 @@ const PurchaseDashboard = () => {
   const { session } = useAuthStore();
   const { widgets, loading, fetchWidgets, refreshData, removeWidget } = useWidgetStore();
 
-  const getIconByName = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      'DollarSign': DollarSign,
-      'TrendingUp': TrendingUp,
-      'TrendingDown': TrendingDown,
-      'ShoppingCart': ShoppingCart,
-      'Package': Package,
-      'Users': Users,
-      'Clock': Clock,
-      'AlertTriangle': AlertTriangle,
-      'CheckCircle': CheckCircle,
-      'Calculator': Calculator,
-      'Target': Target,
-      // Add case variations for better matching
-      'dollarsign': DollarSign,
-      'trendingup': TrendingUp,
-      'trendingdown': TrendingDown,
-      'shoppingcart': ShoppingCart,
-      'package': Package,
-      'users': Users,
-      'clock': Clock,
-      'alerttriangle': AlertTriangle,
-      'checkcircle': CheckCircle,
-      'calculator': Calculator,
-      'target': Target,
-      'DOLLARSIGN': DollarSign,
-      'TRENDINGUP': TrendingUp,
-      'TRENDINGDOWN': TrendingDown,
-      'SHOPPINGCART': ShoppingCart,
-      'PACKAGE': Package,
-      'USERS': Users,
-      'CLOCK': Clock,
-      'ALERTTRIANGLE': AlertTriangle,
-      'CHECKCIRCLE': CheckCircle,
-      'CALCULATOR': Calculator,
-      'TARGET': Target,
-    };
-    
-    return iconMap[iconName] || iconMap[iconName?.toLowerCase()] || iconMap[iconName?.toUpperCase()] || DollarSign;
-  };
 
   const defaultMetrics: PurchaseMetric[] = [
     {
       title: 'Total Spend',
       value: '$2.4M',
       change: '+12%',
-      icon: DollarSign,
+      icon: getIconByName('DollarSign'),
       color: 'text-blue-600'
     },
     {
       title: 'Purchase Orders',
       value: '1,847',
       change: '+8%',
-      icon: ShoppingCart,
+      icon: getIconByName('ShoppingCart'),
       color: 'text-green-600'
     },
     {
       title: 'Active Suppliers',
       value: '342',
       change: '+5%',
-      icon: Users,
+      icon: getIconByName('Users'),
       color: 'text-purple-600'
     },
     {
       title: 'Avg. Order Time',
       value: '3.2 days',
       change: '-15%',
-      icon: Clock,
+      icon: getIconByName('Clock'),
       color: 'text-orange-600'
     }
   ];
