@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Trash2, Plus, Edit } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
 import { toast } from 'sonner';
+import { Layout } from '@/components/Layout';
 
 interface Tenant {
   tenant_id: number;
@@ -134,7 +135,8 @@ export default function TenantManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Tenant Management</h1>
@@ -289,6 +291,7 @@ export default function TenantManagement() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </Layout>
   );
 }

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, BarChart3 } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
 import { toast } from 'sonner';
+import { Layout } from '@/components/Layout';
 
 interface KpiCard {
   id: number;
@@ -166,7 +167,8 @@ export default function KpiManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">KPI Management</h1>
@@ -379,6 +381,7 @@ export default function KpiManagement() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </Layout>
   );
 }

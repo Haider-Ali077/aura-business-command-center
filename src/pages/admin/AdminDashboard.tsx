@@ -2,10 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Users, Building, BarChart3, Cog } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Layout } from '@/components/Layout';
 
 export default function AdminDashboard() {
   return (
-    <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">Manage tenants, users, and system configurations</p>
@@ -137,6 +139,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 }

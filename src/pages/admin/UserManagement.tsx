@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { UserX, Plus, Edit } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
 import { toast } from 'sonner';
+import { Layout } from '@/components/Layout';
 
 interface User {
   user_id: number;
@@ -215,7 +216,8 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">User Management</h1>
@@ -442,6 +444,7 @@ export default function UserManagement() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </Layout>
   );
 }
