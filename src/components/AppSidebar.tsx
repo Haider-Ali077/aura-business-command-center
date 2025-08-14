@@ -258,6 +258,7 @@ import {
   TrendingUp,
   Package,
   Users,
+  Shield
 } from "lucide-react";
 
 import {
@@ -317,7 +318,7 @@ export function AppSidebar() {
   const currentPath = location.pathname;
 
   const { session } = useAuthStore();
-  const { getAccessibleModules } = useRoleStore();
+  const { getAccessibleModules, hasModuleAccess } = useRoleStore();
   const [accessibleModules, setAccessibleModules] = useState(
     getAccessibleModules()
   );
@@ -393,6 +394,127 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                   );
                 })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Admin Section */}
+        {hasModuleAccess('admin') && (
+          <SidebarGroup className="px-3 py-4">
+            <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wide text-xs font-medium mb-3">
+              {!collapsed && "Administration"}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-2">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="p-0">
+                    <NavLink
+                      to="/admin"
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                        collapsed ? "justify-center px-2" : ""
+                      } ${
+                        isActive("/admin")
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                          isActive("/admin") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                        }`}
+                      >
+                        <Shield className="h-5 w-5" />
+                      </div>
+                      {!collapsed && (
+                        <span className="font-medium text-sm truncate">
+                          Admin Dashboard
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="p-0">
+                    <NavLink
+                      to="/admin/tenants"
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                        collapsed ? "justify-center px-2" : ""
+                      } ${
+                        isActive("/admin/tenants")
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                          isActive("/admin/tenants") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                        }`}
+                      >
+                        <Users className="h-5 w-5" />
+                      </div>
+                      {!collapsed && (
+                        <span className="font-medium text-sm truncate">
+                          Tenants
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="p-0">
+                    <NavLink
+                      to="/admin/users"
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                        collapsed ? "justify-center px-2" : ""
+                      } ${
+                        isActive("/admin/users")
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                          isActive("/admin/users") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                        }`}
+                      >
+                        <Users className="h-5 w-5" />
+                      </div>
+                      {!collapsed && (
+                        <span className="font-medium text-sm truncate">
+                          Users
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="p-0">
+                    <NavLink
+                      to="/admin/kpis"
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                        collapsed ? "justify-center px-2" : ""
+                      } ${
+                        isActive("/admin/kpis")
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                          isActive("/admin/kpis") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                        }`}
+                      >
+                        <PieChart className="h-5 w-5" />
+                      </div>
+                      {!collapsed && (
+                        <span className="font-medium text-sm truncate">
+                          KPI Cards
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
