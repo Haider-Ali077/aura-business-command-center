@@ -50,14 +50,11 @@ const iconOptions = [
 ];
 
 const colorOptions = [
-  'blue',
-  'green',
-  'red',
-  'yellow',
-  'purple',
-  'pink',
-  'indigo',
-  'orange'
+  'purple-600',
+  'green-600', 
+  'blue-600',
+  'red-600',
+  'indigo-600'
 ];
 
 export default function KpiManagement() {
