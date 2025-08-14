@@ -23,6 +23,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useRoleStore } from '@/store/roleStore';
 import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Layout } from '@/components/Layout';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -57,73 +58,85 @@ function App() {
               <Route 
                 path="/dashboard/executive" 
                 element={
-                  <ProtectedRoute moduleId="executive">
-                    <ExecutiveDashboard />
-                  </ProtectedRoute>
+                  <Layout>
+                    <ProtectedRoute moduleId="executive">
+                      <ExecutiveDashboard />
+                    </ProtectedRoute>
+                  </Layout>
                 } 
               />
               <Route 
                 path="/dashboard/finance" 
                 element={
-                  <ProtectedRoute moduleId="finance">
-                    <FinanceDashboard />
-                  </ProtectedRoute>
+                  <Layout>
+                    <ProtectedRoute moduleId="finance">
+                      <FinanceDashboard />
+                    </ProtectedRoute>
+                  </Layout>
                 } 
               />
               <Route 
                 path="/dashboard/sales" 
                 element={
-                  <ProtectedRoute moduleId="sales">
-                    <SalesDashboard />
-                  </ProtectedRoute>
+                  <Layout>
+                    <ProtectedRoute moduleId="sales">
+                      <SalesDashboard />
+                    </ProtectedRoute>
+                  </Layout>
                 } 
               />
               <Route 
                 path="/dashboard/purchase" 
                 element={
-                  <ProtectedRoute moduleId="purchase">
-                    <PurchaseDashboard />
-                  </ProtectedRoute>
+                  <Layout>
+                    <ProtectedRoute moduleId="purchase">
+                      <PurchaseDashboard />
+                    </ProtectedRoute>
+                  </Layout>
                 } 
               />
               <Route 
                 path="/dashboard/inventory" 
                 element={
-                  <ProtectedRoute moduleId="inventory">
-                    <InventoryDashboard />
-                  </ProtectedRoute>
+                  <Layout>
+                    <ProtectedRoute moduleId="inventory">
+                      <InventoryDashboard />
+                    </ProtectedRoute>
+                  </Layout>
                 } 
               />
               <Route 
                 path="/dashboard/hr" 
                 element={
-                  <ProtectedRoute moduleId="hr">
-                    <HRDashboard />
-                  </ProtectedRoute>
+                  <Layout>
+                    <ProtectedRoute moduleId="hr">
+                      <HRDashboard />
+                    </ProtectedRoute>
+                  </Layout>
                 } 
               />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings" element={<Layout><Settings /></Layout>} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={
-                <ProtectedRoute moduleId="admin">
+                <Layout>
                   <AdminDashboard />
-                </ProtectedRoute>
+                </Layout>
               } />
               <Route path="/admin/tenants" element={
-                <ProtectedRoute moduleId="admin">
+                <Layout>
                   <TenantManagement />
-                </ProtectedRoute>
+                </Layout>
               } />
               <Route path="/admin/users" element={
-                <ProtectedRoute moduleId="admin">
+                <Layout>
                   <UserManagement />
-                </ProtectedRoute>
+                </Layout>
               } />
               <Route path="/admin/kpis" element={
-                <ProtectedRoute moduleId="admin">
+                <Layout>
                   <KpiManagement />
-                </ProtectedRoute>
+                </Layout>
               } />
               
               <Route path="*" element={<NotFound />} />
