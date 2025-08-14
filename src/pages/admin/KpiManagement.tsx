@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, BarChart3, Trash2 } from 'lucide-react';
+import { Plus, BarChart3, Trash2, Edit } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
 import { toast } from 'sonner';
 import { Layout } from '@/components/Layout';
@@ -65,6 +65,8 @@ export default function KpiManagement() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedKpi, setSelectedKpi] = useState<KpiCard | null>(null);
   const [selectedTenant, setSelectedTenant] = useState<string>('');
   const [formData, setFormData] = useState({
     tenant_id: '',
@@ -136,16 +138,7 @@ export default function KpiManagement() {
       if (response.ok) {
         toast.success('KPI card created successfully');
         setCreateDialogOpen(false);
-        setFormData({
-          tenant_id: '',
-          dashboard: '',
-          title: '',
-          icon: '',
-          color: '',
-          value_query: '',
-          change_query: '',
-          prefix: ''
-        });
+        resetForm();
         if (selectedTenant) {
           fetchKpiCards(parseInt(selectedTenant));
         }
@@ -154,6 +147,40 @@ export default function KpiManagement() {
       }
     } catch (error) {
       toast.error('Error creating KPI card');
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedKpi) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/kpi-cards/${selectedKpi.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          tenant_id: parseInt(formData.tenant_id),
+          change_query: formData.change_query || null,
+          prefix: formData.prefix || null
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('KPI card updated successfully');
+        setEditDialogOpen(false);
+        setSelectedKpi(null);
+        resetForm();
+        if (selectedTenant) {
+          fetchKpiCards(parseInt(selectedTenant));
+        }
+      } else {
+        toast.error('Failed to update KPI card');
+      }
+    } catch (error) {
+      toast.error('Error updating KPI card');
     }
   };
 
@@ -176,6 +203,34 @@ export default function KpiManagement() {
     } catch (error) {
       toast.error('Error deleting KPI card');
     }
+  };
+
+  const openEditDialog = (kpi: KpiCard) => {
+    setSelectedKpi(kpi);
+    setFormData({
+      tenant_id: kpi.tenant_id.toString(),
+      dashboard: kpi.dashboard,
+      title: kpi.title,
+      icon: kpi.icon,
+      color: kpi.color,
+      value_query: kpi.value_query,
+      change_query: kpi.change_query || '',
+      prefix: kpi.prefix || ''
+    });
+    setEditDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      tenant_id: '',
+      dashboard: '',
+      title: '',
+      icon: '',
+      color: '',
+      value_query: '',
+      change_query: '',
+      prefix: ''
+    });
   };
 
   const getTenantName = (tenantId: number) => {
@@ -390,13 +445,22 @@ export default function KpiManagement() {
                       {kpi.change_query || 'None'}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(kpi.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(kpi)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(kpi.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -412,6 +476,131 @@ export default function KpiManagement() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit KPI Card</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_tenant_id">Tenant</Label>
+                <Select value={formData.tenant_id} onValueChange={(value) => setFormData({ ...formData, tenant_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tenants.map((tenant) => (
+                      <SelectItem key={tenant.tenant_id} value={tenant.tenant_id.toString()}>
+                        {tenant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit_dashboard">Dashboard</Label>
+                <Select value={formData.dashboard} onValueChange={(value) => setFormData({ ...formData, dashboard: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dashboardOptions.map((dashboard) => (
+                      <SelectItem key={dashboard} value={dashboard}>
+                        {dashboard.charAt(0).toUpperCase() + dashboard.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="edit_title">Title</Label>
+              <Input
+                id="edit_title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit_icon">Icon</Label>
+                <Select value={formData.icon} onValueChange={(value) => setFormData({ ...formData, icon: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {iconOptions.map((icon) => (
+                      <SelectItem key={icon} value={icon}>
+                        {icon}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit_color">Color</Label>
+                <Select value={formData.color} onValueChange={(value) => setFormData({ ...formData, color: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colorOptions.map((color) => (
+                      <SelectItem key={color} value={color}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded bg-${color}-500`}></div>
+                          {color}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit_prefix">Prefix (Optional)</Label>
+                <Input
+                  id="edit_prefix"
+                  value={formData.prefix}
+                  onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+                  placeholder="e.g., $, %"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="edit_value_query">Value Query</Label>
+              <Textarea
+                id="edit_value_query"
+                value={formData.value_query}
+                onChange={(e) => setFormData({ ...formData, value_query: e.target.value })}
+                className="h-24"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit_change_query">Change Query (Optional)</Label>
+              <Textarea
+                id="edit_change_query"
+                value={formData.change_query}
+                onChange={(e) => setFormData({ ...formData, change_query: e.target.value })}
+                className="h-24"
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Update</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );

@@ -83,8 +83,8 @@ export default function WidgetManagement() {
   const fetchWidgets = async (tenantId?: number) => {
     try {
       const url = tenantId 
-        ? `${API_BASE_URL}/api/widgets?tenant_id=${tenantId}`
-        : `${API_BASE_URL}/api/widgets`;
+        ? `${API_BASE_URL}/api/admin/widgets?tenant_id=${tenantId}`
+        : `${API_BASE_URL}/api/admin/widgets`;
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
