@@ -15,6 +15,7 @@ import { Layout } from '@/components/Layout';
 interface Widget {
   id: number;
   tenant_id: number;
+  dashboard: string;
   title: string;
   type: string;
   span: number;
@@ -33,11 +34,20 @@ interface Tenant {
 }
 
 const widgetTypes = [
-  'chart',
-  'metric',
-  'table',
-  'gauge',
-  'progress'
+  'line',
+  'bar',
+  'area',
+  'pie',
+  'table'
+];
+
+const dashboardTypes = [
+  'executive',
+  'sales',
+  'finance',
+  'hr',
+  'inventory',
+  'purchase'
 ];
 
 export default function WidgetManagement() {
@@ -50,6 +60,7 @@ export default function WidgetManagement() {
   const [selectedTenant, setSelectedTenant] = useState<string>('');
   const [formData, setFormData] = useState({
     tenant_id: '',
+    dashboard: '',
     title: '',
     type: '',
     span: '1',
@@ -192,6 +203,7 @@ export default function WidgetManagement() {
     setSelectedWidget(widget);
     setFormData({
       tenant_id: widget.tenant_id.toString(),
+      dashboard: widget.dashboard,
       title: widget.title,
       type: widget.type,
       span: widget.span.toString(),
@@ -207,6 +219,7 @@ export default function WidgetManagement() {
   const resetForm = () => {
     setFormData({
       tenant_id: '',
+      dashboard: '',
       title: '',
       type: '',
       span: '1',
@@ -274,6 +287,24 @@ export default function WidgetManagement() {
                     </Select>
                   </div>
                   <div>
+                    <Label htmlFor="dashboard">Dashboard</Label>
+                    <Select onValueChange={(value) => setFormData({ ...formData, dashboard: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select dashboard" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dashboardTypes.map((dashboard) => (
+                          <SelectItem key={dashboard} value={dashboard}>
+                            {dashboard.charAt(0).toUpperCase() + dashboard.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <Label htmlFor="type">Widget Type</Label>
                     <Select onValueChange={(value) => setFormData({ ...formData, type: value })}>
                       <SelectTrigger>
@@ -288,17 +319,16 @@ export default function WidgetManagement() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g., Sales Chart"
-                    required
-                  />
+                  <div>
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="e.g., Sales Chart"
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-4 gap-4">
@@ -409,6 +439,7 @@ export default function WidgetManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Title</TableHead>
+                    <TableHead>Dashboard</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Span</TableHead>
                     <TableHead>Position</TableHead>
@@ -421,7 +452,8 @@ export default function WidgetManagement() {
                   {widgets.map((widget) => (
                     <TableRow key={widget.id}>
                       <TableCell className="font-medium">{widget.title}</TableCell>
-                      <TableCell>{widget.type}</TableCell>
+                      <TableCell className="capitalize">{widget.dashboard}</TableCell>
+                      <TableCell className="capitalize">{widget.type}</TableCell>
                       <TableCell>{widget.span}</TableCell>
                       <TableCell>{widget.position_x}, {widget.position_y}</TableCell>
                       <TableCell>{widget.size_width} x {widget.size_height}</TableCell>
@@ -450,7 +482,7 @@ export default function WidgetManagement() {
                   ))}
                   {widgets.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground">
                         No widgets found for this tenant
                       </TableCell>
                     </TableRow>
