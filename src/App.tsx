@@ -7,7 +7,7 @@ import Dashboard from '@/pages/Dashboard';
 import Analytics from '@/pages/Analytics';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
+
 import TenantManagement from '@/pages/admin/TenantManagement';
 import UserManagement from '@/pages/admin/UserManagement';
 import KpiManagement from '@/pages/admin/KpiManagement';
@@ -106,12 +106,6 @@ function App() {
               />
               <Route path="/settings" element={<Settings />} />
               
-              {/* Admin Routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute moduleId="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
               <Route path="/admin/tenants" element={
                 <ProtectedRoute moduleId="admin">
                   <TenantManagement />

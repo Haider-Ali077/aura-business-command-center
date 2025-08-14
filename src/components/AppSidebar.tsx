@@ -258,7 +258,7 @@ import {
   TrendingUp,
   Package,
   Users,
-  Shield
+  Building2
 } from "lucide-react";
 
 import {
@@ -410,33 +410,6 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild className="p-0">
                     <NavLink
-                      to="/admin"
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
-                        collapsed ? "justify-center px-2" : ""
-                      } ${
-                        isActive("/admin")
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      }`}
-                    >
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
-                          isActive("/admin") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
-                        }`}
-                      >
-                        <Shield className="h-5 w-5" />
-                      </div>
-                      {!collapsed && (
-                        <span className="font-medium text-sm truncate">
-                          Admin Dashboard
-                        </span>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild className="p-0">
-                    <NavLink
                       to="/admin/tenants"
                       className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
                         collapsed ? "justify-center px-2" : ""
@@ -451,7 +424,7 @@ export function AppSidebar() {
                           isActive("/admin/tenants") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
                         }`}
                       >
-                        <Users className="h-5 w-5" />
+                        <Building2 className="h-5 w-5" />
                       </div>
                       {!collapsed && (
                         <span className="font-medium text-sm truncate">
