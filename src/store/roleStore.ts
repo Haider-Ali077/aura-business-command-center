@@ -51,6 +51,13 @@ export const dashboardModules: DashboardModule[] = [
     icon: 'Users',
     description: 'Headcount, attrition, productivity metrics',
     roles: ['CFO']
+  },
+  {
+    id: 'admin',
+    name: 'Admin Panel',
+    icon: 'Shield',
+    description: 'Tenant management, user administration, KPI configuration',
+    roles: ['Admin']
   }
 ];
 
