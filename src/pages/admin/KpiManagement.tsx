@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, BarChart3 } from 'lucide-react';
+import { Plus, BarChart3, Trash2 } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
 import { toast } from 'sonner';
 import { Layout } from '@/components/Layout';
@@ -154,6 +154,27 @@ export default function KpiManagement() {
       }
     } catch (error) {
       toast.error('Error creating KPI card');
+    }
+  };
+
+  const handleDelete = async (kpiCardId: number) => {
+    if (!confirm('Are you sure you want to delete this KPI card?')) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/kpi-cards/${kpiCardId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('KPI card deleted successfully');
+        if (selectedTenant) {
+          fetchKpiCards(parseInt(selectedTenant));
+        }
+      } else {
+        toast.error('Failed to delete KPI card');
+      }
+    } catch (error) {
+      toast.error('Error deleting KPI card');
     }
   };
 
@@ -346,6 +367,7 @@ export default function KpiManagement() {
                   <TableHead>Prefix</TableHead>
                   <TableHead>Value Query</TableHead>
                   <TableHead>Change Query</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -367,11 +389,20 @@ export default function KpiManagement() {
                     <TableCell className="max-w-xs truncate" title={kpi.change_query || ''}>
                       {kpi.change_query || 'None'}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(kpi.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {kpiCards.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       No KPI cards found for this tenant
                     </TableCell>
                   </TableRow>

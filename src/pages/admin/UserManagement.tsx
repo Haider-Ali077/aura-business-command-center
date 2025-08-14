@@ -27,9 +27,15 @@ interface Tenant {
   name: string;
 }
 
+interface Role {
+  role_id: number;
+  name: string;
+}
+
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -47,6 +53,7 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers();
     fetchTenants();
+    fetchRoles();
   }, []);
 
   useEffect(() => {
@@ -98,6 +105,20 @@ export default function UserManagement() {
       }
     } catch (error) {
       toast.error('Error fetching tenants');
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/roles`);
+      if (response.ok) {
+        const data = await response.json();
+        setRoles(data);
+      } else {
+        toast.error('Failed to fetch roles');
+      }
+    } catch (error) {
+      toast.error('Error fetching roles');
     }
   };
 
@@ -207,8 +228,8 @@ export default function UserManagement() {
   };
 
   const getRoleName = (roleId: number) => {
-    const roles = { 1: 'Admin', 2: 'User', 3: 'Manager' };
-    return roles[roleId as keyof typeof roles] || 'Unknown';
+    const role = roles.find(r => r.role_id === roleId);
+    return role ? role.name : 'Unknown';
   };
 
   if (loading) {
@@ -286,9 +307,11 @@ export default function UserManagement() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Admin</SelectItem>
-                    <SelectItem value="2">User</SelectItem>
-                    <SelectItem value="3">Manager</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role.role_id} value={role.role_id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -421,9 +444,11 @@ export default function UserManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Admin</SelectItem>
-                  <SelectItem value="2">User</SelectItem>
-                  <SelectItem value="3">Manager</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role.role_id} value={role.role_id.toString()}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
