@@ -25,6 +25,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useRoleStore } from '@/store/roleStore';
 import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AdminProtectedRoute } from '@/components/AdminProtectedRoute';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -107,29 +108,29 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               
               <Route path="/admin/tenants" element={
-                <ProtectedRoute moduleId="admin">
+                <AdminProtectedRoute>
                   <TenantManagement />
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/users" element={
-                <ProtectedRoute moduleId="admin">
+                <AdminProtectedRoute>
                   <UserManagement />
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/kpis" element={
-                <ProtectedRoute moduleId="admin">
+                <AdminProtectedRoute>
                   <KpiManagement />
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/widgets" element={
-                <ProtectedRoute moduleId="admin">
+                <AdminProtectedRoute>
                   <WidgetManagement />
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/roles" element={
-                <ProtectedRoute moduleId="admin">
+                <AdminProtectedRoute>
                   <RoleManagement />
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               
               <Route path="*" element={<NotFound />} />
