@@ -14,7 +14,6 @@ import { Layout } from '@/components/Layout';
 interface Tenant {
   tenant_id: number;
   name: string;
-  database_name: string;
   is_active: boolean;
   created_at: string;
 }
@@ -27,7 +26,6 @@ export default function TenantManagement() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    database_name: '',
     is_active: true
   });
 
@@ -65,7 +63,7 @@ export default function TenantManagement() {
       if (response.ok) {
         toast.success('Tenant created successfully');
         setCreateDialogOpen(false);
-        setFormData({ name: '', database_name: '', is_active: true });
+        setFormData({ name: '', is_active: true });
         fetchTenants();
       } else {
         toast.error('Failed to create tenant');
@@ -124,7 +122,6 @@ export default function TenantManagement() {
     setSelectedTenant(tenant);
     setFormData({
       name: tenant.name,
-      database_name: tenant.database_name,
       is_active: tenant.is_active
     });
     setEditDialogOpen(true);
@@ -164,15 +161,6 @@ export default function TenantManagement() {
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="database_name">Database Name</Label>
-                <Input
-                  id="database_name"
-                  value={formData.database_name}
-                  onChange={(e) => setFormData({ ...formData, database_name: e.target.value })}
-                  required
-                />
-              </div>
               <div className="flex items-center space-x-2">
                 <Switch
                   id="is_active"
@@ -203,7 +191,6 @@ export default function TenantManagement() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Database</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
@@ -214,10 +201,9 @@ export default function TenantManagement() {
                 <TableRow key={tenant.tenant_id}>
                   <TableCell>{tenant.tenant_id}</TableCell>
                   <TableCell className="font-medium">{tenant.name}</TableCell>
-                  <TableCell>{tenant.database_name}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      tenant.is_active 
+                      tenant.is_active
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
@@ -264,17 +250,8 @@ export default function TenantManagement() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
-            </div>
-            <div>
-              <Label htmlFor="edit_database_name">Database Name</Label>
-              <Input
-                id="edit_database_name"
-                value={formData.database_name}
-                onChange={(e) => setFormData({ ...formData, database_name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="flex items-center space-x-2">
+              </div>
+              <div className="flex items-center space-x-2">
               <Switch
                 id="edit_is_active"
                 checked={formData.is_active}

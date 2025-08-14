@@ -11,6 +11,8 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import TenantManagement from '@/pages/admin/TenantManagement';
 import UserManagement from '@/pages/admin/UserManagement';
 import KpiManagement from '@/pages/admin/KpiManagement';
+import WidgetManagement from '@/pages/admin/WidgetManagement';
+import RoleManagement from '@/pages/admin/RoleManagement';
 import { ExecutiveDashboard } from "@/components/dashboard/ExecutiveDashboard";
 import { FinanceDashboard } from "@/components/dashboard/FinanceDashboard";
 import { SalesDashboard } from "@/components/dashboard/SalesDashboard";
@@ -123,6 +125,16 @@ function App() {
               <Route path="/admin/kpis" element={
                 <ProtectedRoute moduleId="admin">
                   <KpiManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/widgets" element={
+                <ProtectedRoute moduleId="admin">
+                  <WidgetManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/roles" element={
+                <ProtectedRoute moduleId="admin">
+                  <RoleManagement />
                 </ProtectedRoute>
               } />
               
