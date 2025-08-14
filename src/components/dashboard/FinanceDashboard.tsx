@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { DollarSign, TrendingUp, CreditCard, PiggyBank, Calculator, Calendar, RefreshCw } from "lucide-react";
+import { TrendingUp, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { API_BASE_URL } from "@/config/api";
+import { getIconByName } from '@/lib/iconUtils';
 
 interface FinanceMetric {
   title: string;
@@ -60,48 +61,37 @@ export function FinanceDashboard() {
           setMetrics(mappedKpis);
         } else {
           setMetrics([
-            { title: 'Total Revenue', value: '$2,847,392', change: 15.2, icon: DollarSign, color: 'text-green-600' },
-            { title: 'Net Profit', value: '$892,450', change: 8.7, icon: TrendingUp, color: 'text-blue-600' },
-            { title: 'Cash Flow', value: '$445,223', change: -3.2, icon: PiggyBank, color: 'text-purple-600' },
-            { title: 'Accounts Receivable', value: '$234,567', change: 12.1, icon: CreditCard, color: 'text-orange-600' },
-            { title: 'Operating Margin', value: '31.4%', change: 4.5, icon: Calculator, color: 'text-cyan-600' },
-            { title: 'Days Sales Outstanding', value: '28 days', change: -8.3, icon: Calendar, color: 'text-red-600' }
+            { title: 'Total Revenue', value: '$2,847,392', change: 15.2, icon: getIconByName('DollarSign'), color: 'text-green-600' },
+            { title: 'Net Profit', value: '$892,450', change: 8.7, icon: getIconByName('TrendingUp'), color: 'text-blue-600' },
+            { title: 'Cash Flow', value: '$445,223', change: -3.2, icon: getIconByName('DollarSign'), color: 'text-purple-600' },
+            { title: 'Accounts Receivable', value: '$234,567', change: 12.1, icon: getIconByName('CreditCard'), color: 'text-orange-600' },
+            { title: 'Operating Margin', value: '31.4%', change: 4.5, icon: getIconByName('BarChart3'), color: 'text-cyan-600' },
+            { title: 'Days Sales Outstanding', value: '28 days', change: -8.3, icon: getIconByName('Calendar'), color: 'text-red-600' }
           ]);
         }
       } else {
         setMetrics([
-          { title: 'Total Revenue', value: '$2,847,392', change: 15.2, icon: DollarSign, color: 'text-green-600' },
-          { title: 'Net Profit', value: '$892,450', change: 8.7, icon: TrendingUp, color: 'text-blue-600' },
-          { title: 'Cash Flow', value: '$445,223', change: -3.2, icon: PiggyBank, color: 'text-purple-600' },
-          { title: 'Accounts Receivable', value: '$234,567', change: 12.1, icon: CreditCard, color: 'text-orange-600' },
-          { title: 'Operating Margin', value: '31.4%', change: 4.5, icon: Calculator, color: 'text-cyan-600' },
-          { title: 'Days Sales Outstanding', value: '28 days', change: -8.3, icon: Calendar, color: 'text-red-600' }
+          { title: 'Total Revenue', value: '$2,847,392', change: 15.2, icon: getIconByName('DollarSign'), color: 'text-green-600' },
+          { title: 'Net Profit', value: '$892,450', change: 8.7, icon: getIconByName('TrendingUp'), color: 'text-blue-600' },
+          { title: 'Cash Flow', value: '$445,223', change: -3.2, icon: getIconByName('DollarSign'), color: 'text-purple-600' },
+          { title: 'Accounts Receivable', value: '$234,567', change: 12.1, icon: getIconByName('CreditCard'), color: 'text-orange-600' },
+          { title: 'Operating Margin', value: '31.4%', change: 4.5, icon: getIconByName('BarChart3'), color: 'text-cyan-600' },
+          { title: 'Days Sales Outstanding', value: '28 days', change: -8.3, icon: getIconByName('Calendar'), color: 'text-red-600' }
         ]);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
       setMetrics([
-        { title: 'Total Revenue', value: '$2,847,392', change: 15.2, icon: DollarSign, color: 'text-green-600' },
-        { title: 'Net Profit', value: '$892,450', change: 8.7, icon: TrendingUp, color: 'text-blue-600' },
-        { title: 'Cash Flow', value: '$445,223', change: -3.2, icon: PiggyBank, color: 'text-purple-600' },
-        { title: 'Accounts Receivable', value: '$234,567', change: 12.1, icon: CreditCard, color: 'text-orange-600' },
-        { title: 'Operating Margin', value: '31.4%', change: 4.5, icon: Calculator, color: 'text-cyan-600' },
-        { title: 'Days Sales Outstanding', value: '28 days', change: -8.3, icon: Calendar, color: 'text-red-600' }
+        { title: 'Total Revenue', value: '$2,847,392', change: 15.2, icon: getIconByName('DollarSign'), color: 'text-green-600' },
+        { title: 'Net Profit', value: '$892,450', change: 8.7, icon: getIconByName('TrendingUp'), color: 'text-blue-600' },
+        { title: 'Cash Flow', value: '$445,223', change: -3.2, icon: getIconByName('DollarSign'), color: 'text-purple-600' },
+        { title: 'Accounts Receivable', value: '$234,567', change: 12.1, icon: getIconByName('CreditCard'), color: 'text-orange-600' },
+        { title: 'Operating Margin', value: '31.4%', change: 4.5, icon: getIconByName('BarChart3'), color: 'text-cyan-600' },
+        { title: 'Days Sales Outstanding', value: '28 days', change: -8.3, icon: getIconByName('Calendar'), color: 'text-red-600' }
       ]);
     }
   };
 
-  const getIconByName = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      'DollarSign': DollarSign,
-      'TrendingUp': TrendingUp,
-      'CreditCard': CreditCard,
-      'PiggyBank': PiggyBank,
-      'Calculator': Calculator,
-      'Calendar': Calendar,
-    };
-    return iconMap[iconName] || DollarSign;
-  };
 
   useEffect(() => {
     if (session?.user.tenant_id) {

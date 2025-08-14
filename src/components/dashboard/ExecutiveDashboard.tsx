@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Package, UserCheck, AlertTriangle, RefreshCw } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { Layout } from "@/components/Layout";
 import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
+import { getIconByName } from '@/lib/iconUtils';
 
 interface ExecutiveKPI {
   title: string;
@@ -69,46 +70,35 @@ export function ExecutiveDashboard() {
         } else {
           // Fallback to dummy data
           setKpis([
-            { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
-            { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
-            { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
-            { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
+            { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: getIconByName('DollarSign'), color: 'text-green-600' },
+            { title: 'Total Orders', value: '3,247', change: -2.1, icon: getIconByName('ShoppingCart'), color: 'text-purple-600' },
+            { title: 'Inventory Value', value: '$847K', change: 5.7, icon: getIconByName('Package'), color: 'text-orange-600' },
+            { title: 'Employee Count', value: '156', change: 3.2, icon: getIconByName('Users'), color: 'text-cyan-600' },
           ]);
         }
       } else {
         // Fallback to dummy data on error
         setKpis([
-          { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
-          { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
-          { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
-          { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
+          { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: getIconByName('DollarSign'), color: 'text-green-600' },
+          { title: 'Total Orders', value: '3,247', change: -2.1, icon: getIconByName('ShoppingCart'), color: 'text-purple-600' },
+          { title: 'Inventory Value', value: '$847K', change: 5.7, icon: getIconByName('Package'), color: 'text-orange-600' },
+          { title: 'Employee Count', value: '156', change: 3.2, icon: getIconByName('Users'), color: 'text-cyan-600' },
         ]);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
       // Fallback to dummy data
       setKpis([
-        { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: DollarSign, color: 'text-green-600' },
-        { title: 'Total Orders', value: '3,247', change: -2.1, icon: ShoppingCart, color: 'text-purple-600' },
-        { title: 'Inventory Value', value: '$847K', change: 5.7, icon: Package, color: 'text-orange-600' },
-        { title: 'Employee Count', value: '156', change: 3.2, icon: UserCheck, color: 'text-cyan-600' },
+        { title: 'Total Revenue', value: '$2.4M', change: 12.5, icon: getIconByName('DollarSign'), color: 'text-green-600' },
+        { title: 'Total Orders', value: '3,247', change: -2.1, icon: getIconByName('ShoppingCart'), color: 'text-purple-600' },
+        { title: 'Inventory Value', value: '$847K', change: 5.7, icon: getIconByName('Package'), color: 'text-orange-600' },
+        { title: 'Employee Count', value: '156', change: 3.2, icon: getIconByName('Users'), color: 'text-cyan-600' },
       ]);
     } finally {
       setIsLoadingKpis(false);
     }
   };
 
-  const getIconByName = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      'DollarSign': DollarSign,
-      'Users': Users,
-      'ShoppingCart': ShoppingCart,
-      'Package': Package,
-      'UserCheck': UserCheck,
-      'AlertTriangle': AlertTriangle,
-    };
-    return iconMap[iconName] || DollarSign;
-  };
 
   useEffect(() => {
     if (session?.user.tenant_id) {

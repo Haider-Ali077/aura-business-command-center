@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, UserPlus, UserMinus, Clock, Target, TrendingUp, RefreshCw } from "lucide-react";
+import { TrendingUp, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { API_BASE_URL } from "@/config/api";
+import { getIconByName } from '@/lib/iconUtils';
 
 interface HRMetric {
   title: string;
@@ -62,48 +63,37 @@ export function HRDashboard() {
           setMetrics(mappedKpis);
         } else {
           setMetrics([
-            { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
-            { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
-            { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
-            { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
-            { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
-            { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
+            { title: 'Total Employees', value: '1,247', change: 8.2, icon: getIconByName('Users'), color: 'text-blue-600' },
+            { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: getIconByName('UserPlus'), color: 'text-green-600' },
+            { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: getIconByName('UserMinus'), color: 'text-red-600' },
+            { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: getIconByName('Clock'), color: 'text-purple-600' },
+            { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: getIconByName('Target'), color: 'text-cyan-600' },
+            { title: 'Training Completion', value: '89.3%', change: 6.7, icon: getIconByName('TrendingUp'), color: 'text-orange-600' }
           ]);
         }
       } else {
         setMetrics([
-          { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
-          { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
-          { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
-          { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
-          { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
-          { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
+          { title: 'Total Employees', value: '1,247', change: 8.2, icon: getIconByName('Users'), color: 'text-blue-600' },
+          { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: getIconByName('UserPlus'), color: 'text-green-600' },
+          { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: getIconByName('UserMinus'), color: 'text-red-600' },
+          { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: getIconByName('Clock'), color: 'text-purple-600' },
+          { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: getIconByName('Target'), color: 'text-cyan-600' },
+          { title: 'Training Completion', value: '89.3%', change: 6.7, icon: getIconByName('TrendingUp'), color: 'text-orange-600' }
         ]);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
       setMetrics([
-        { title: 'Total Employees', value: '1,247', change: 8.2, icon: Users, color: 'text-blue-600' },
-        { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: UserPlus, color: 'text-green-600' },
-        { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: UserMinus, color: 'text-red-600' },
-        { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: Clock, color: 'text-purple-600' },
-        { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: Target, color: 'text-cyan-600' },
-        { title: 'Training Completion', value: '89.3%', change: 6.7, icon: TrendingUp, color: 'text-orange-600' }
+        { title: 'Total Employees', value: '1,247', change: 8.2, icon: getIconByName('Users'), color: 'text-blue-600' },
+        { title: 'New Hires (MTD)', value: '23', change: 15.0, icon: getIconByName('UserPlus'), color: 'text-green-600' },
+        { title: 'Attrition Rate', value: '12.4%', change: -18.3, icon: getIconByName('UserMinus'), color: 'text-red-600' },
+        { title: 'Avg Time to Hire', value: '28 days', change: -12.5, icon: getIconByName('Clock'), color: 'text-purple-600' },
+        { title: 'Employee Satisfaction', value: '4.2/5', change: 5.8, icon: getIconByName('Target'), color: 'text-cyan-600' },
+        { title: 'Training Completion', value: '89.3%', change: 6.7, icon: getIconByName('TrendingUp'), color: 'text-orange-600' }
       ]);
     }
   };
 
-  const getIconByName = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      'Users': Users,
-      'UserPlus': UserPlus,
-      'UserMinus': UserMinus,
-      'Clock': Clock,
-      'Target': Target,
-      'TrendingUp': TrendingUp,
-    };
-    return iconMap[iconName] || Users;
-  };
 
   useEffect(() => {
     if (session?.user.tenant_id) {

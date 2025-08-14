@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Target, Users, Award, MapPin, Calendar, RefreshCw } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
+import { getIconByName } from '@/lib/iconUtils';
 
 interface SalesMetric {
   title: string;
@@ -68,63 +69,39 @@ export function SalesDashboard() {
           setMetrics(mappedKpis);
         } else {
           setMetrics([
-            { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
-            { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
-            { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
-            { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
-            { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
-            { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
+            { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: getIconByName('TrendingUp'), color: 'text-green-600' },
+            { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: getIconByName('Target'), color: 'text-blue-600' },
+            { title: 'Active Leads', value: '2,847', change: 12.7, icon: getIconByName('Users'), color: 'text-purple-600' },
+            { title: 'Deals Closed', value: '156', change: 8.9, icon: getIconByName('Award'), color: 'text-orange-600' },
+            { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: getIconByName('TrendingUp'), color: 'text-cyan-600' },
+            { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: getIconByName('Calendar'), color: 'text-red-600' }
           ]);
         }
       } else {
         setMetrics([
-          { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
-          { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
-          { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
-          { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
-          { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
-          { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
+          { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: getIconByName('TrendingUp'), color: 'text-green-600' },
+          { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: getIconByName('Target'), color: 'text-blue-600' },
+          { title: 'Active Leads', value: '2,847', change: 12.7, icon: getIconByName('Users'), color: 'text-purple-600' },
+          { title: 'Deals Closed', value: '156', change: 8.9, icon: getIconByName('Award'), color: 'text-orange-600' },
+          { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: getIconByName('TrendingUp'), color: 'text-cyan-600' },
+          { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: getIconByName('Calendar'), color: 'text-red-600' }
         ]);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
       setMetrics([
-        { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: TrendingUp, color: 'text-green-600' },
-        { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: Target, color: 'text-blue-600' },
-        { title: 'Active Leads', value: '2,847', change: 12.7, icon: Users, color: 'text-purple-600' },
-        { title: 'Deals Closed', value: '156', change: 8.9, icon: Award, color: 'text-orange-600' },
-        { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: TrendingUp, color: 'text-cyan-600' },
-        { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: Calendar, color: 'text-red-600' }
+        { title: 'Total Sales', value: '$1,847,250', change: 18.2, icon: getIconByName('TrendingUp'), color: 'text-green-600' },
+        { title: 'Conversion Rate', value: '24.8%', change: 5.3, icon: getIconByName('Target'), color: 'text-blue-600' },
+        { title: 'Active Leads', value: '2,847', change: 12.7, icon: getIconByName('Users'), color: 'text-purple-600' },
+        { title: 'Deals Closed', value: '156', change: 8.9, icon: getIconByName('Award'), color: 'text-orange-600' },
+        { title: 'Avg Deal Size', value: '$11,842', change: 6.4, icon: getIconByName('TrendingUp'), color: 'text-cyan-600' },
+        { title: 'Sales Cycle', value: '32 days', change: -12.1, icon: getIconByName('Calendar'), color: 'text-red-600' }
       ]);
     } finally {
       setIsLoadingMetrics(false);
     }
   };
 
-  const getIconByName = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      'TrendingUp': TrendingUp,
-      'Target': Target,
-      'Users': Users,
-      'Award': Award,
-      'MapPin': MapPin,
-      'Calendar': Calendar,
-      // Add case variations for better matching
-      'trendingup': TrendingUp,
-      'target': Target,
-      'users': Users,
-      'award': Award,
-      'mappin': MapPin,
-      'calendar': Calendar,
-      'TRENDINGUP': TrendingUp,
-      'TARGET': Target,
-      'USERS': Users,
-      'AWARD': Award,
-      'MAPPIN': MapPin,
-      'CALENDAR': Calendar,
-    };
-    return iconMap[iconName] || iconMap[iconName?.toLowerCase()] || iconMap[iconName?.toUpperCase()] || TrendingUp;
-  };
 
   useEffect(() => {
     if (session?.user.tenant_id) {

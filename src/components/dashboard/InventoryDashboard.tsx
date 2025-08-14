@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Package, TrendingDown, AlertTriangle, Clock, Truck, BarChart3, RefreshCw } from "lucide-react";
+import { TrendingDown, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { API_BASE_URL } from "@/config/api";
+import { getIconByName } from '@/lib/iconUtils';
 
 interface InventoryMetric {
   title: string;
@@ -61,61 +62,37 @@ export function InventoryDashboard() {
           setMetrics(mappedKpis);
         } else {
           setMetrics([
-            { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
-            { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
-            { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
-            { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
-            { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
-            { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
+            { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: getIconByName('Package'), color: 'text-blue-600' },
+            { title: 'Low Stock Items', value: '47', change: -12.8, icon: getIconByName('AlertTriangle'), color: 'text-red-600' },
+            { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: getIconByName('BarChart3'), color: 'text-green-600' },
+            { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: getIconByName('Truck'), color: 'text-purple-600' },
+            { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: getIconByName('TrendingDown'), color: 'text-cyan-600' },
+            { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: getIconByName('Clock'), color: 'text-orange-600' }
           ]);
         }
       } else {
         setMetrics([
-          { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
-          { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
-          { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
-          { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
-          { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
-          { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
+          { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: getIconByName('Package'), color: 'text-blue-600' },
+          { title: 'Low Stock Items', value: '47', change: -12.8, icon: getIconByName('AlertTriangle'), color: 'text-red-600' },
+          { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: getIconByName('BarChart3'), color: 'text-green-600' },
+          { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: getIconByName('Truck'), color: 'text-purple-600' },
+          { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: getIconByName('TrendingDown'), color: 'text-cyan-600' },
+          { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: getIconByName('Clock'), color: 'text-orange-600' }
         ]);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
       setMetrics([
-        { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: Package, color: 'text-blue-600' },
-        { title: 'Low Stock Items', value: '47', change: -12.8, icon: AlertTriangle, color: 'text-red-600' },
-        { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: BarChart3, color: 'text-green-600' },
-        { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: Truck, color: 'text-purple-600' },
-        { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: TrendingDown, color: 'text-cyan-600' },
-        { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: Clock, color: 'text-orange-600' }
+        { title: 'Total Inventory Value', value: '$2,847,392', change: 5.2, icon: getIconByName('Package'), color: 'text-blue-600' },
+        { title: 'Low Stock Items', value: '47', change: -12.8, icon: getIconByName('AlertTriangle'), color: 'text-red-600' },
+        { title: 'Inventory Turnover', value: '6.2x', change: 8.7, icon: getIconByName('BarChart3'), color: 'text-green-600' },
+        { title: 'Avg Delivery Time', value: '4.2 days', change: -15.3, icon: getIconByName('Truck'), color: 'text-purple-600' },
+        { title: 'Stock Accuracy', value: '97.8%', change: 2.1, icon: getIconByName('TrendingDown'), color: 'text-cyan-600' },
+        { title: 'Aging Inventory', value: '$184,250', change: -8.9, icon: getIconByName('Clock'), color: 'text-orange-600' }
       ]);
     }
   };
 
-  const getIconByName = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      'Package': Package,
-      'TrendingDown': TrendingDown,
-      'AlertTriangle': AlertTriangle,
-      'Clock': Clock,
-      'Truck': Truck,
-      'BarChart3': BarChart3,
-      // Add case variations for better matching
-      'package': Package,
-      'trendingdown': TrendingDown,
-      'alerttriangle': AlertTriangle,
-      'clock': Clock,
-      'truck': Truck,
-      'barchart3': BarChart3,
-      'PACKAGE': Package,
-      'TRENDINGDOWN': TrendingDown,
-      'ALERTTRIANGLE': AlertTriangle,
-      'CLOCK': Clock,
-      'TRUCK': Truck,
-      'BARCHART3': BarChart3,
-    };
-    return iconMap[iconName] || iconMap[iconName?.toLowerCase()] || iconMap[iconName?.toUpperCase()] || Package;
-  };
 
   useEffect(() => {
     if (session?.user.tenant_id) {

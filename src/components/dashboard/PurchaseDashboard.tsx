@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users, Clock, AlertTriangle, CheckCircle, Calculator, Target } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useAuthStore } from '@/store/authStore';
 import { useWidgetStore } from '@/store/widgetStore';
 import { API_BASE_URL } from '@/config/api';
+import { getIconByName } from '@/lib/iconUtils';
 import { ConfigurableWidget } from '@/components/ConfigurableWidget';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
