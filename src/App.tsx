@@ -7,6 +7,10 @@ import Dashboard from '@/pages/Dashboard';
 import Analytics from '@/pages/Analytics';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import TenantManagement from '@/pages/admin/TenantManagement';
+import UserManagement from '@/pages/admin/UserManagement';
+import KpiManagement from '@/pages/admin/KpiManagement';
 import { ExecutiveDashboard } from "@/components/dashboard/ExecutiveDashboard";
 import { FinanceDashboard } from "@/components/dashboard/FinanceDashboard";
 import { SalesDashboard } from "@/components/dashboard/SalesDashboard";
@@ -15,7 +19,6 @@ import { InventoryDashboard } from "@/components/dashboard/InventoryDashboard";
 import { HRDashboard } from "@/components/dashboard/HRDashboard";
 import NotFound from '@/pages/NotFound';
 import { LoginForm } from '@/components/LoginForm';
-import { Layout } from '@/components/Layout';
 import { useAuthStore } from '@/store/authStore';
 import { useRoleStore } from '@/store/roleStore';
 import { useInactivityTimer } from '@/hooks/useInactivityTimer';
@@ -48,7 +51,7 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <Layout>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
               <Route path="/" element={<Navigate to={defaultDashboard} replace />} />
               <Route 
@@ -99,13 +102,33 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute moduleId="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/tenants" element={
+                <ProtectedRoute moduleId="admin">
+                  <TenantManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/users" element={
+                <ProtectedRoute moduleId="admin">
+                  <UserManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/kpis" element={
+                <ProtectedRoute moduleId="admin">
+                  <KpiManagement />
+                </ProtectedRoute>
+              } />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Layout>
+          </div>
           <Toaster />
         </Router>
       </QueryClientProvider>
