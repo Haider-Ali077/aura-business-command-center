@@ -3,9 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
-import Dashboard from '@/pages/Dashboard';
-import Analytics from '@/pages/Analytics';
-import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 
 import TenantManagement from '@/pages/admin/TenantManagement';
