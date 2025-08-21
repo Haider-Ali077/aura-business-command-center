@@ -13,7 +13,7 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 interface PurchaseMetric {
   title: string;
   value: string;
-  change?: string;
+  change: number | null;
   icon: any;
   color: string;
 }
@@ -112,9 +112,9 @@ const PurchaseDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-                    {metric.change && (
-                      <p className={`text-xs mt-1 ${Number(metric.change) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {Number(metric.change) > 0 ? '+' : ''}{metric.change} from last month
+                    {metric.change !== null && metric.change !== 0 && (
+                      <p className={`text-xs mt-1 ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {metric.change > 0 ? '+' : ''}{metric.change}% from last month
                       </p>
                     )}
                   </CardContent>
