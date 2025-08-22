@@ -46,7 +46,7 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-2 md:gap-4 min-w-0">
-        <AlertsDropdown />
+        {/* <AlertsDropdown /> */}
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
