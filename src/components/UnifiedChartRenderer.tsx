@@ -43,7 +43,7 @@ interface UnifiedChartRendererProps {
   isMaximized?: boolean;
 }
 
-const DEFAULT_COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#EF4444', '#F59E0B', '#8B5CF6'];
+const DEFAULT_COLORS = ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'];
 
 export const UnifiedChartRenderer = ({ 
   type, 
@@ -53,7 +53,7 @@ export const UnifiedChartRenderer = ({
   isLoading = false, 
   isMaximized = false 
 }: UnifiedChartRendererProps) => {
-  const chartHeight = isMaximized ? 400 : 300;
+  const chartHeight = isMaximized ? 400 : 250;
   
   if (isLoading) {
     return (

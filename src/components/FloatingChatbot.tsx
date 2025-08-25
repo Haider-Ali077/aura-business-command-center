@@ -39,7 +39,7 @@ const convertChatbotChartData = (chart: ChartData): {
     xLabel: chart.xLabel,
     yLabel: chart.yLabel,
     chartType: chart.chart_type as 'line' | 'bar' | 'area' | 'pie' | 'table',
-    colors: ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))'],
+    colors: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'],
     showGrid: true,
   };
 
@@ -571,10 +571,8 @@ export function FloatingChatbot() {
                                       <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
                                       <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                                     </div>
-                                    <div className="w-full h-36 bg-gray-50/50 dark:bg-background/30 rounded-lg p-0.5">
-                                     <ResponsiveContainer width="100%" height="100%">
+                                    <div className="w-full h-48 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2">
                                        {renderChart(message.chart)}
-                                     </ResponsiveContainer>
                                    </div>
                                    <div className="flex justify-end mt-1.5 pt-1.5 border-t border-gray-100 dark:border-border">
                                      <Button 
