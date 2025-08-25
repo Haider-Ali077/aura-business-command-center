@@ -53,7 +53,7 @@ export const UnifiedChartRenderer = ({
   isLoading = false, 
   isMaximized = false 
 }: UnifiedChartRendererProps) => {
-  const chartHeight = isMaximized ? 500 : 320;
+  const chartHeight = isMaximized ? 500 : 280;
   
   if (isLoading) {
     return (
@@ -89,8 +89,8 @@ export const UnifiedChartRenderer = ({
   switch (type) {
     case 'line':
       return (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={safeData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <LineChart data={safeData} margin={{ top: 15, right: 15, left: 15, bottom: 15 }}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
             <XAxis 
               dataKey={labelKey}
@@ -121,8 +121,8 @@ export const UnifiedChartRenderer = ({
 
     case 'bar':
       return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={safeData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={safeData} margin={{ top: 15, right: 15, left: 15, bottom: 15 }}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
             <XAxis 
               dataKey={labelKey} 
@@ -150,8 +150,8 @@ export const UnifiedChartRenderer = ({
 
     case 'area':
       return (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={safeData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <AreaChart data={safeData} margin={{ top: 15, right: 15, left: 15, bottom: 15 }}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
             <XAxis 
               dataKey={labelKey}
@@ -182,7 +182,7 @@ export const UnifiedChartRenderer = ({
 
     case 'pie':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie
               data={safeData.slice(0, 6)}
@@ -190,7 +190,7 @@ export const UnifiedChartRenderer = ({
               cy="50%"
               labelLine={false}
               label={({ payload, percent }) => `${payload[labelKey]} ${(percent * 100).toFixed(0)}%`}
-              outerRadius="80%"
+              outerRadius="70%"
               fill="#8884d8"
               dataKey={dataKey}
               nameKey={labelKey}
@@ -206,31 +206,29 @@ export const UnifiedChartRenderer = ({
 
     case 'table':
       return (
-        <div className="h-full w-full overflow-auto">
-          <div className="h-full">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  {tableKeys.map((key) => (
-                    <TableHead key={key} className="text-xs px-2 py-1">
-                      {metadata?.columns.find(col => col.key === key)?.label || key}
-                    </TableHead>
+        <div className="h-full w-full overflow-auto" style={{ maxHeight: chartHeight }}>
+          <Table>
+            <TableHeader className="sticky top-0 bg-background">
+              <TableRow>
+                {tableKeys.map((key) => (
+                  <TableHead key={key} className="text-xs px-2 py-1">
+                    {metadata?.columns.find(col => col.key === key)?.label || key}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {safeData.map((row, index) => (
+                <TableRow key={index}>
+                  {tableKeys.map((key, cellIndex) => (
+                    <TableCell key={cellIndex} className="text-xs px-2 py-1">
+                      {typeof row[key] === 'number' ? row[key].toLocaleString() : String(row[key] || '')}
+                    </TableCell>
                   ))}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {safeData.map((row, index) => (
-                  <TableRow key={index}>
-                    {tableKeys.map((key, cellIndex) => (
-                      <TableCell key={cellIndex} className="text-xs px-2 py-1">
-                        {typeof row[key] === 'number' ? row[key].toLocaleString() : String(row[key] || '')}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       );
 

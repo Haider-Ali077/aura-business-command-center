@@ -128,8 +128,8 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           onToggleMaximize={() => setIsMaximized(!isMaximized)}
         />
       </CardHeader>
-      <CardContent className="p-2 pt-0 h-full">
-        <div className="h-full w-full">
+      <CardContent className="p-3 pt-0 h-full overflow-hidden">
+        <div className="h-full w-full" style={{ height: 'calc(100% - 1rem)' }}>
           <UnifiedChartRenderer
             type={widget.type as 'line' | 'bar' | 'area' | 'pie' | 'table'}
             data={displayData}
