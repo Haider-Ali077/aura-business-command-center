@@ -85,6 +85,7 @@ export function SalesDashboard() {
             <p className="text-muted-foreground mt-2">Sales performance, pipeline, and customer insights</p>
           </div>
           <Button 
+            variant="gradient"
             onClick={() => {
               refreshData();
               fetchKPIData();

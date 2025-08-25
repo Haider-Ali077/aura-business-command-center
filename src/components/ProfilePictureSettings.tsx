@@ -129,7 +129,7 @@ export function ProfilePictureSettings() {
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant="gradient"
                 size="sm"
                 disabled={isUploading}
                 onClick={() => document.getElementById('profile-picture-input')?.click()}

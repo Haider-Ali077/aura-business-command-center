@@ -86,8 +86,8 @@ export function PasswordChange() {
           />
         </div>
         <Button 
+          variant="gradient"
           onClick={handlePasswordChange}
-          className="bg-blue-600 hover:bg-blue-700"
           disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
         >
           Change Password

@@ -85,6 +85,7 @@ export function FinanceDashboard() {
             <p className="text-muted-foreground mt-2">Financial performance and cash flow analysis</p>
           </div>
           <Button 
+            variant="gradient"
             onClick={() => {
               refreshData();
               fetchKPIData();

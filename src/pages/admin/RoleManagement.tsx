@@ -106,7 +106,7 @@ export default function RoleManagement() {
                   <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">Create</Button>
+                  <Button type="submit" variant="gradient">Create</Button>
                 </div>
               </form>
             </DialogContent>

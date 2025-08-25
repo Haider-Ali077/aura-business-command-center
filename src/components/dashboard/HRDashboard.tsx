@@ -77,6 +77,7 @@ export function HRDashboard() {
             <p className="text-muted-foreground mt-2">Employee metrics, hiring, and performance insights</p>
           </div>
           <Button 
+            variant="gradient"
             onClick={() => {
               refreshData();
               fetchKPIData();

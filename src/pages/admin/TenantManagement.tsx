@@ -173,7 +173,7 @@ export default function TenantManagement() {
                 <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Create</Button>
+                <Button type="submit" variant="gradient">Create</Button>
               </div>
             </form>
           </DialogContent>
@@ -263,7 +263,7 @@ export default function TenantManagement() {
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Update</Button>
+              <Button type="submit" variant="gradient">Update</Button>
             </div>
           </form>
         </DialogContent>

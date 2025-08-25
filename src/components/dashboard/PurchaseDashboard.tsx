@@ -84,6 +84,7 @@ const PurchaseDashboard = () => {
             <p className="text-muted-foreground mt-2">Purchase orders, supplier management, and procurement analytics</p>
           </div>
           <Button 
+            variant="gradient"
             onClick={handleRefresh} 
             disabled={loading || isLoadingMetrics}
             className="flex items-center gap-2"

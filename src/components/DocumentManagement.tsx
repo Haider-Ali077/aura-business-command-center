@@ -177,7 +177,7 @@ export function DocumentManagement() {
             disabled={isLoading}
           />
           <label htmlFor="file-upload">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
+            <Button variant="gradient" disabled={isLoading}>
               {isLoading ? "Uploading..." : "Choose Files"}
             </Button>
           </label>

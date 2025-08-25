@@ -77,6 +77,7 @@ export function InventoryDashboard() {
             <p className="text-muted-foreground mt-2">Stock levels, turnover, and supply chain performance</p>
           </div>
           <Button 
+            variant="gradient"
             onClick={() => {
               refreshData();
               fetchKPIData();

@@ -622,9 +622,9 @@ export function FloatingChatbot() {
                     disabled={isLoading}
                   />
                   <Button 
+                    variant="gradient"
                     onClick={handleSendMessage} 
                     disabled={isLoading || !inputValue.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground"
                     size="sm"
                   >
                     <Send className="h-4 w-4" />
@@ -648,10 +648,11 @@ export function FloatingChatbot() {
                         </SelectContent>
                       </Select>
                       <Button 
+                        variant="gradient"
                         size="sm" 
                         onClick={() => confirmAddToDashboard(pendingChart!, selectedDashboard)}
                         disabled={!selectedDashboard}
-                        className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground text-xs"
+                        className="text-xs"
                       >
                         Add
                       </Button>

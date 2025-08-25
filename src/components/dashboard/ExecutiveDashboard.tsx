@@ -97,6 +97,7 @@ export function ExecutiveDashboard() {
           <p className="text-muted-foreground mt-2">High-level overview of company performance</p>
         </div>
         <Button 
+          variant="gradient"
           onClick={() => {
             refreshData();
             fetchKPIData();
