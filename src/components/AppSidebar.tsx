@@ -331,9 +331,13 @@ export function AppSidebar() {
     currentPath === path || currentPath.startsWith(path + "/");
 
   return (
-    <Sidebar
-      className={`transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}
-      collapsible="icon"
+    <Sidebar 
+      className={`
+        ${collapsed ? 'w-14' : 'w-64'} 
+        transition-all duration-300 ease-in-out
+        bg-gradient-to-b from-sidebar-background to-muted border-sidebar-border
+        shadow-sm
+      `}
     >
       <SidebarContent className="bg-sidebar-background border-r border-sidebar-border transition-all duration-300">
         {/* Header */}
@@ -371,11 +375,11 @@ export function AppSidebar() {
                            to={moduleUrl}
                            className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
                              collapsed ? "justify-center px-2" : ""
-                            } ${
-                              active
-                                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                            }`}
+                           } ${
+                             active
+                               ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                               : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
+                           }`}
                          >
                            <div
                              className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
@@ -415,8 +419,8 @@ export function AppSidebar() {
                         collapsed ? "justify-center px-2" : ""
                       } ${
                         isActive("/admin/tenants")
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                          : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
                       }`}
                     >
                       <div
@@ -442,8 +446,8 @@ export function AppSidebar() {
                         collapsed ? "justify-center px-2" : ""
                       } ${
                         isActive("/admin/users")
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                          : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
                       }`}
                     >
                       <div
@@ -465,13 +469,13 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild className="p-0">
                     <NavLink
                       to="/admin/kpis"
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
-                        collapsed ? "justify-center px-2" : ""
-                      } ${
-                        isActive("/admin/kpis")
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      }`}
+                       className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                         collapsed ? "justify-center px-2" : ""
+                       } ${
+                         isActive("/admin/kpis")
+                           ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                           : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
+                       }`}
                     >
                       <div
                         className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
@@ -492,13 +496,13 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild className="p-0">
                     <NavLink
                       to="/admin/widgets"
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
-                        collapsed ? "justify-center px-2" : ""
-                      } ${
-                        isActive("/admin/widgets")
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      }`}
+                       className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                         collapsed ? "justify-center px-2" : ""
+                       } ${
+                         isActive("/admin/widgets")
+                           ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                           : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
+                       }`}
                     >
                       <div
                         className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
@@ -519,13 +523,13 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild className="p-0">
                     <NavLink
                       to="/admin/roles"
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
-                        collapsed ? "justify-center px-2" : ""
-                      } ${
-                        isActive("/admin/roles")
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      }`}
+                       className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                         collapsed ? "justify-center px-2" : ""
+                       } ${
+                         isActive("/admin/roles")
+                           ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                           : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
+                       }`}
                     >
                       <div
                         className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
@@ -560,8 +564,8 @@ export function AppSidebar() {
                          collapsed ? "justify-center px-2" : ""
                         } ${
                           isActive(settingsItem.url)
-                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                            : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
                         }`}
                      >
                        <div
