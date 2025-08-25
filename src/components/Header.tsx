@@ -53,7 +53,7 @@ export function Header() {
             <Button variant="ghost" size="sm" className="flex items-center gap-2 min-w-0 h-auto py-1">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={profilePictureUrl} alt="Profile picture" />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white text-xs font-semibold">
                   {getInitials(session?.user.user_name || session?.user.email || '')}
                 </AvatarFallback>
               </Avatar>

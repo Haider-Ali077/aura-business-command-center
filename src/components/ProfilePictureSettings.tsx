@@ -121,7 +121,7 @@ export function ProfilePictureSettings() {
         <div className="flex items-center gap-6">
           <Avatar className="h-20 w-20">
             <AvatarImage src={profilePictureUrl} alt="Profile picture" />
-            <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white text-lg font-semibold">
               {getInitials(session.user.user_name || session.user.email)}
             </AvatarFallback>
           </Avatar>
