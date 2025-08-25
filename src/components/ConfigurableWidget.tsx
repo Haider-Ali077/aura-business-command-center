@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { sqlService, ChartData } from "@/services/sqlService";
-import { ChartRenderer } from "./widget/ChartRenderer";
+import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
 import { WidgetHeader } from "./widget/WidgetHeader";
+import { ChartConfig, ChartMetadata, EnhancedChartData } from "@/types/chart";
 
 interface Widget {
   id: string;
@@ -18,6 +19,7 @@ interface Widget {
     timePeriod?: string;
     dataSource?: string;
     chartData?: any;
+    chartConfig?: ChartConfig;
   };
 }
 
@@ -32,7 +34,8 @@ interface ConfigurableWidgetProps {
 
 export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, onResize }: ConfigurableWidgetProps) {
   const [timePeriod, setTimePeriod] = useState(widget.config?.timePeriod || '6months');
-  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [chartData, setChartData] = useState<EnhancedChartData[]>([]);
+  const [metadata, setMetadata] = useState<ChartMetadata | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   
@@ -61,22 +64,43 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   }, [widget.sqlQuery, data]);
 
   const fetchData = async () => {
-    if (!widget.sqlQuery) return;
+    if (!widget.sqlQuery) {
+      // Convert legacy data format to enhanced format
+      const enhancedData = Array.isArray(data) ? data.map(item => ({
+        ...item,
+        name: item.name || String(Object.values(item)[0])
+      })) : [];
+      setChartData(enhancedData);
+      return;
+    }
     
     setIsLoading(true);
     try {
-      // Always fetch fresh data using SQL query to ensure consistency
-      console.log('Fetching fresh data for widget:', widget.title, 'Query:', widget.sqlQuery);
-      const result = await sqlService.getChartData(widget.sqlQuery);
-      console.log('Fresh data result for', widget.title, ':', result);
-      setChartData(result);
+      // Use enhanced method with chart configuration
+      const result = await sqlService.getEnhancedChartData(
+        widget.sqlQuery, 
+        widget.config?.chartConfig
+      );
+      
+      console.log('Enhanced data result for', widget.title, ':', result);
+      setChartData(result.data);
+      setMetadata(result.metadata);
     } catch (error) {
       console.error('Error fetching chart data:', error);
       // Fallback to pre-configured data or passed data
       if (widget.config?.chartData) {
-        setChartData(widget.config.chartData);
+        const enhancedData = Array.isArray(widget.config.chartData) ? 
+          widget.config.chartData.map(item => ({
+            ...item,
+            name: item.name || String(Object.values(item)[0])
+          })) : [];
+        setChartData(enhancedData);
       } else {
-        setChartData(data);
+        const enhancedData = Array.isArray(data) ? data.map(item => ({
+          ...item,
+          name: item.name || String(Object.values(item)[0])
+        })) : [];
+        setChartData(enhancedData);
       }
     } finally {
       setIsLoading(false);
@@ -105,9 +129,11 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
         />
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <ChartRenderer
-          type={widget.type}
+        <UnifiedChartRenderer
+          type={widget.type as 'line' | 'bar' | 'area' | 'pie' | 'table'}
           data={displayData}
+          config={widget.config?.chartConfig}
+          metadata={metadata}
           isLoading={isLoading}
           isMaximized={isMaximized}
         />

@@ -9,15 +9,10 @@ import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRoleStore } from "@/store/roleStore";
 import { dataService } from "@/services/dataService";
-import {
-  BarChart, Bar,
-  LineChart, Line, Area,
-  PieChart, Pie, Cell,
-  XAxis, YAxis,
-  CartesianGrid, Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { ResponsiveContainer } from 'recharts';
 import { API_BASE_URL } from '@/config/api';
+import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
+import { ChartConfig, EnhancedChartData } from "@/types/chart";
 
 interface ChartData {
   chart_type: string;
@@ -28,6 +23,28 @@ interface ChartData {
   yLabel: string;
   sqlQuery?: string;
 }
+
+// Convert chatbot chart data to unified format
+const convertChatbotChartData = (chart: ChartData): {
+  data: EnhancedChartData[];
+  config: ChartConfig;
+} => {
+  const data = chart.x.map((label, idx) => ({
+    name: label,
+    [chart.xLabel]: label,
+    [chart.yLabel]: chart.y[idx],
+  }));
+
+  const config: ChartConfig = {
+    xLabel: chart.xLabel,
+    yLabel: chart.yLabel,
+    chartType: chart.chart_type as 'line' | 'bar' | 'area' | 'pie' | 'table',
+    colors: ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))'],
+    showGrid: true,
+  };
+
+  return { data, config };
+};
 
 interface Message {
   id: string;
@@ -297,7 +314,9 @@ export function FloatingChatbot() {
         return;
       }
 
-      // Add widget to selected dashboard
+      const { data, config } = convertChatbotChartData(chart);
+
+      // Add widget to selected dashboard with enhanced configuration
       const newWidget = {
         id: `chart-${Date.now()}`,
         title: chart.title,
@@ -308,7 +327,8 @@ export function FloatingChatbot() {
         sqlQuery: chart.sqlQuery || `SELECT '${chart.xLabel}' as name, ${chart.y[0]} as value`,
         config: {
           dataSource: 'chatbot',
-          chartData: chart,
+          chartData: data,
+          chartConfig: config, // Enhanced configuration with labels
         }
       };
       
@@ -319,7 +339,7 @@ export function FloatingChatbot() {
       const successMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'bot',
-        content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard!`,
+        content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard with proper axis labels!`,
         timestamp: new Date(),
       };
       
@@ -449,160 +469,17 @@ export function FloatingChatbot() {
 
 
   const renderChart = (chart: ChartData) => {
-    const chartData = chart.x.map((label, idx) => ({
-      [chart.xLabel]: label,
-      [chart.yLabel]: chart.y[idx],
-    }));
-
-    // SAP Joule AI inspired color palette
-    const colors = [
-      '#6366F1', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', 
-      '#EF4444', '#EC4899', '#84CC16', '#F97316', '#3B82F6'
-    ];
-
-    switch (chart.chart_type) {
-      case 'bar':
-        return (
-            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-              <defs>
-                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9}/>
-                  <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.7}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-              <XAxis 
-                dataKey={chart.xLabel} 
-                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} 
-                angle={0}
-                textAnchor="middle"
-                height={20}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis 
-                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={false}
-                tickLine={false}
-                width={25}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  fontSize: '9px', 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
-                  color: 'hsl(var(--popover-foreground))'
-                }}
-                cursor={{ fill: 'hsl(var(--muted) / 0.2)' }}
-              />
-              <Bar 
-                dataKey={chart.yLabel} 
-                fill="url(#barGradient)" 
-                radius={[2, 2, 0, 0]}
-              />
-            </BarChart>
-        );
-      case 'line':
-        return (
-            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-              <defs>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10B981" stopOpacity={0.3}/>
-                  <stop offset="100%" stopColor="#10B981" stopOpacity={0.05}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-              <XAxis 
-                dataKey={chart.xLabel} 
-                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} 
-                angle={0}
-                textAnchor="middle"
-                height={20}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis 
-                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={false}
-                tickLine={false}
-                width={25}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  fontSize: '9px', 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
-                  color: 'hsl(var(--popover-foreground))'
-                }}
-                cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted-foreground))' }}
-              />
-            <Area 
-              type="monotone" 
-              dataKey={chart.yLabel} 
-              fill="url(#lineGradient)" 
-              stroke="none"
-            />
-            <Line 
-              type="monotone" 
-              dataKey={chart.yLabel} 
-              stroke="#10B981" 
-              strokeWidth={3} 
-              dot={{ r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#ffffff' }}
-              activeDot={{ r: 6, fill: '#059669', strokeWidth: 2, stroke: '#ffffff' }}
-            />
-          </LineChart>
-        );
-      case 'pie':
-        const pieData = chart.x.map((label, idx) => ({
-          name: label,
-          value: chart.y[idx],
-          color: colors[idx % colors.length]
-        }));
-        return (
-          <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <defs>
-              {pieData.map((entry, index) => (
-                <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
-                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.7}/>
-                </linearGradient>
-              ))}
-            </defs>
-            <Tooltip 
-              contentStyle={{ 
-                fontSize: '9px', 
-                backgroundColor: 'hsl(var(--popover))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '4px',
-                boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
-                color: 'hsl(var(--popover-foreground))'
-              }}
-              formatter={(value, name) => [`${value}`, name]}
-            />
-            <Pie
-              data={pieData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={60}
-              innerRadius={20}
-              paddingAngle={1}
-              label={false}
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={`url(#pieGradient-${index})`} />
-              ))}
-            </Pie>
-          </PieChart>
-        );
-      default:
-        return null;
-    }
+    const { data, config } = convertChatbotChartData(chart);
+    
+    return (
+      <UnifiedChartRenderer
+        type={chart.chart_type as 'line' | 'bar' | 'area' | 'pie' | 'table'}
+        data={data}
+        config={config}
+        isLoading={false}
+        isMaximized={false}
+      />
+    );
   };
 
   return (

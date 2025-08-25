@@ -117,6 +117,15 @@ export interface Widget {
     timePeriod?: string;
     dataSource?: string;
     chartData?: any;
+    // Enhanced chart configuration
+    chartConfig?: {
+      xLabel?: string;
+      yLabel?: string;
+      dataKeys?: string[];
+      colors?: string[];
+      showGrid?: boolean;
+      showLegend?: boolean;
+    };
   };
 }
 

@@ -1,16 +1,16 @@
 
 import { useAuthStore } from '@/store/authStore';
 import { API_BASE_URL } from '@/config/api';
+import { SqlResult, EnhancedChartData, ChartMetadata, ChartConfig } from '@/types/chart';
 
-export interface SqlResult {
-  columns: string[];
-  rows: any[][];
-}
-
+// Legacy interface for backward compatibility
 export interface ChartData {
   name: string;
   [key: string]: any;
 }
+
+// Use enhanced version for new implementations
+export type { EnhancedChartData };
 
 class SqlService {
   async runSql(query: string, databaseName?: string): Promise<SqlResult | any[]> {
@@ -59,6 +59,50 @@ class SqlService {
       console.error('Error running SQL query:', error);
       throw error;
     }
+  }
+
+  // Enhanced method that preserves column metadata
+  generateChartMetadata(data: any[]): ChartMetadata {
+    if (!Array.isArray(data) || data.length === 0) {
+      return { columns: [] };
+    }
+
+    const firstItem = data[0];
+    const keys = Object.keys(firstItem);
+    
+    const columns = keys.map(key => ({
+      key,
+      label: this.formatColumnLabel(key),
+      type: this.detectColumnType(firstItem[key]) as 'string' | 'number' | 'date'
+    }));
+
+    // Find best label key (first non-numeric)
+    const labelKey = keys.find(key => typeof firstItem[key] !== 'number') || keys[0];
+    
+    // Find best data key (prioritize common value fields)
+    const priorityKeys = ['value', 'amount', 'total', 'count', 'revenue', 'sales'];
+    const dataKey = keys.find(key => 
+      typeof firstItem[key] === 'number' && 
+      priorityKeys.some(p => key.toLowerCase().includes(p))
+    ) || keys.filter(key => typeof firstItem[key] === 'number').pop();
+
+    return {
+      columns,
+      labelKey,
+      dataKey
+    };
+  }
+
+  private formatColumnLabel(key: string): string {
+    return key
+      .replace(/[_-]/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  private detectColumnType(value: any): string {
+    if (typeof value === 'number') return 'number';
+    if (value && typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) return 'date';
+    return 'string';
   }
 
   convertToChartData(sqlResult: SqlResult): ChartData[] {
@@ -192,6 +236,68 @@ class SqlService {
     }
     
     return [];
+  }
+
+  // Enhanced method with chart configuration support
+  async getEnhancedChartData(query: string, config?: ChartConfig, databaseName?: string): Promise<{
+    data: EnhancedChartData[];
+    metadata: ChartMetadata;
+  }> {
+    const result = await this.runSql(query, databaseName);
+    
+    let dataArray: any[] = [];
+    
+    // Convert to array format
+    if (Array.isArray(result)) {
+      dataArray = result;
+    } else if (result && 'columns' in result && 'rows' in result) {
+      dataArray = result.rows.map(row => {
+        const obj: any = {};
+        result.columns.forEach((col, index) => {
+          obj[col] = row[index];
+        });
+        return obj;
+      });
+    }
+
+    const metadata = this.generateChartMetadata(dataArray);
+    
+    // Process data with configuration
+    const enhancedData = dataArray.map(item => {
+      const processedItem: EnhancedChartData = { ...item };
+      
+      // Use configured label key or auto-detect
+      const labelKey = config?.xLabel || metadata.labelKey || Object.keys(item)[0];
+      let nameValue = String(item[labelKey]);
+      
+      // Handle month conversion
+      if (typeof item[labelKey] === 'number' && item[labelKey] >= 1 && item[labelKey] <= 12 && 
+          labelKey.toLowerCase().includes('month')) {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        nameValue = monthNames[item[labelKey] - 1];
+      }
+      
+      // Handle date formatting
+      if (typeof item[labelKey] === 'string' && item[labelKey].match(/^\d{4}-\d{2}-\d{2}/)) {
+        const date = new Date(item[labelKey]);
+        nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      
+      processedItem.name = nameValue;
+      
+      return processedItem;
+    });
+
+    return {
+      data: enhancedData,
+      metadata: {
+        ...metadata,
+        // Override with explicit configuration if provided
+        labelKey: config?.xLabel || metadata.labelKey,
+        dataKey: config?.yLabel || metadata.dataKey
+      }
+    };
   }
 }
 
