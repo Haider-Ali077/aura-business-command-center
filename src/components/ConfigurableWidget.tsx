@@ -112,11 +112,9 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
   return (
     <Card 
       className={`group transition-all duration-200 ${optimizedLayout.span} ${
-        isMaximized ? 'fixed inset-4 z-50 bg-background border-border' : ''
+        isMaximized ? 'fixed inset-4 z-50 bg-background border-border' : 'min-h-[380px] flex flex-col'
       }`}
-      style={{ 
-        height: isMaximized ? 'calc(100vh - 2rem)' : '380px'
-      }}
+      style={isMaximized ? { height: 'calc(100vh - 2rem)' } : {}}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <WidgetHeader
@@ -128,8 +126,8 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
           onToggleMaximize={() => setIsMaximized(!isMaximized)}
         />
       </CardHeader>
-      <CardContent className="p-3 pt-0 h-full overflow-hidden">
-        <div className="h-full w-full" style={{ height: 'calc(100% - 1rem)' }}>
+      <CardContent className="p-3 pt-0 flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 w-full min-h-[280px]">
           <UnifiedChartRenderer
             type={widget.type as 'line' | 'bar' | 'area' | 'pie' | 'table'}
             data={displayData}

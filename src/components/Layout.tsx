@@ -16,8 +16,10 @@ export function Layout({ children }: LayoutProps) {
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0">
           <Header />
-          <div className="flex-1 p-4 md:p-6 overflow-auto bg-background">
-            {children}
+          <div className="flex-1 p-4 md:p-6 overflow-hidden bg-background">
+            <div className="h-full overflow-y-auto">
+              {children}
+            </div>
           </div>
         </main>
         <FloatingChatbot />
