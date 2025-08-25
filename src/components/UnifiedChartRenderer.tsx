@@ -53,7 +53,7 @@ export const UnifiedChartRenderer = ({
   isLoading = false, 
   isMaximized = false 
 }: UnifiedChartRendererProps) => {
-  const chartHeight = isMaximized ? 400 : 250;
+  const chartHeight = isMaximized ? 400 : 200;
   
   if (isLoading) {
     return (
