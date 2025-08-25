@@ -478,6 +478,7 @@ export function FloatingChatbot() {
         config={config}
         isLoading={false}
         isMaximized={false}
+        context="chatbot"
       />
     );
   };

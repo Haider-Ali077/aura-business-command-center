@@ -137,6 +137,7 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
             metadata={metadata}
             isLoading={isLoading}
             isMaximized={isMaximized}
+            context="dashboard"
           />
         </div>
       </CardContent>

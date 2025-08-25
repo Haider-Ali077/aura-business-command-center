@@ -41,6 +41,7 @@ interface UnifiedChartRendererProps {
   metadata?: ChartMetadata;
   isLoading?: boolean;
   isMaximized?: boolean;
+  context?: 'chatbot' | 'dashboard';
 }
 
 const DEFAULT_COLORS = ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'];
@@ -51,9 +52,10 @@ export const UnifiedChartRenderer = ({
   config, 
   metadata, 
   isLoading = false, 
-  isMaximized = false 
+  isMaximized = false,
+  context = 'dashboard'
 }: UnifiedChartRendererProps) => {
-  const chartHeight = isMaximized ? 500 : 280;
+  const chartHeight = isMaximized ? 500 : (context === 'chatbot' ? 200 : 280);
   
   if (isLoading) {
     return (
