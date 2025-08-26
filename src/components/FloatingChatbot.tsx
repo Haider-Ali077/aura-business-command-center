@@ -38,12 +38,19 @@ interface Message {
 }
 
 export function FloatingChatbot() {
+  // Error boundary state
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  
   const { session } = useAuthStore();
   const { addWidget } = useWidgetStore();
   const { getAccessibleModules } = useRoleStore();
 
-  // Get user-specific localStorage keys
+  // Get user-specific localStorage keys with session ID
   const getUserStorageKey = (key: string) => {
+    if (session?.user?.user_id && session?.session_id) {
+      return `intellyca-${session.user.user_id}-${session.session_id}-${key}`;
+    }
     const userId = session?.user?.user_id || 'anonymous';
     return `intellyca-${userId}-${key}`;
   };
@@ -56,8 +63,9 @@ export function FloatingChatbot() {
         const parsed = JSON.parse(saved);
         return parsed.map((msg: any) => ({
           ...msg,
+          content: msg.content || '', // Ensure content is always a string
           timestamp: new Date(msg.timestamp)
-        }));
+        })).filter((msg: any) => msg.content && msg.content.trim()); // Filter out empty messages
       }
     } catch (error) {
       console.error('Error loading chat messages:', error);
@@ -70,6 +78,60 @@ export function FloatingChatbot() {
       timestamp: new Date(),
     }];
   };
+
+  // Only clear chat history when user actually logs in (session_id changes)
+  useEffect(() => {
+    if (session?.user?.user_id && session?.session_id) {
+      const currentSessionKey = `intellyca-${session.user.user_id}-${session.session_id}-chat-messages`;
+      const currentOpenKey = `intellyca-${session.user.user_id}-${session.session_id}-chat-open`;
+      
+      // Check if this is a new session (different session_id)
+      const lastSessionId = localStorage.getItem(`intellyca-${session.user.user_id}-last-session-id`);
+      
+      if (lastSessionId !== session.session_id) {
+        // This is a new login - clear old data and reset chat
+        console.log('🔄 New session detected, clearing old chat data');
+        
+        // Clear old session data
+        if (lastSessionId) {
+          localStorage.removeItem(`intellyca-${session.user.user_id}-${lastSessionId}-chat-messages`);
+          localStorage.removeItem(`intellyca-${session.user.user_id}-${lastSessionId}-chat-open`);
+        }
+        
+        // Store new session ID
+        localStorage.setItem(`intellyca-${session.user.user_id}-last-session-id`, session.session_id);
+        
+        // Reset messages to initial state for new session
+        setMessages([{
+          id: '1',
+          type: 'bot' as const,
+          content: `Hello! I'm Intellyca, your AI-powered business intelligence assistant. What would you like to explore today?`,
+          timestamp: new Date(),
+        }]);
+        
+        // Reset chat state
+        setIsOpen(false);
+        setIsMinimized(false);
+      } else {
+        // Same session - load existing messages if available
+        const savedMessages = localStorage.getItem(currentSessionKey);
+        if (savedMessages) {
+          try {
+            const parsed = JSON.parse(savedMessages);
+            const validMessages = parsed.filter((msg: any) => msg.content && msg.content.trim());
+            if (validMessages.length > 0) {
+              setMessages(validMessages.map((msg: any) => ({
+                ...msg,
+                timestamp: new Date(msg.timestamp)
+              })));
+            }
+          } catch (error) {
+            console.error('Error loading saved messages:', error);
+          }
+        }
+      }
+    }
+  }, [session?.session_id]); // Only trigger on session_id change, not user_id
 
   const [isOpen, setIsOpen] = useState(() => {
     try {
@@ -352,71 +414,17 @@ export function FloatingChatbot() {
     };
     setMessages([initialMessage]);
     try {
+      // Clear current session data
       localStorage.removeItem(getUserStorageKey('chat-messages'));
+      localStorage.removeItem(getUserStorageKey('chat-open'));
+      
+      // Also clear any legacy data for this user
+      if (session?.user?.user_id) {
+        localStorage.removeItem(`intellyca-${session.user.user_id}-chat-messages`);
+        localStorage.removeItem(`intellyca-${session.user.user_id}-chat-open`);
+      }
     } catch (error) {
       console.error('Error clearing chat history:', error);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading || !session) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputValue,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt: userMessage.content,
-          user_id: session.user.user_id,
-          tenant_name: session.user.tenant_name,
-          role_name: session.user.role_name,
-          token: session.token
-        }),
-      });
-
-      const data = await res.json();
-      console.log("Received response:", data);
-
-      let chart: ChartData | undefined;
-      if (data.response?.data && data.response?.x_axis && data.response?.y_axis) {
-        chart = {
-          chart_type: data.response.chart_type,
-          title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
-          x: data.response.data.map((row: any) => row[data.response.x_axis]),
-          y: data.response.data.map((row: any) => row[data.response.y_axis]),
-          xLabel: data.response.x_axis,
-          yLabel: data.response.y_axis,
-          sqlQuery: data.response.sql_query || data.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
-        };
-      }
-      
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: typeof data.response === 'string' ? data.response : (data.sql_query ? `SQL Query: ${data.sql_query}` : ''),
-        timestamp: new Date(),
-        chart,
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-
-      // Save conversation to database
-      await saveConversation(userMessage.content, data.response);
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -447,12 +455,157 @@ export function FloatingChatbot() {
     }
   };
 
+  const handleSendMessage = async () => {
+    try {
+      if (!inputValue.trim() || isLoading || !session) return;
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: inputValue,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setInputValue('');
+      setIsLoading(true);
+
+          try {
+        const res = await fetch(`${API_BASE_URL}/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            prompt: userMessage.content,
+            user_id: session.user.user_id,
+            tenant_name: session.user.tenant_name,
+            role_name: session.user.role_name,
+            token: session.token
+          }),
+        });
+
+        const data = await res.json();
+        console.log("Received response:", data);
+
+        let chart: ChartData | undefined;
+        let messageContent = '';
+        
+        // Handle different response types
+        if (data.response) {
+          if (data.response.response_type === 'text_summary' && data.response.text) {
+            // Text summary response
+            messageContent = data.response.text;
+            
+            // Check if visualization was suggested
+            if (data.response.visualization_suggested) {
+              messageContent += `\n\n💡 **Visualization Suggestion:** ${data.response.suggestion_reason}`;
+            }
+          } else if (data.response.response_type === 'chart' && data.response.data && data.response.x_axis && data.response.y_axis) {
+            // Chart response
+            messageContent = data.response.text || `Chart: ${data.response.y_axis} by ${data.response.x_axis}`;
+            if (data.response.reason) {
+              messageContent += `\n\n📊 **Chart Type Selected:** ${data.response.chart_type} - ${data.response.reason}`;
+            }
+            chart = {
+              chart_type: data.response.chart_type,
+              title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+              x: data.response.data.map((row: any) => row[data.response.x_axis]),
+              y: data.response.data.map((row: any) => row[data.response.y_axis]),
+              xLabel: data.response.x_axis,
+              yLabel: data.response.y_axis,
+              sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
+            };
+          } else if (data.response.data && data.response.x_axis && data.response.y_axis) {
+            // Legacy chart response (fallback)
+            messageContent = data.response.text || `Chart: ${data.response.y_axis} by ${data.response.x_axis}`;
+            chart = {
+              chart_type: data.response.chart_type,
+              title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+              x: data.response.data.map((row: any) => row[data.response.x_axis]),
+              y: data.response.data.map((row: any) => row[data.response.y_axis]),
+              xLabel: data.response.x_axis,
+              yLabel: data.response.y_axis,
+              sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
+            };
+          } else if (typeof data.response === 'string') {
+            // String response
+            messageContent = data.response;
+          } else if (data.response.text) {
+            // Text response
+            messageContent = data.response.text;
+          } else {
+            // Fallback
+            messageContent = 'Response received';
+          }
+        } else if (typeof data === 'string') {
+          // Direct string response
+          messageContent = data;
+        } else {
+          // Fallback
+          messageContent = 'Response received';
+        }
+        
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: messageContent,
+          timestamp: new Date(),
+          chart,
+        };
+
+        setMessages(prev => [...prev, botMessage]);
+
+        // Save conversation to database
+        await saveConversation(userMessage.content, messageContent);
+      } catch (error) {
+        console.error("Error sending message:", error);
+        setHasError(true);
+        setErrorMessage('Failed to send message. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Critical error in handleSendMessage:", error);
+      setHasError(true);
+      setErrorMessage('Critical error occurred. Please refresh the page.');
+    }
+  };
 
   const renderChart = (chart: ChartData) => {
-    const chartData = chart.x.map((label, idx) => ({
-      [chart.xLabel]: label,
-      [chart.yLabel]: chart.y[idx],
-    }));
+    // Safety checks
+    if (!chart || !chart.x || !chart.y || !chart.xLabel || !chart.yLabel) {
+      console.error('Invalid chart data:', chart);
+      return (
+        <div className="flex items-center justify-center h-full text-xs text-red-500">
+          Invalid chart data
+        </div>
+      );
+    }
+    
+    // Enhanced data mapping with better error handling
+    const chartData = chart.x.map((label, idx) => {
+      try {
+        return {
+          [chart.xLabel]: label,
+          [chart.yLabel]: chart.y[idx],
+        };
+      } catch (error) {
+        console.error('Error mapping chart data:', error);
+        return {
+          [chart.xLabel]: label || 'Unknown',
+          [chart.yLabel]: chart.y[idx] || 0,
+        };
+      }
+    }).filter(item => item !== null); // Filter out any null items
+    
+    // Check if we have valid data
+    if (chartData.length === 0) {
+      console.error('No valid chart data after mapping');
+      return (
+        <div className="flex items-center justify-center h-full text-xs text-red-500">
+          No data available for chart
+        </div>
+      );
+    }
 
     // SAP Joule AI inspired color palette
     const colors = [
@@ -556,54 +709,216 @@ export function FloatingChatbot() {
             />
           </LineChart>
         );
-      case 'pie':
-        const pieData = chart.x.map((label, idx) => ({
-          name: label,
-          value: chart.y[idx],
-          color: colors[idx % colors.length]
-        }));
-        return (
-          <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <defs>
-              {pieData.map((entry, index) => (
-                <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
-                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.7}/>
-                </linearGradient>
-              ))}
-            </defs>
-            <Tooltip 
-              contentStyle={{ 
-                fontSize: '9px', 
-                backgroundColor: 'hsl(var(--popover))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '4px',
-                boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
-                color: 'hsl(var(--popover-foreground))'
-              }}
-              formatter={(value, name) => [`${value}`, name]}
-            />
-            <Pie
-              data={pieData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={60}
-              innerRadius={20}
-              paddingAngle={1}
-              label={false}
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={`url(#pieGradient-${index})`} />
-              ))}
-            </Pie>
-          </PieChart>
-        );
-      default:
-        return null;
+             case 'pie':
+         const pieData = chart.x.map((label, idx) => ({
+           name: label,
+           value: chart.y[idx],
+           color: colors[idx % colors.length]
+         }));
+         return (
+           <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+             <defs>
+               {pieData.map((entry, index) => (
+                 <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="1" y2="1">
+                   <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
+                   <stop offset="100%" stopColor={entry.color} stopOpacity={0.7}/>
+                 </linearGradient>
+               ))}
+             </defs>
+             <Tooltip 
+               contentStyle={{ 
+                 fontSize: '9px', 
+                 backgroundColor: 'hsl(var(--popover))', 
+                 border: '1px solid hsl(var(--border))',
+                 borderRadius: '4px',
+                 boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
+                 color: 'hsl(var(--popover-foreground))'
+               }}
+               formatter={(value, name) => [`${value}`, name]}
+             />
+             <Pie
+               data={pieData}
+               dataKey="value"
+               nameKey="name"
+               cx="50%"
+               cy="50%"
+               outerRadius={60}
+               innerRadius={20}
+               paddingAngle={1}
+               label={false}
+             >
+               {pieData.map((entry, index) => (
+                 <Cell key={`cell-${index}`} fill={`url(#pieGradient-${index})`} />
+               ))}
+             </Pie>
+           </PieChart>
+         );
+       case 'scatter':
+         return (
+           <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+             <defs>
+               <linearGradient id="scatterGradient" x1="0" y1="0" x2="0" y2="1">
+                 <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                 <stop offset="100%" stopColor="#6366F1" stopOpacity={0.6}/>
+               </linearGradient>
+             </defs>
+             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+             <XAxis 
+               dataKey={chart.xLabel} 
+               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} 
+               angle={0}
+               textAnchor="middle"
+               height={20}
+               axisLine={false}
+               tickLine={false}
+             />
+             <YAxis 
+               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+               axisLine={false}
+               tickLine={false}
+               width={25}
+             />
+             <Tooltip 
+               contentStyle={{ 
+                 fontSize: '9px', 
+                 backgroundColor: 'hsl(var(--popover))', 
+                 border: '1px solid hsl(var(--border))',
+                 borderRadius: '4px',
+                 boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
+                 color: 'hsl(var(--popover-foreground))'
+               }}
+               cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted-foreground))' }}
+             />
+              <Line 
+                type="monotone" 
+                dataKey={chart.yLabel} 
+                stroke="url(#scatterGradient)" 
+                strokeWidth={3} 
+                dot={{ r: 5, fill: '#8B5CF6', strokeWidth: 2, stroke: '#ffffff' }}
+                activeDot={{ r: 6, fill: '#6366F1', strokeWidth: 2, stroke: '#ffffff' }}
+              />
+           </LineChart>
+         );
+       case 'histogram':
+         return (
+           <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+             <defs>
+               <linearGradient id="histogramGradient" x1="0" y1="0" x2="0" y2="1">
+                 <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.9}/>
+                 <stop offset="100%" stopColor="#D97706" stopOpacity={0.7}/>
+               </linearGradient>
+             </defs>
+             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+             <XAxis 
+               dataKey={chart.xLabel} 
+               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} 
+               angle={0}
+               textAnchor="middle"
+               height={20}
+               axisLine={false}
+               tickLine={false}
+             />
+             <YAxis 
+               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+               axisLine={false}
+               tickLine={false}
+               width={25}
+             />
+             <Tooltip 
+               contentStyle={{ 
+                 fontSize: '9px', 
+                 backgroundColor: 'hsl(var(--popover))', 
+                 border: '1px solid hsl(var(--border))',
+                 borderRadius: '4px',
+                 boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
+                 color: 'hsl(var(--popover-foreground))'
+               }}
+               cursor={{ fill: 'hsl(var(--muted) / 0.2)' }}
+             />
+             <Bar 
+               dataKey={chart.yLabel} 
+               fill="url(#histogramGradient)" 
+               radius={[2, 2, 0, 0]}
+             />
+           </BarChart>
+         );
+       case 'table':
+       case 'enhanced_table':
+         // For table data, show a simple bar chart as fallback
+         return (
+           <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+             <defs>
+               <linearGradient id="tableGradient" x1="0" y1="0" x2="0" y2="1">
+                 <stop offset="0%" stopColor="#10B981" stopOpacity={0.9}/>
+                 <stop offset="100%" stopColor="#059669" stopOpacity={0.7}/>
+               </linearGradient>
+             </defs>
+             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+             <XAxis 
+               dataKey={chart.xLabel} 
+               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} 
+               angle={0}
+               textAnchor="middle"
+               height={20}
+               axisLine={false}
+               tickLine={false}
+             />
+             <YAxis 
+               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+               axisLine={false}
+               tickLine={false}
+               width={25}
+             />
+             <Tooltip 
+               contentStyle={{ 
+                 fontSize: '9px', 
+                 backgroundColor: 'hsl(var(--popover))', 
+                 border: '1px solid hsl(var(--border))',
+                 borderRadius: '4px',
+                 boxShadow: '0 2px 8px hsl(var(--foreground) / 0.1)',
+                 color: 'hsl(var(--popover-foreground))'
+               }}
+               cursor={{ fill: 'hsl(var(--muted) / 0.2)' }}
+             />
+             <Bar 
+               dataKey={chart.yLabel} 
+               fill="url(#tableGradient)" 
+               radius={[2, 2, 0, 0]}
+             />
+           </BarChart>
+         );
+       default:
+         return null;
     }
   };
+
+  // Error boundary - if there's an error, show error state
+  if (hasError) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Card className="w-80 shadow-xl bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+          <div className="p-4 text-center">
+            <div className="text-red-600 dark:text-red-400 mb-2">
+              <X className="h-8 w-8 mx-auto" />
+            </div>
+            <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">Something went wrong</h3>
+            <p className="text-sm text-red-600 dark:text-red-400 mb-3">{errorMessage}</p>
+            <Button 
+              onClick={() => {
+                setHasError(false);
+                setErrorMessage('');
+                window.location.reload();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              Reload Page
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -668,7 +983,7 @@ export function FloatingChatbot() {
               {/* Messages Area - SAP Joule AI Style */}
               <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
                 <div className="space-y-3">
-                  {messages.map((message) => (
+                  {messages.filter(message => message.content && message.content.trim()).map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                        <div className={`${message.chart ? 'max-w-[90%]' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                          {message.type === 'user' ? (
@@ -680,37 +995,73 @@ export function FloatingChatbot() {
                          ) : (
             // Bot message - clean style without avatar
                              <div className="w-full">
-                {message.content.trim() && (
+                {message.content && message.content.trim() && (
                   <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
-                    <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    <div className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed">
+                      {message.content.split('\n').map((line, index) => {
+                        // Simple markdown rendering for bold text and headers
+                        if (line.startsWith('**') && line.endsWith('**')) {
+                          return <p key={index} className="font-semibold mb-1">{line.slice(2, -2)}</p>;
+                        } else if (line.startsWith('📊') || line.startsWith('💡')) {
+                          return <p key={index} className="font-semibold text-blue-600 dark:text-blue-400 mb-1">{line}</p>;
+                        } else if (line.includes('**')) {
+                          // Handle inline bold text
+                          const parts = line.split('**');
+                          return (
+                            <p key={index} className="mb-1">
+                              {parts.map((part, partIndex) => 
+                                partIndex % 2 === 1 ? 
+                                  <span key={partIndex} className="font-semibold">{part}</span> : 
+                                  part
+                              )}
+                            </p>
+                          );
+                        } else if (line.trim() === '') {
+                          return <div key={index} className="h-2"></div>;
+                        } else {
+                          return <p key={index} className="mb-1">{line}</p>;
+                        }
+                      })}
+                    </div>
                     {!message.chart && (
                       <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
                     )}
                   </div>
                 )}
-                               {message.chart && (
-                                  <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-1 shadow-sm">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
-                                      <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                                               {message.chart && (
+                                   <div className="mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-1 shadow-sm">
+                                     <div className="flex items-center justify-between mb-1">
+                                       <h4 className="text-xs font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
+                                       <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                     </div>
+                                     <div className="w-full h-36 bg-gray-50/50 dark:bg-background/30 rounded-lg p-0.5">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        {(() => {
+                                          try {
+                                            return renderChart(message.chart!);
+                                          } catch (error) {
+                                            console.error('Chart rendering error:', error);
+                                            return (
+                                              <div className="flex items-center justify-center h-full text-xs text-gray-500">
+                                                Chart rendering failed. Please try again.
+                                              </div>
+                                            );
+                                          }
+                                        })()}
+                                      </ResponsiveContainer>
                                     </div>
-                                    <div className="w-full h-36 bg-gray-50/50 dark:bg-background/30 rounded-lg p-0.5">
-                                     <ResponsiveContainer width="100%" height="100%">
-                                       {renderChart(message.chart)}
-                                     </ResponsiveContainer>
-                                   </div>
-                                   <div className="flex justify-end mt-1.5 pt-1.5 border-t border-gray-100 dark:border-border">
-                                     <Button 
-                                       size="sm" 
-                                       onClick={() => handleAddToDashboard(message.chart!)}
-                                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-2 py-1 shadow-sm rounded-full h-6"
-                                     >
-                                       <Plus className="h-2.5 w-2.5 mr-1" />
-                                       Add
-                                     </Button>
-                                   </div>
-                                 </div>
-                               )}
+                                    <div className="flex justify-end mt-1.5 pt-1.5 border-t border-gray-100 dark:border-border">
+                                      <Button 
+                                        size="sm" 
+                                        onClick={() => handleAddToDashboard(message.chart!)}
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-2 py-1 shadow-sm rounded-full h-6"
+                                      >
+                                        <Plus className="h-2.5 w-2.5 mr-1" />
+                                        Add
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                           )}
                         </div>

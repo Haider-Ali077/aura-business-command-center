@@ -18,6 +18,7 @@ export interface AuthSession {
   user: User;
   token: string;
   expiresAt: Date;
+  session_id?: string; // Backend session ID for chat memory
 }
 
 interface AuthStore {
@@ -65,7 +66,8 @@ export const useAuthStore = create<AuthStore>()(
           const session: AuthSession = {
             user: data.user,
             token: data.token,
-            expiresAt
+            expiresAt,
+            session_id: data.session_id // Capture session ID from backend
           };
 
           set({ session, isLoading: false, lastActivity: Date.now() });
@@ -78,6 +80,14 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
+        // Clear localStorage for the current user before logging out
+        const currentSession = get().session;
+        if (currentSession?.user?.user_id) {
+          const userId = currentSession.user.user_id;
+          localStorage.removeItem(`intellyca-${userId}-chat-messages`);
+          localStorage.removeItem(`intellyca-${userId}-chat-open`);
+        }
+        
         set({ session: null, error: null, lastActivity: Date.now() });
       },
 
