@@ -12,7 +12,7 @@ import { dataService } from "@/services/dataService";
 import { ResponsiveContainer } from 'recharts';
 import { API_BASE_URL } from '@/config/api';
 import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
-import { ChartConfig, EnhancedChartData } from "@/types/chart";
+import { ChartConfig, EnhancedChartData, ChartMetadata } from "@/types/chart";
 
 interface ChartData {
   chart_type: string;
@@ -22,13 +22,41 @@ interface ChartData {
   xLabel: string;
   yLabel: string;
   sqlQuery?: string;
+  rawData?: any[]; // For table data
 }
 
 // Convert chatbot chart data to unified format
 const convertChatbotChartData = (chart: ChartData): {
   data: EnhancedChartData[];
   config: ChartConfig;
+  metadata?: ChartMetadata;
 } => {
+  // For tables, use the raw data directly
+  if (chart.chart_type === 'table' && chart.rawData) {
+    const data = chart.rawData;
+    
+    // Generate metadata from the raw data columns
+    const columns = Object.keys(data[0] || {}).map(key => ({
+      key,
+      label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+      type: typeof data[0]?.[key] === 'number' ? 'number' as const : 'string' as const,
+    }));
+
+    const config: ChartConfig = {
+      chartType: 'table',
+      colors: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'],
+    };
+
+    const metadata: ChartMetadata = {
+      columns,
+      labelKey: columns[0]?.key,
+      dataKey: columns.find(col => col.type === 'number')?.key,
+    };
+
+    return { data, config, metadata };
+  }
+
+  // For charts, use the transformed format
   const data = chart.x.map((label, idx) => ({
     name: label,
     [chart.xLabel]: label,
@@ -409,16 +437,31 @@ export function FloatingChatbot() {
       console.log("Received response:", data);
 
       let chart: ChartData | undefined;
-      if (data.response?.data && data.response?.x_axis && data.response?.y_axis) {
-        chart = {
-          chart_type: data.response.chart_type,
-          title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
-          x: data.response.data.map((row: any) => row[data.response.x_axis]),
-          y: data.response.data.map((row: any) => row[data.response.y_axis]),
-          xLabel: data.response.x_axis,
-          yLabel: data.response.y_axis,
-          sqlQuery: data.response.sql_query || data.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
-        };
+      if (data.response?.data && data.response?.chart_type) {
+        if (data.response.chart_type === 'table') {
+          // For tables, preserve the raw data
+          chart = {
+            chart_type: 'table',
+            title: 'Data Table',
+            x: [], // Not used for tables
+            y: [], // Not used for tables
+            xLabel: '',
+            yLabel: '',
+            rawData: data.response.data,
+            sqlQuery: data.response.sql_query || data.sql_query || 'SELECT * FROM your_table'
+          };
+        } else if (data.response?.x_axis && data.response?.y_axis) {
+          // For charts, use the transformed format
+          chart = {
+            chart_type: data.response.chart_type,
+            title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+            x: data.response.data.map((row: any) => row[data.response.x_axis]),
+            y: data.response.data.map((row: any) => row[data.response.y_axis]),
+            xLabel: data.response.x_axis,
+            yLabel: data.response.y_axis,
+            sqlQuery: data.response.sql_query || data.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
+          };
+        }
       }
       
       const botMessage: Message = {
@@ -469,13 +512,14 @@ export function FloatingChatbot() {
 
 
   const renderChart = (chart: ChartData) => {
-    const { data, config } = convertChatbotChartData(chart);
+    const { data, config, metadata } = convertChatbotChartData(chart);
     
     return (
       <UnifiedChartRenderer
         type={chart.chart_type as 'line' | 'bar' | 'area' | 'pie' | 'table'}
         data={data}
         config={config}
+        metadata={metadata}
         isLoading={false}
         isMaximized={false}
         context="chatbot"
