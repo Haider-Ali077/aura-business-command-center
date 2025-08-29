@@ -78,6 +78,10 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
+        // Clear widget cache on logout
+        import('@/store/widgetStore').then(widgetStore => {
+          widgetStore.useWidgetStore.getState().clearCache();
+        });
         set({ session: null, error: null, lastActivity: Date.now() });
       },
 
