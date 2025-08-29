@@ -123,18 +123,6 @@ export function FloatingChatbot() {
     }
   }, [messages, session?.user?.user_id]);
 
-  // Clear chat when user logs in/out
-  useEffect(() => {
-    if (session?.user?.user_id) {
-      // Load user-specific messages when logging in
-      const userMessages = loadInitialMessages();
-      setMessages(userMessages);
-    } else {
-      // Clear chat when logging out
-      clearChatHistory();
-    }
-  }, [session?.user?.user_id]);
-
   // Save isOpen state to localStorage (user-specific)
   useEffect(() => {
     try {
@@ -584,7 +572,7 @@ export function FloatingChatbot() {
                                       <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
                                       <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                                     </div>
-                                    <div className="w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 overflow-auto">
+                                    <div className="w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 overflow-hidden">
                                        <div className="w-full h-full">
                                          {renderChart(message.chart)}
                                        </div>

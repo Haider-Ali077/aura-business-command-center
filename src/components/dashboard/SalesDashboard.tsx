@@ -66,15 +66,8 @@ export function SalesDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      // Only fetch if cache is invalid
-      const { isCacheValid } = useWidgetStore.getState();
-      if (!isCacheValid(session.user.tenant_id, 'sales')) {
-        fetchWidgets(session.user.tenant_id, 'sales');
-        fetchKPIData();
-      } else {
-        // Load from cache
-        fetchWidgets(session.user.tenant_id, 'sales');
-      }
+      fetchWidgets(session.user.tenant_id, 'sales');
+      fetchKPIData();
     }
   }, [session, fetchWidgets]);
 

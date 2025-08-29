@@ -65,15 +65,8 @@ const PurchaseDashboard = () => {
 
   useEffect(() => {
     if (session) {
-      // Only fetch if cache is invalid
-      const { isCacheValid } = useWidgetStore.getState();
-      if (!isCacheValid(session.user.tenant_id, 'purchase')) {
-        fetchWidgets(session.user.tenant_id, 'purchase');
-        fetchKPIData();
-      } else {
-        // Load from cache
-        fetchWidgets(session.user.tenant_id, 'purchase');
-      }
+      fetchWidgets(session.user.tenant_id, 'purchase');
+      fetchKPIData();
     }
   }, [session, fetchWidgets]);
 

@@ -129,63 +129,26 @@ export interface Widget {
   };
 }
 
-interface WidgetCache {
-  [key: string]: {
-    widgets: Widget[];
-    timestamp: number;
-    kpis?: any[];
-    kpiTimestamp?: number;
-  };
-}
-
 interface WidgetStore {
   widgets: Widget[];
   loading: boolean;
-  cache: WidgetCache;
-  CACHE_DURATION: number;
-  fetchWidgets: (tenantId: number, dashboard: string, forceRefresh?: boolean) => Promise<void>;
+  fetchWidgets: (tenantId: number, dashboard: string) => Promise<void>;
   addWidget: (widget: Widget, tenantId: number, dashboard: string) => Promise<void>;
   removeWidget: (id: string) => void;
   updateWidget: (id: string, updates: Partial<Widget>) => void;
   moveWidget: (id: string, position: { x: number; y: number }) => void;
   resizeWidget: (id: string, size: { width: number; height: number }) => void;
   refreshData: () => Promise<void>;
-  isCacheValid: (tenantId: number, dashboard: string) => boolean;
-  clearCache: () => void;
 }
 
 export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   widgets: [],
   loading: false,
-  cache: {},
-  CACHE_DURATION: 10 * 60 * 1000, // 10 minutes
 
-  isCacheValid: (tenantId, dashboard) => {
-    const cacheKey = `${tenantId}-${dashboard}`;
-    const cached = get().cache[cacheKey];
-    return cached && (Date.now() - cached.timestamp) < get().CACHE_DURATION;
-  },
-
-  clearCache: () => {
-    set({ cache: {} });
-  },
-
-  fetchWidgets: async (tenantId, dashboard, forceRefresh = false) => {
-    const cacheKey = `${tenantId}-${dashboard}`;
-    
-    // Check cache first unless force refresh is requested
-    if (!forceRefresh && get().isCacheValid(tenantId, dashboard)) {
-      const cached = get().cache[cacheKey];
-      if (cached) {
-        console.log('Using cached widgets for', dashboard);
-        set({ widgets: cached.widgets });
-        return;
-      }
-    }
-    
+  fetchWidgets: async (tenantId, dashboard) => {
     set({ loading: true });
     try {
-      console.log('Fetching fresh widgets with tenantId:', tenantId, 'type:', typeof tenantId);
+      console.log('Fetching widgets with tenantId:', tenantId, 'type:', typeof tenantId);
       
       const res = await fetch(`${API_BASE_URL}/widgetfetch`, {
       method: 'POST',
@@ -260,19 +223,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
         
         return widget;
       }));
-      
-      // Cache the results
-      set(state => ({
-        widgets: transformed,
-        loading: false,
-        cache: {
-          ...state.cache,
-          [cacheKey]: {
-            widgets: transformed,
-            timestamp: Date.now()
-          }
-        }
-      }));
+      set({ widgets: transformed, loading: false });
     } catch (err) {
       console.error("Failed to fetch widgets", err);
       set({ loading: false });
@@ -330,10 +281,10 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
     const currentPath = window.location.pathname;
     const dashboardType = currentPath.split('/').pop() || 'executive';
     
-    console.log('Force refreshing data for dashboard:', dashboardType, 'tenant:', session.user.tenant_id);
+    console.log('Refreshing data for dashboard:', dashboardType, 'tenant:', session.user.tenant_id);
     
-    // Force refresh - bypass cache
-    await get().fetchWidgets(session.user.tenant_id, dashboardType, true);
+    // Re-fetch widgets from backend to get latest configuration and data
+    await get().fetchWidgets(session.user.tenant_id, dashboardType);
   },
 
   removeWidget: (id) =>

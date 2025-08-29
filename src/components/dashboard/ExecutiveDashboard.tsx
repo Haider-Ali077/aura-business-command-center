@@ -77,16 +77,8 @@ export function ExecutiveDashboard() {
     if (session?.user.tenant_id) {
       console.log('Session user data:', session.user);
       console.log('Tenant ID:', session.user.tenant_id, 'Type:', typeof session.user.tenant_id);
-      
-      // Only fetch if cache is invalid
-      const { isCacheValid } = useWidgetStore.getState();
-      if (!isCacheValid(session.user.tenant_id, 'executive')) {
-        fetchWidgets(session.user.tenant_id, 'executive');
-        fetchKPIData();
-      } else {
-        // Load from cache
-        fetchWidgets(session.user.tenant_id, 'executive');
-      }
+      fetchWidgets(session.user.tenant_id, 'executive');
+      fetchKPIData();
     }
   }, [session, fetchWidgets]);
 
