@@ -208,29 +208,31 @@ export const UnifiedChartRenderer = ({
 
     case 'table':
       return (
-        <div className="h-full w-full overflow-x-auto overflow-y-auto" style={{ maxHeight: chartHeight }}>
-          <Table className="min-w-full">
-            <TableHeader className="sticky top-0 bg-background">
-              <TableRow>
-                {tableKeys.map((key) => (
-                  <TableHead key={key} className="text-xs px-2 py-1 whitespace-nowrap">
-                    {metadata?.columns.find(col => col.key === key)?.label || key}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {safeData.map((row, index) => (
-                <TableRow key={index}>
-                  {tableKeys.map((key, cellIndex) => (
-                    <TableCell key={cellIndex} className="text-xs px-2 py-1 whitespace-nowrap">
-                      {typeof row[key] === 'number' ? row[key].toLocaleString() : String(row[key] || '')}
-                    </TableCell>
+        <div className="h-full w-full overflow-y-auto" style={{ maxHeight: chartHeight }}>
+          <div className="overflow-x-auto">
+            <Table className="min-w-full">
+              <TableHeader className="sticky top-0 bg-background">
+                <TableRow>
+                  {tableKeys.map((key) => (
+                    <TableHead key={key} className="text-xs px-2 py-1 whitespace-nowrap">
+                      {metadata?.columns.find(col => col.key === key)?.label || key}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {safeData.map((row, index) => (
+                  <TableRow key={index}>
+                    {tableKeys.map((key, cellIndex) => (
+                      <TableCell key={cellIndex} className="text-xs px-2 py-1 whitespace-nowrap">
+                        {typeof row[key] === 'number' ? row[key].toLocaleString() : String(row[key] || '')}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       );
 
