@@ -208,12 +208,12 @@ export const UnifiedChartRenderer = ({
 
     case 'table':
       return (
-        <div className="h-full w-full overflow-auto" style={{ maxHeight: chartHeight }}>
-          <Table>
+        <div className="h-full w-full overflow-x-auto overflow-y-auto" style={{ maxHeight: chartHeight }}>
+          <Table className="min-w-full">
             <TableHeader className="sticky top-0 bg-background">
               <TableRow>
                 {tableKeys.map((key) => (
-                  <TableHead key={key} className="text-xs px-2 py-1">
+                  <TableHead key={key} className="text-xs px-2 py-1 whitespace-nowrap">
                     {metadata?.columns.find(col => col.key === key)?.label || key}
                   </TableHead>
                 ))}
@@ -223,7 +223,7 @@ export const UnifiedChartRenderer = ({
               {safeData.map((row, index) => (
                 <TableRow key={index}>
                   {tableKeys.map((key, cellIndex) => (
-                    <TableCell key={cellIndex} className="text-xs px-2 py-1">
+                    <TableCell key={cellIndex} className="text-xs px-2 py-1 whitespace-nowrap">
                       {typeof row[key] === 'number' ? row[key].toLocaleString() : String(row[key] || '')}
                     </TableCell>
                   ))}
