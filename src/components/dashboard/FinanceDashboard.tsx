@@ -65,8 +65,15 @@ export function FinanceDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(session.user.tenant_id, 'finance');
-      fetchKPIData();
+      // Only fetch if cache is invalid
+      const { isCacheValid } = useWidgetStore.getState();
+      if (!isCacheValid(session.user.tenant_id, 'finance')) {
+        fetchWidgets(session.user.tenant_id, 'finance');
+        fetchKPIData();
+      } else {
+        // Load from cache
+        fetchWidgets(session.user.tenant_id, 'finance');
+      }
     }
   }, [session, fetchWidgets]);
 

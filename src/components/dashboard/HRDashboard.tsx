@@ -58,8 +58,15 @@ export function HRDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(session.user.tenant_id, 'hr');
-      fetchKPIData();
+      // Only fetch if cache is invalid
+      const { isCacheValid } = useWidgetStore.getState();
+      if (!isCacheValid(session.user.tenant_id, 'hr')) {
+        fetchWidgets(session.user.tenant_id, 'hr');
+        fetchKPIData();
+      } else {
+        // Load from cache
+        fetchWidgets(session.user.tenant_id, 'hr');
+      }
     }
   }, [session, fetchWidgets]);
 
