@@ -208,8 +208,8 @@ export const UnifiedChartRenderer = ({
 
     case 'table':
       return (
-        <div className="h-full w-full overflow-y-auto" style={{ maxHeight: chartHeight }}>
-          <div className="overflow-x-auto">
+        <div className="h-full w-full overflow-hidden" style={{ maxHeight: chartHeight }}>
+          <div className="h-full overflow-auto">
             <Table className="min-w-full">
               <TableHeader className="sticky top-0 bg-background">
                 <TableRow>
