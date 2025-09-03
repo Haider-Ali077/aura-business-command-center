@@ -392,6 +392,7 @@ export function FloatingChatbot() {
     setInputValue('');
     setIsLoading(true);
 
+    
     try {
       const res = await fetch(`${API_BASE_URL}/ask`, {
         method: 'POST',
