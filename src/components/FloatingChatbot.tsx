@@ -409,7 +409,11 @@ export function FloatingChatbot() {
       console.log("Received response:", data);
 
       let chart: ChartData | undefined;
-      if (data.response?.data && data.response?.x_axis && data.response?.y_axis) {
+      let messageContent = '';
+      
+      // Handle different response types
+      if (data.response?.chart_type && data.response?.x_axis && data.response?.y_axis) {
+        // Chart response
         chart = {
           chart_type: data.response.chart_type,
           title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
@@ -417,14 +421,27 @@ export function FloatingChatbot() {
           y: data.response.data.map((row: any) => row[data.response.y_axis]),
           xLabel: data.response.x_axis,
           yLabel: data.response.y_axis,
-          sqlQuery: data.response.sql_query || data.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
+          sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
         };
+        messageContent = `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
+      } else if (data.response?.text && data.response?.data) {
+        // Text response with data
+        messageContent = `${data.response.text}\n\n📋 Data Summary: ${data.response.summary || `Found ${data.response.data.length} rows`}`;
+      } else if (data.response?.value) {
+        // Single value response
+        messageContent = `📊 Result: ${data.response.value}`;
+      } else if (typeof data.response === 'string') {
+        // Plain text response
+        messageContent = data.response;
+      } else {
+        // Fallback
+        messageContent = 'Received response from the system.';
       }
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: typeof data.response === 'string' ? data.response : (data.sql_query ? `SQL Query: ${data.sql_query}` : ''),
+        content: messageContent,
         timestamp: new Date(),
         chart,
       };
