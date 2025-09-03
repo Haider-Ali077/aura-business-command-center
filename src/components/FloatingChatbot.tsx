@@ -22,6 +22,7 @@ interface ChartData {
   xLabel: string;
   yLabel: string;
   sqlQuery?: string;
+  rawData?: any[]; // Preserve original data for tables
 }
 
 // Convert chatbot chart data to unified format
@@ -29,6 +30,19 @@ const convertChatbotChartData = (chart: ChartData): {
   data: EnhancedChartData[];
   config: ChartConfig;
 } => {
+  // For tables, use raw data if available to preserve all columns
+  if (chart.chart_type === 'table' && chart.rawData) {
+    const config: ChartConfig = {
+      xLabel: chart.xLabel,
+      yLabel: chart.yLabel,
+      chartType: 'table',
+      colors: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'],
+      showGrid: true,
+    };
+    return { data: chart.rawData, config };
+  }
+  
+  // For charts, use the transformed data
   const data = chart.x.map((label, idx) => ({
     name: label,
     [chart.xLabel]: label,
@@ -422,9 +436,12 @@ export function FloatingChatbot() {
           y: data.response.data.map((row: any) => row[data.response.y_axis]),
           xLabel: data.response.x_axis,
           yLabel: data.response.y_axis,
-          sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`
+          sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`,
+          rawData: data.response.chart_type === 'table' ? data.response.data : undefined // Preserve raw data for tables
         };
-        messageContent = `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
+        messageContent = data.response.chart_type === 'table' 
+          ? `📋 Here's your table showing ${data.response.y_axis} by ${data.response.x_axis}`
+          : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
       } else if (data.response?.text && data.response?.data) {
         // Text response with data
         messageContent = `${data.response.text}\n\n📋 Data Summary: ${data.response.summary || `Found ${data.response.data.length} rows`}`;
