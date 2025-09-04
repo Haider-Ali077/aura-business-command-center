@@ -433,8 +433,8 @@ export function FloatingChatbot() {
         // Chart response
         chart = {
           chart_type: data.response.chart_type,
-          title: data.response.chart_type === 'table' && data.response.table_name 
-            ? data.response.table_name 
+          title: data.response.chart_type === 'table' 
+            ? "Data Table" 
             : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
           x: data.response.data.map((row: any) => row[data.response.x_axis]),
           y: data.response.data.map((row: any) => row[data.response.y_axis]),
@@ -445,7 +445,7 @@ export function FloatingChatbot() {
           tableName: data.response.table_name // Include table name for table charts
         };
         messageContent = data.response.chart_type === 'table' 
-          ? `📋 Here's your table: ${data.response.table_name || `showing ${data.response.y_axis} by ${data.response.x_axis}`}`
+          ? `📋 Here's your data table`
           : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
       } else if (data.response?.text && data.response?.data) {
         // Text response with data
