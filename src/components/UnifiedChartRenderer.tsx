@@ -211,7 +211,7 @@ export const UnifiedChartRenderer = ({
     case 'table':
       return (
         <div className="h-full w-full overflow-hidden" style={{ maxHeight: chartHeight }}>
-          {tableName && (
+          {tableName && context !== 'chatbot' && (
             <div className="mb-2 px-2 py-1 bg-muted/50 rounded-t-md border-b">
               <h4 className="text-sm font-medium text-foreground truncate">{tableName}</h4>
             </div>

@@ -617,7 +617,7 @@ export function FloatingChatbot() {
                                       <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
                                       <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                                     </div>
-                                    <div className="w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 overflow-hidden">
+                                    <div className={`w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 ${message.chart.chart_type === 'table' ? 'overflow-auto' : 'overflow-hidden'}`}>
                                        <div className="w-full h-full">
                                          {renderChart(message.chart)}
                                        </div>
