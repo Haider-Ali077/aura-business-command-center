@@ -266,25 +266,28 @@ class SqlService {
     const enhancedData = dataArray.map(item => {
       const processedItem: EnhancedChartData = { ...item };
       
-      // Use configured label key or auto-detect
-      const labelKey = config?.xLabel || metadata.labelKey || Object.keys(item)[0];
-      let nameValue = String(item[labelKey]);
-      
-      // Handle month conversion
-      if (typeof item[labelKey] === 'number' && item[labelKey] >= 1 && item[labelKey] <= 12 && 
-          labelKey.toLowerCase().includes('month')) {
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        nameValue = monthNames[item[labelKey] - 1];
+      // Only add 'name' field for chart types, not tables
+      if (config?.chartType && config.chartType !== 'table') {
+        // Use configured label key or auto-detect
+        const labelKey = config?.xLabel || metadata.labelKey || Object.keys(item)[0];
+        let nameValue = String(item[labelKey]);
+        
+        // Handle month conversion
+        if (typeof item[labelKey] === 'number' && item[labelKey] >= 1 && item[labelKey] <= 12 && 
+            labelKey.toLowerCase().includes('month')) {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          nameValue = monthNames[item[labelKey] - 1];
+        }
+        
+        // Handle date formatting
+        if (typeof item[labelKey] === 'string' && item[labelKey].match(/^\d{4}-\d{2}-\d{2}/)) {
+          const date = new Date(item[labelKey]);
+          nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        processedItem.name = nameValue;
       }
-      
-      // Handle date formatting
-      if (typeof item[labelKey] === 'string' && item[labelKey].match(/^\d{4}-\d{2}-\d{2}/)) {
-        const date = new Date(item[labelKey]);
-        nameValue = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      }
-      
-      processedItem.name = nameValue;
       
       return processedItem;
     });

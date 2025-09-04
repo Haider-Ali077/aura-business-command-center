@@ -232,7 +232,12 @@ export const UnifiedChartRenderer = ({
                   <TableRow key={index}>
                     {tableKeys.map((key, cellIndex) => (
                       <TableCell key={cellIndex} className="text-xs px-2 py-1">
-                        {typeof row[key] === 'number' ? row[key].toLocaleString() : String(row[key] || '')}
+                        {typeof row[key] === 'number' ? 
+                          (key.toLowerCase().includes('year') || 
+                           (typeof row[key] === 'number' && row[key] >= 1900 && row[key] <= 2100 && row[key] % 1 === 0)) 
+                            ? row[key].toString() 
+                            : row[key].toLocaleString() 
+                          : String(row[key] || '')}
                       </TableCell>
                     ))}
                   </TableRow>
