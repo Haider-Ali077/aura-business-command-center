@@ -464,6 +464,7 @@ export function FloatingChatbot() {
         messageContent = 'Received response from the system.';
       }
       
+      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
