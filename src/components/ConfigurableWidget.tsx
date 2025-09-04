@@ -15,6 +15,7 @@ interface Widget {
   position: { x: number; y: number };
   size: { width: number; height: number };
   sqlQuery?: string;
+  tableName?: string; // Table name for table widgets
   config?: {
     timePeriod?: string;
     dataSource?: string;
@@ -136,6 +137,7 @@ export function ConfigurableWidget({ widget, data, onRemove, onUpdate, onMove, o
             isLoading={isLoading}
             isMaximized={isMaximized}
             context="dashboard"
+            tableName={widget.tableName}
           />
         </div>
       </CardContent>

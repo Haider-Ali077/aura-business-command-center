@@ -23,6 +23,7 @@ interface ChartData {
   yLabel: string;
   sqlQuery?: string;
   rawData?: any[]; // Preserve original data for tables
+  tableName?: string; // Table name for table charts
 }
 
 // Convert chatbot chart data to unified format
@@ -339,6 +340,7 @@ export function FloatingChatbot() {
         position: { x: 0, y: 0 },
         size: { width: 300, height: 350 },
         sqlQuery: chart.sqlQuery || `SELECT '${chart.xLabel}' as name, ${chart.y[0]} as value`,
+        tableName: chart.tableName, // Include table name for table widgets
         config: {
           dataSource: 'chatbot',
           chartData: data,
@@ -431,22 +433,28 @@ export function FloatingChatbot() {
         // Chart response
         chart = {
           chart_type: data.response.chart_type,
-          title: `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+          title: data.response.chart_type === 'table' && data.response.table_name 
+            ? data.response.table_name 
+            : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
           x: data.response.data.map((row: any) => row[data.response.x_axis]),
           y: data.response.data.map((row: any) => row[data.response.y_axis]),
           xLabel: data.response.x_axis,
           yLabel: data.response.y_axis,
           sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`,
-          rawData: data.response.chart_type === 'table' ? data.response.data : undefined // Preserve raw data for tables
+          rawData: data.response.chart_type === 'table' ? data.response.data : undefined, // Preserve raw data for tables
+          tableName: data.response.table_name // Include table name for table charts
         };
         messageContent = data.response.chart_type === 'table' 
-          ? `📋 Here's your table showing ${data.response.y_axis} by ${data.response.x_axis}`
+          ? `📋 Here's your table: ${data.response.table_name || `showing ${data.response.y_axis} by ${data.response.x_axis}`}`
           : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
       } else if (data.response?.text && data.response?.data) {
         // Text response with data
         messageContent = `${data.response.text}\n\n📋 Data Summary: ${data.response.summary || `Found ${data.response.data.length} rows`}`;
+      } else if (data.response?.text) {
+        // Text response without data (including single value responses)
+        messageContent = data.response.text;
       } else if (data.response?.value) {
-        // Single value response
+        // Single value response (legacy format)
         messageContent = `📊 Result: ${data.response.value}`;
       } else if (typeof data.response === 'string') {
         // Plain text response
@@ -514,6 +522,7 @@ export function FloatingChatbot() {
         isLoading={false}
         isMaximized={false}
         context="chatbot"
+        tableName={chart.tableName}
       />
     );
   };

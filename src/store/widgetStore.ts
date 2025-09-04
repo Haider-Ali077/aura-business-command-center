@@ -113,6 +113,7 @@ export interface Widget {
   position: { x: number; y: number };
   size: { width: number; height: number };
   sqlQuery?: string;
+  tableName?: string; // Table name for table widgets
   config?: {
     timePeriod?: string;
     dataSource?: string;

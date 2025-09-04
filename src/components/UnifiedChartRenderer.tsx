@@ -42,6 +42,7 @@ interface UnifiedChartRendererProps {
   isLoading?: boolean;
   isMaximized?: boolean;
   context?: 'chatbot' | 'dashboard';
+  tableName?: string; // Table name for table charts
 }
 
 const DEFAULT_COLORS = ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'];
@@ -53,7 +54,8 @@ export const UnifiedChartRenderer = ({
   metadata, 
   isLoading = false, 
   isMaximized = false,
-  context = 'dashboard'
+  context = 'dashboard',
+  tableName
 }: UnifiedChartRendererProps) => {
   const chartHeight = isMaximized ? 500 : (context === 'chatbot' ? 200 : 280);
   
@@ -209,6 +211,11 @@ export const UnifiedChartRenderer = ({
     case 'table':
       return (
         <div className="h-full w-full overflow-hidden" style={{ maxHeight: chartHeight }}>
+          {tableName && (
+            <div className="mb-2 px-2 py-1 bg-muted/50 rounded-t-md border-b">
+              <h4 className="text-sm font-medium text-foreground truncate">{tableName}</h4>
+            </div>
+          )}
           <div className="h-full overflow-auto">
             <Table className="min-w-full">
               <TableHeader className="sticky top-0 bg-background">
