@@ -546,7 +546,7 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
+        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-500 ease-in-out bg-card border-border ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
           {/* Fixed Header */}
           <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -594,7 +594,7 @@ export function FloatingChatbot() {
           </div>
 
           {!isMinimized && (
-            <>
+            <div className="animate-fade-in">
               {/* Messages Area - SAP Joule AI Style */}
               <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
                 <div className="space-y-3">
@@ -684,7 +684,7 @@ export function FloatingChatbot() {
                 </div>
                 
                 {showDashboardSelect && (
-                  <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg">
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg animate-scale-in">
                     <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">Select Dashboard:</p>
                     <div className="flex gap-2">
                       <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
@@ -724,7 +724,7 @@ export function FloatingChatbot() {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
         </Card>
       )}
