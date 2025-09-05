@@ -152,12 +152,13 @@ export function FloatingChatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-scroll to bottom when chat interface is expanded
+  // Auto-scroll to bottom when chat interface is expanded from minimized state
   useEffect(() => {
     if (!isMinimized && isOpen) {
+      // Use a longer delay to ensure the transition animation completes
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100); // Small delay to allow animation to start
+      }, 350); // Matches the transition duration
     }
   }, [isMinimized, isOpen]);
 
@@ -550,7 +551,7 @@ export function FloatingChatbot() {
       ) : (
         <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
           {/* Fixed Header */}
-          <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
+          <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0 relative z-10">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                 <Bot className="h-4 w-4" />
