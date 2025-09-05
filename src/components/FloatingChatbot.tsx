@@ -510,7 +510,7 @@ export function FloatingChatbot() {
         messageContent = data.response;
       } else {
         // Fallback
-        messageContent = 'Something went wrong. p,ease try again with another query, and if error presists please contact Admin.';
+        messageContent = 'Something went wrong. Please try again with another query, and if error presists please contact Admin.';
       }
       
       
