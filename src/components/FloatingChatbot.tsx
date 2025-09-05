@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff, RefreshCw } from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
@@ -118,6 +119,8 @@ export function FloatingChatbot() {
   const [selectedDashboard, setSelectedDashboard] = useState<string>('');
   const [showDashboardSelect, setShowDashboardSelect] = useState(false);
   const [pendingChart, setPendingChart] = useState<ChartData | null>(null);
+  const [showTitleDialog, setShowTitleDialog] = useState(false);
+  const [tableTitle, setTableTitle] = useState('');
   
   // Voice recognition states
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
@@ -321,6 +324,13 @@ export function FloatingChatbot() {
   };
 
   const handleAddToDashboard = (chart: ChartData) => {
+    // If it's a table, show title dialog first
+    if (chart.chart_type === 'table') {
+      setPendingChart(chart);
+      setShowTitleDialog(true);
+      return;
+    }
+    
     const accessibleModules = getAccessibleModules();
     if (accessibleModules.length === 1) {
       // If user has access to only one dashboard, add directly
@@ -330,6 +340,35 @@ export function FloatingChatbot() {
       setPendingChart(chart);
       setShowDashboardSelect(true);
     }
+  };
+
+  const handleTitleConfirm = () => {
+    if (!tableTitle.trim() || !pendingChart) return;
+    
+    // Update the chart with the provided title
+    const updatedChart = {
+      ...pendingChart,
+      title: tableTitle.trim()
+    };
+    
+    setShowTitleDialog(false);
+    setTableTitle('');
+    
+    const accessibleModules = getAccessibleModules();
+    if (accessibleModules.length === 1) {
+      // If user has access to only one dashboard, add directly
+      confirmAddToDashboard(updatedChart, accessibleModules[0].id);
+    } else {
+      // Show dashboard selection with updated chart
+      setPendingChart(updatedChart);
+      setShowDashboardSelect(true);
+    }
+  };
+
+  const handleTitleCancel = () => {
+    setShowTitleDialog(false);
+    setTableTitle('');
+    setPendingChart(null);
   };
 
   const confirmAddToDashboard = async (chart: ChartData, dashboardId: string) => {
@@ -731,6 +770,36 @@ export function FloatingChatbot() {
           )}
         </Card>
       )}
+      
+      {/* Table Title Dialog */}
+      <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Table Title</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              value={tableTitle}
+              onChange={(e) => setTableTitle(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && tableTitle.trim() && handleTitleConfirm()}
+              placeholder="Enter a title for your table..."
+              className="w-full"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleTitleCancel}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleTitleConfirm} 
+              disabled={!tableTitle.trim()}
+            >
+              Add Table
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
