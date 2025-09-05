@@ -152,13 +152,6 @@ export function FloatingChatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-scroll to bottom when chat is reopened after minimizing
-  useEffect(() => {
-    if (!isMinimized && isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [isMinimized, isOpen]);
-
   // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -546,9 +539,9 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-500 ease-in-out bg-card border-border origin-top ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
+        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
           {/* Fixed Header */}
-          <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0 relative z-50">
+          <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                 <Bot className="h-4 w-4" />
@@ -596,108 +589,134 @@ export function FloatingChatbot() {
           {!isMinimized && (
             <>
               {/* Messages Area - SAP Joule AI Style */}
-              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50 relative z-40">
-                <div className="space-y-3 animate-fade-in transition-opacity duration-300 delay-75">
+              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
+                <div className="space-y-3">
                   {messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`max-w-[80%] rounded-lg p-3 ${
-                         message.type === 'user' 
-                           ? 'bg-blue-600 text-white' 
-                           : 'bg-white dark:bg-muted border shadow-sm'
-                       }`}>
-                         {message.type === 'bot' && message.chart ? (
-                           <div className="space-y-3">
-                             <p className="text-sm text-muted-foreground mb-2">{message.content}</p>
-                             {renderChart(message.chart)}
-                             <Button
-                               onClick={() => handleAddToDashboard(message.chart)}
-                               className="w-full text-xs"
-                               variant="outline"
-                               size="sm"
-                             >
-                               Add to Dashboard
-                             </Button>
-                           </div>
+                       <div className={`${message.chart ? 'w-full' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                         {message.type === 'user' ? (
+                           // User message bubble - SAP Joule style
+                            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm">
+                              <p className="text-xs font-medium leading-relaxed">{message.content}</p>
+                              <p className="text-xs text-blue-100 mt-1 opacity-80">{message.timestamp.toLocaleTimeString()}</p>
+                            </div>
                          ) : (
-                           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                         )}
-                       </div>
-                     </div>
+            // Bot message - clean style without avatar
+                             <div className="w-full">
+                {message.content.trim() && (
+                  <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
+                    <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    {!message.chart && (
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                    )}
+                  </div>
+                )}
+                               {message.chart && (
+                                  <div className="mt-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-3 shadow-sm">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
+                                      <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                    </div>
+                                    <div className={`w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 ${message.chart.chart_type === 'table' ? 'overflow-auto' : 'overflow-hidden'}`}>
+                                       <div className="w-full h-full">
+                                         {renderChart(message.chart)}
+                                       </div>
+                                   </div>
+                                   <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-border">
+                                     <p className="text-xs text-gray-500 dark:text-muted-foreground opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                                     <Button 
+                                       size="sm" 
+                                       onClick={() => handleAddToDashboard(message.chart!)}
+                                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full h-7"
+                                     >
+                                       <Plus className="h-3 w-3 mr-1" />
+                                       Add to Dashboard
+                                     </Button>
+                                   </div>
+                                 </div>
+                               )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                    ))}
-                   
                    {isLoading && (
-                     <div className="flex justify-start">
-                       <div className="bg-white dark:bg-muted border shadow-sm rounded-lg p-3 max-w-[80%]">
-                         <div className="flex items-center gap-2">
-                           <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
-                           <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                           <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                           <span className="text-sm text-muted-foreground ml-2">AI is thinking...</span>
-                         </div>
-                       </div>
-                     </div>
-                   )}
-                   <div ref={messagesEndRef} />
+                    <div className="flex justify-start mb-4">
+                      <div className="bg-gray-100 dark:bg-muted border dark:border-border p-3 rounded-lg">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-primary/60 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-primary/60 rounded-full animate-bounce delay-100"></div>
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-primary/60 rounded-full animate-bounce delay-200"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
                 </div>
               </div>
 
               {/* Input Area */}
-              <div className="p-3 border-t bg-white dark:bg-background">
+              <div className="p-3 border-t border-gray-200 dark:border-border bg-white dark:bg-background flex-shrink-0">
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                    placeholder="Ask about your data..."
-                    className="flex-1"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask me anything about your business data..."
+                    className="flex-1 text-sm bg-white dark:bg-background border-gray-200 dark:border-border text-gray-900 dark:text-foreground"
                     disabled={isLoading}
                   />
-                  <Button
-                    onClick={handleSendMessage}
+                  <Button 
+                    variant="gradient"
+                    onClick={handleSendMessage} 
                     disabled={isLoading || !inputValue.trim()}
                     size="sm"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-
-              {/* Dashboard Selection Modal */}
-              {showDashboardSelect && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                  <div className="bg-white dark:bg-card rounded-lg p-4 w-full max-w-sm">
-                    <h3 className="font-semibold mb-3">Add to Dashboard</h3>
-                    <div className="space-y-2 mb-4">
-                      {getAccessibleModules().map((dashboard) => (
-                        <Button
-                          key={dashboard.id}
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            if (pendingChart) {
-                              confirmAddToDashboard(pendingChart, dashboard.id);
-                            }
-                          }}
-                        >
-                          {dashboard.name}
-                        </Button>
-                      ))}
-                    </div>
+                
+                {showDashboardSelect && (
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg">
+                    <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">Select Dashboard:</p>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
+                      <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
+                        <SelectTrigger className="flex-1 text-xs bg-white dark:bg-background border-gray-200 dark:border-border">
+                          <SelectValue placeholder="Choose dashboard" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAccessibleModules().map((module) => (
+                            <SelectItem key={module.id} value={module.id} className="text-xs">
+                              {module.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        variant="gradient"
+                        size="sm" 
+                        onClick={() => confirmAddToDashboard(pendingChart!, selectedDashboard)}
+                        disabled={!selectedDashboard}
+                        className="text-xs"
+                      >
+                        Add
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
                         onClick={() => {
                           setShowDashboardSelect(false);
                           setPendingChart(null);
+                          setSelectedDashboard('');
                         }}
-                        className="flex-1"
+                        className="text-xs"
                       >
                         Cancel
                       </Button>
                     </div>
                   </div>
-                </div>
-                 )}
+                )}
+              </div>
             </>
           )}
         </Card>
