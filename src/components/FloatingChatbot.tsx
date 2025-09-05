@@ -546,9 +546,9 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-500 ease-in-out bg-card border-border ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
+        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-500 ease-in-out bg-card border-border origin-top ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
           {/* Fixed Header */}
-          <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
+          <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0 relative z-50">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                 <Bot className="h-4 w-4" />
@@ -594,9 +594,9 @@ export function FloatingChatbot() {
           </div>
 
           {!isMinimized && (
-            <>
+            <div className="flex-1 flex flex-col z-40 relative animate-fade-in transition-opacity duration-300 delay-75">
               {/* Messages Area - SAP Joule AI Style */}
-              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50 animate-fade-in">
+              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
                 <div className="space-y-3">
                   {messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -722,9 +722,9 @@ export function FloatingChatbot() {
                       </Button>
                     </div>
                   </div>
-                )}
+                 )}
               </div>
-            </>
+            </div>
           )}
         </Card>
       )}
