@@ -594,9 +594,9 @@ export function FloatingChatbot() {
           </div>
 
           {!isMinimized && (
-            <div className="animate-fade-in">
+            <>
               {/* Messages Area - SAP Joule AI Style */}
-              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
+              <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50 animate-fade-in">
                 <div className="space-y-3">
                   {messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -724,7 +724,7 @@ export function FloatingChatbot() {
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
         </Card>
       )}
