@@ -3,12 +3,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EnhancedChartData, ChartConfig, ChartMetadata } from '@/types/chart';
 
 // Custom tooltip component with better formatting
-const CustomTooltip = ({ active, payload, label, config }: any) => {
+const CustomTooltip = ({ active, payload, label, config, chartType }: any) => {
   if (active && payload && payload.length) {
-    // Detect if this is a pie chart by checking payload structure
-    const isPieChart = payload[0]?.payload && payload[0]?.name !== undefined;
-    
-    if (isPieChart) {
+    if (chartType === 'pie') {
       // For pie charts, show slice name and value
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
@@ -132,7 +129,7 @@ export const UnifiedChartRenderer = ({
               tickLine={false}
               label={{ value: config?.yLabel, angle: -90, position: 'insideLeft', style: { fontSize: '10px' } }}
             />
-            <Tooltip content={<CustomTooltip config={config} />} />
+            <Tooltip content={<CustomTooltip config={config} chartType="line" />} />
             <Line 
               type="monotone" 
               dataKey={dataKey} 
@@ -164,7 +161,7 @@ export const UnifiedChartRenderer = ({
               tickLine={false}
               label={{ value: config?.yLabel, angle: -90, position: 'insideLeft', style: { fontSize: '10px' } }}
             />
-            <Tooltip content={<CustomTooltip config={config} />} />
+            <Tooltip content={<CustomTooltip config={config} chartType="bar" />} />
             <Bar 
               dataKey={dataKey} 
               fill={colors[0]}
@@ -193,7 +190,7 @@ export const UnifiedChartRenderer = ({
               tickLine={false}
               label={{ value: config?.yLabel, angle: -90, position: 'insideLeft', style: { fontSize: '10px' } }}
             />
-            <Tooltip content={<CustomTooltip config={config} />} />
+            <Tooltip content={<CustomTooltip config={config} chartType="area" />} />
             <Area 
               type="monotone" 
               dataKey={dataKey} 
@@ -229,7 +226,7 @@ export const UnifiedChartRenderer = ({
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip config={config} />} />
+            <Tooltip content={<CustomTooltip config={config} chartType="pie" />} />
           </PieChart>
         </ResponsiveContainer>
       );
