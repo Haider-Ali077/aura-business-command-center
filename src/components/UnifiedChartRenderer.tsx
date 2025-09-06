@@ -45,7 +45,11 @@ interface UnifiedChartRendererProps {
   tableName?: string; // Table name for table charts
 }
 
-const DEFAULT_COLORS = ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'];
+const DEFAULT_COLORS = [
+  '#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4',
+  '#EC4899', '#84CC16', '#F97316', '#6366F1', '#14B8A6', '#F43F5E',
+  '#22C55E', '#A855F7', '#EAB308', '#06B6D4', '#64748B', '#DC2626'
+];
 
 export const UnifiedChartRenderer = ({ 
   type, 
@@ -189,17 +193,21 @@ export const UnifiedChartRenderer = ({
         <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie
-              data={safeData.slice(0, 6)}
+              data={safeData}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ payload, percent }) => `${payload[labelKey]} ${(percent * 100).toFixed(0)}%`}
+              label={({ payload, percent }) => 
+                safeData.length <= 8 
+                  ? `${payload[labelKey]} ${(percent * 100).toFixed(0)}%`
+                  : percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
+              }
               outerRadius="70%"
               fill="#8884d8"
               dataKey={dataKey}
               nameKey={labelKey}
             >
-              {safeData.slice(0, 6).map((entry, index) => (
+              {safeData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
               ))}
             </Pie>
