@@ -5,6 +5,24 @@ import { EnhancedChartData, ChartConfig, ChartMetadata } from '@/types/chart';
 // Custom tooltip component with better formatting
 const CustomTooltip = ({ active, payload, label, config }: any) => {
   if (active && payload && payload.length) {
+    // Detect if this is a pie chart by checking payload structure
+    const isPieChart = payload[0]?.payload && payload[0]?.name !== undefined;
+    
+    if (isPieChart) {
+      // For pie charts, show slice name and value
+      return (
+        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-medium text-foreground">
+            {payload[0].name}
+          </p>
+          <p className="text-sm" style={{ color: payload[0].color }}>
+            {`${typeof payload[0].value === 'number' ? payload[0].value.toLocaleString() : payload[0].value}`}
+          </p>
+        </div>
+      );
+    }
+    
+    // For other chart types, use the original format
     return (
       <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
         <p className="font-medium text-foreground">
