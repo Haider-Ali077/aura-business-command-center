@@ -14,6 +14,7 @@ import { ResponsiveContainer } from 'recharts';
 import { API_BASE_URL } from '@/config/api';
 import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
 import { ChartConfig, EnhancedChartData } from "@/types/chart";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChartData {
   chart_type: string;
@@ -74,6 +75,7 @@ export function FloatingChatbot() {
   const { session } = useAuthStore();
   const { addWidget } = useWidgetStore();
   const { getAccessibleModules } = useRoleStore();
+  const isMobile = useIsMobile();
 
   // Get user-specific localStorage keys
   const getUserStorageKey = (key: string) => {
@@ -578,17 +580,17 @@ export function FloatingChatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className={`fixed bottom-6 z-50 ${isMobile ? 'left-4 right-4' : 'right-6'}`}>
       {!isOpen ? (
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg hover:scale-105 transition-all"
+          className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg hover:scale-105 transition-all ml-auto"
         >
           <MessageSquare className="text-white" />
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`w-96 shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : 'h-[600px]'}`}>
+        <Card className={`${isMobile ? 'w-full' : 'w-96'} shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : isMobile ? 'h-[80vh] max-h-[600px]' : 'h-[600px]'}`}>
           {/* Fixed Header */}
           <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0 relative z-10">
             <div className="flex items-center gap-2">
