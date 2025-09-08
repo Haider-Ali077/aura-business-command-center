@@ -172,154 +172,180 @@ export function FloatingChatbot() {
     }
   }, [isOpen]);
 
-  // Initialize speech recognition
+  // Initialize speech recognition - only once on mount
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       // Main speech recognition for voice input
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
-      
-      recognitionRef.current.onresult = (event: any) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+      if (!recognitionRef.current) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
         
-        for (let i = 0; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        
-        const fullTranscript = (finalTranscript + interimTranscript).trim();
-        
-        if (voiceState === 'listening' && fullTranscript) {
-          setInputValue(fullTranscript);
+        recognitionRef.current.onresult = (event: any) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
           
-          if (finalTranscript.trim()) {
-            console.log('Voice input complete:', finalTranscript);
-            setVoiceState('processing');
-            
-            // Auto-send after longer delay to allow complete speech
-            autoSendTimeoutRef.current = setTimeout(() => {
-              if (finalTranscript.trim()) {
-                handleSendMessage(true);
-              }
-            }, 2000);
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
           }
-        }
-      };
-      
-      recognitionRef.current.onstart = () => {
-        console.log('Voice input started');
-        setVoiceState('listening');
-      };
-      
-      recognitionRef.current.onend = () => {
-        console.log('Voice input ended');
-        if (voiceState === 'listening') {
-          setVoiceState('idle');
-        }
-      };
-      
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Voice recognition error:', event.error);
-        setVoiceState('idle');
+          
+          const fullTranscript = (finalTranscript + interimTranscript).trim();
+          
+          if (fullTranscript) {
+            setInputValue(fullTranscript);
+            
+            if (finalTranscript.trim()) {
+              console.log('Voice input complete:', finalTranscript);
+              setVoiceState('processing');
+              
+              // Auto-send after delay to allow complete speech
+              if (autoSendTimeoutRef.current) {
+                clearTimeout(autoSendTimeoutRef.current);
+              }
+              autoSendTimeoutRef.current = setTimeout(() => {
+                if (finalTranscript.trim()) {
+                  handleSendMessage(true);
+                }
+              }, 1500);
+            }
+          }
+        };
         
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          const message = isMobile 
-            ? 'Microphone permission denied. Please enable microphone access for voice input.'
-            : 'Microphone access denied. Please allow microphone permissions and try again.';
-          alert(message);
-        }
-      };
+        recognitionRef.current.onstart = () => {
+          console.log('Main voice input started');
+          setVoiceState('listening');
+        };
+        
+        recognitionRef.current.onend = () => {
+          console.log('Main voice input ended');
+          setVoiceState('idle');
+        };
+        
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Voice recognition error:', event.error);
+          setVoiceState('idle');
+          
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            const message = isMobile 
+              ? 'Microphone permission denied. Please enable microphone access for voice input.'
+              : 'Microphone access denied. Please allow microphone permissions and try again.';
+            alert(message);
+          }
+        };
+      }
 
       // Background wake word recognition
-      wakeWordRecognitionRef.current = new SpeechRecognition();
-      wakeWordRecognitionRef.current.continuous = true;
-      wakeWordRecognitionRef.current.interimResults = false;
-      wakeWordRecognitionRef.current.lang = 'en-US';
-      
-      wakeWordRecognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+      if (!wakeWordRecognitionRef.current) {
+        wakeWordRecognitionRef.current = new SpeechRecognition();
+        wakeWordRecognitionRef.current.continuous = true;
+        wakeWordRecognitionRef.current.interimResults = false;
+        wakeWordRecognitionRef.current.lang = 'en-US';
         
-        if (transcript.includes('hey agent')) {
-          console.log('Wake word "Hey Agent" detected! Opening chatbot...');
+        wakeWordRecognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
           
-          if (!isOpen) {
-            setIsOpen(true);
-            setTimeout(() => {
-              if (voiceState === 'idle') {
+          if (transcript.includes('hey agent')) {
+            console.log('Wake word "Hey Agent" detected! Opening chatbot...');
+            
+            if (!isOpen) {
+              setIsOpen(true);
+              setTimeout(() => {
                 startVoiceInput();
-              }
-            }, 500);
-          } else if (voiceState === 'idle') {
-            startVoiceInput();
+              }, 500);
+            } else {
+              startVoiceInput();
+            }
           }
-        }
-      };
-      
-      wakeWordRecognitionRef.current.onend = () => {
-        if (isBackgroundListening) {
-          setTimeout(() => {
-            if (isBackgroundListening && wakeWordRecognitionRef.current) {
-              try {
-                wakeWordRecognitionRef.current.start();
-              } catch (e) {
-                console.log('Wake word recognition restart failed:', e);
-              }
-            }
-          }, 1000);
-        }
-      };
-      
-      wakeWordRecognitionRef.current.onerror = (event: any) => {
-        if (event.error !== 'aborted' && isBackgroundListening) {
-          setTimeout(() => {
-            if (isBackgroundListening && wakeWordRecognitionRef.current) {
-              try {
-                wakeWordRecognitionRef.current.start();
-              } catch (e) {
-                console.log('Wake word recognition restart failed:', e);
-              }
-            }
-          }, 2000);
-        }
-      };
-
-      // Start background wake word detection
-      setIsBackgroundListening(true);
-      try {
-        wakeWordRecognitionRef.current.start();
-        console.log('Wake word detection started');
-      } catch (e) {
-        console.log('Could not start wake word detection:', e);
-        setIsBackgroundListening(false);
+        };
+        
+        wakeWordRecognitionRef.current.onend = () => {
+          console.log('Wake word recognition ended, restarting...');
+          restartWakeWordRecognition();
+        };
+        
+        wakeWordRecognitionRef.current.onerror = (event: any) => {
+          console.log('Wake word recognition error:', event.error);
+          if (event.error !== 'aborted') {
+            restartWakeWordRecognition();
+          }
+        };
       }
     }
 
     return () => {
-      // Cleanup
+      // Cleanup timeouts
       if (autoSendTimeoutRef.current) {
         clearTimeout(autoSendTimeoutRef.current);
       }
       if (restartTimeoutRef.current) {
         clearTimeout(restartTimeoutRef.current);
       }
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      if (wakeWordRecognitionRef.current) {
-        wakeWordRecognitionRef.current.stop();
-      }
-      setIsBackgroundListening(false);
     };
-  }, [voiceState, isOpen, isBackgroundListening, isMobile]);
+  }, []); // Only run once on mount
+
+  // Separate effect for managing wake word detection state
+  useEffect(() => {
+    if (isBackgroundListening && wakeWordRecognitionRef.current) {
+      startWakeWordRecognition();
+    } else if (!isBackgroundListening && wakeWordRecognitionRef.current) {
+      stopWakeWordRecognition();
+    }
+  }, [isBackgroundListening]);
+
+  // Start wake word detection on mount
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setIsBackgroundListening(true);
+    }
+  }, []);
+
+  const startWakeWordRecognition = () => {
+    if (!wakeWordRecognitionRef.current) return;
+    
+    try {
+      // Check if already running
+      if (wakeWordRecognitionRef.current.readyState === undefined || 
+          wakeWordRecognitionRef.current.readyState === 0) {
+        wakeWordRecognitionRef.current.start();
+        console.log('Wake word detection started');
+      }
+    } catch (e) {
+      console.log('Could not start wake word detection:', e);
+    }
+  };
+
+  const stopWakeWordRecognition = () => {
+    if (!wakeWordRecognitionRef.current) return;
+    
+    try {
+      wakeWordRecognitionRef.current.stop();
+      console.log('Wake word detection stopped');
+    } catch (e) {
+      console.log('Could not stop wake word detection:', e);
+    }
+  };
+
+  const restartWakeWordRecognition = () => {
+    if (!isBackgroundListening) return;
+    
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+    }
+    
+    restartTimeoutRef.current = setTimeout(() => {
+      if (isBackgroundListening && wakeWordRecognitionRef.current) {
+        startWakeWordRecognition();
+      }
+    }, 1000);
+  };
 
   const startVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -335,13 +361,19 @@ export function FloatingChatbot() {
       return;
     }
     
+    // Stop wake word recognition while using main voice input
+    if (wakeWordRecognitionRef.current) {
+      stopWakeWordRecognition();
+    }
+    
     // Clear input and start listening
     setInputValue('');
+    setVoiceState('listening');
     
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
-        console.log('Voice input started');
+        console.log('Starting main voice input');
       } catch (e) {
         console.error('Failed to start voice input:', e);
         const message = isMobile 
@@ -349,6 +381,10 @@ export function FloatingChatbot() {
           : 'Failed to start voice input. Please try again.';
         alert(message);
         setVoiceState('idle');
+        // Restart wake word detection if main voice input failed
+        if (isBackgroundListening) {
+          setTimeout(() => startWakeWordRecognition(), 500);
+        }
       }
     }
   };
@@ -361,12 +397,18 @@ export function FloatingChatbot() {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
+        console.log('Stopping main voice input');
       } catch (e) {
         console.error('Failed to stop voice input:', e);
       }
     }
     
     setVoiceState('idle');
+    
+    // Restart wake word detection after stopping main voice input
+    if (isBackgroundListening) {
+      setTimeout(() => startWakeWordRecognition(), 1000);
+    }
   };
 
   const handleAddToDashboard = (chart: ChartData) => {
