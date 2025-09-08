@@ -89,6 +89,7 @@ export function FloatingChatbot() {
   type VoiceState = 'idle' | 'listening' | 'processing' | 'completing';
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [isBackgroundListening, setIsBackgroundListening] = useState(false);
+  const [wakeWordRestartTrigger, setWakeWordRestartTrigger] = useState(0);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
@@ -217,15 +218,15 @@ export function FloatingChatbot() {
         };
         
         wakeWordRecognitionRef.current.onend = () => {
-          console.log('Wake word recognition ended, restarting...');
-          restartWakeWordRecognition();
+          console.log('Wake word recognition ended, triggering restart...');
+          setWakeWordRestartTrigger(prev => prev + 1);
         };
         
         wakeWordRecognitionRef.current.onerror = (event: any) => {
           console.log('Wake word recognition error:', event.error);
           // Only restart for specific errors, ignore no-speech
           if (event.error !== 'aborted' && event.error !== 'no-speech') {
-            restartWakeWordRecognition();
+            setWakeWordRestartTrigger(prev => prev + 1);
           }
         };
       }
@@ -257,6 +258,20 @@ export function FloatingChatbot() {
       setIsBackgroundListening(true);
     }
   }, []);
+
+  // Handle wake word restart trigger
+  useEffect(() => {
+    if (wakeWordRestartTrigger > 0 && isBackgroundListening) {
+      console.log('Wake word restart triggered, restarting detection...');
+      const restartTimeout = setTimeout(() => {
+        if (wakeWordRecognitionRef.current && isBackgroundListening) {
+          startWakeWordRecognition();
+        }
+      }, 100);
+      
+      return () => clearTimeout(restartTimeout);
+    }
+  }, [wakeWordRestartTrigger, isBackgroundListening]);
 
   const startWakeWordRecognition = () => {
     if (!wakeWordRecognitionRef.current || !isBackgroundListening) {
@@ -310,48 +325,11 @@ export function FloatingChatbot() {
     }
   };
 
-  const restartWakeWordRecognition = () => {
-    if (!isBackgroundListening) return;
-    
-    if (restartTimeoutRef.current) {
-      clearTimeout(restartTimeoutRef.current);
+  const triggerWakeWordRestart = () => {
+    if (isBackgroundListening) {
+      console.log('Triggering wake word restart via state...');
+      setWakeWordRestartTrigger(prev => prev + 1);
     }
-    
-    restartTimeoutRef.current = setTimeout(() => {
-      if (isBackgroundListening && wakeWordRecognitionRef.current) {
-        startWakeWordRecognition();
-      }
-    }, 1000);
-  };
-
-  const restartWakeWordRecognitionImmediate = () => {
-    if (!isBackgroundListening) {
-      console.log('Wake word detection disabled, skipping restart');
-      return;
-    }
-    
-    console.log('Immediately restarting wake word detection');
-    
-    // Clear any pending restart timeouts
-    if (restartTimeoutRef.current) {
-      clearTimeout(restartTimeoutRef.current);
-    }
-    
-    // Stop current recognition if running
-    if (wakeWordRecognitionRef.current) {
-      try {
-        wakeWordRecognitionRef.current.stop();
-      } catch (e) {
-        console.log('Error stopping wake word recognition:', e);
-      }
-    }
-    
-    // Start immediately with minimal delay for cleanup
-    setTimeout(() => {
-      if (isBackgroundListening && wakeWordRecognitionRef.current) {
-        startWakeWordRecognition();
-      }
-    }, 200);
   };
 
   const startVoiceInput = () => {
@@ -390,7 +368,7 @@ export function FloatingChatbot() {
         setVoiceState('idle');
         // Restart wake word detection if main voice input failed
         if (isBackgroundListening) {
-          setTimeout(() => startWakeWordRecognition(), 500);
+          triggerWakeWordRestart();
         }
       }
     }
@@ -415,7 +393,7 @@ export function FloatingChatbot() {
     // Restart wake word detection after stopping main voice input
     if (isBackgroundListening) {
       console.log('Restarting wake word detection after stopping voice input');
-      restartWakeWordRecognitionImmediate();
+      triggerWakeWordRestart();
     }
   };
 
@@ -641,7 +619,7 @@ export function FloatingChatbot() {
         // Immediately restart wake word detection after completing voice message
         if (isBackgroundListening) {
           console.log('Restarting wake word detection after voice message');
-          restartWakeWordRecognitionImmediate();
+          triggerWakeWordRestart();
         }
       }
     }
