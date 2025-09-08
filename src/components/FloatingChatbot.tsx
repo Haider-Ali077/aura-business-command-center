@@ -259,17 +259,43 @@ export function FloatingChatbot() {
   }, []);
 
   const startWakeWordRecognition = () => {
-    if (!wakeWordRecognitionRef.current) return;
+    if (!wakeWordRecognitionRef.current || !isBackgroundListening) {
+      console.log('Wake word recognition not available or disabled');
+      return;
+    }
     
     try {
-      // Check if already running
-      if (wakeWordRecognitionRef.current.readyState === undefined || 
-          wakeWordRecognitionRef.current.readyState === 0) {
-        wakeWordRecognitionRef.current.start();
-        console.log('Wake word detection started');
+      // Stop any existing recognition first
+      try {
+        wakeWordRecognitionRef.current.stop();
+      } catch (e) {
+        // Ignore stop errors
       }
+      
+      // Small delay to ensure cleanup, then start
+      setTimeout(() => {
+        if (wakeWordRecognitionRef.current && isBackgroundListening) {
+          try {
+            wakeWordRecognitionRef.current.start();
+            console.log('Wake word detection started successfully');
+          } catch (startError) {
+            console.error('Failed to start wake word detection:', startError);
+            // Retry once after a brief delay
+            setTimeout(() => {
+              if (wakeWordRecognitionRef.current && isBackgroundListening) {
+                try {
+                  wakeWordRecognitionRef.current.start();
+                  console.log('Wake word detection started on retry');
+                } catch (retryError) {
+                  console.error('Wake word detection retry failed:', retryError);
+                }
+              }
+            }, 500);
+          }
+        }
+      }, 100);
     } catch (e) {
-      console.log('Could not start wake word detection:', e);
+      console.error('Wake word detection setup error:', e);
     }
   };
 
@@ -296,6 +322,36 @@ export function FloatingChatbot() {
         startWakeWordRecognition();
       }
     }, 1000);
+  };
+
+  const restartWakeWordRecognitionImmediate = () => {
+    if (!isBackgroundListening) {
+      console.log('Wake word detection disabled, skipping restart');
+      return;
+    }
+    
+    console.log('Immediately restarting wake word detection');
+    
+    // Clear any pending restart timeouts
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+    }
+    
+    // Stop current recognition if running
+    if (wakeWordRecognitionRef.current) {
+      try {
+        wakeWordRecognitionRef.current.stop();
+      } catch (e) {
+        console.log('Error stopping wake word recognition:', e);
+      }
+    }
+    
+    // Start immediately with minimal delay for cleanup
+    setTimeout(() => {
+      if (isBackgroundListening && wakeWordRecognitionRef.current) {
+        startWakeWordRecognition();
+      }
+    }, 200);
   };
 
   const startVoiceInput = () => {
@@ -358,7 +414,8 @@ export function FloatingChatbot() {
     
     // Restart wake word detection after stopping main voice input
     if (isBackgroundListening) {
-      setTimeout(() => startWakeWordRecognition(), 1000);
+      console.log('Restarting wake word detection after stopping voice input');
+      restartWakeWordRecognitionImmediate();
     }
   };
 
@@ -581,12 +638,10 @@ export function FloatingChatbot() {
       if (isVoiceMessage) {
         console.log('Voice message sent successfully');
         setVoiceState('idle');
-        // Restart wake word detection after completing voice message
+        // Immediately restart wake word detection after completing voice message
         if (isBackgroundListening) {
-          setTimeout(() => {
-            console.log('Restarting wake word detection after voice message');
-            startWakeWordRecognition();
-          }, 2000);
+          console.log('Restarting wake word detection after voice message');
+          restartWakeWordRecognitionImmediate();
         }
       }
     }
