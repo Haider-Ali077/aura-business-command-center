@@ -148,15 +148,23 @@ export function FloatingChatbot() {
               console.log('Voice input complete:', finalTranscript);
               setVoiceState('processing');
               
-              // Auto-send after delay to allow complete speech
+              // Stop recognition immediately after final transcript
+              if (recognitionRef.current) {
+                try {
+                  recognitionRef.current.stop();
+                } catch (e) {
+                  console.log('Recognition already stopped');
+                }
+              }
+              
+              // Auto-send after shorter delay
               if (autoSendTimeoutRef.current) {
                 clearTimeout(autoSendTimeoutRef.current);
               }
               autoSendTimeoutRef.current = setTimeout(() => {
-                if (finalTranscript.trim()) {
-                  handleSendMessage(true);
-                }
-              }, 1500);
+                console.log('Auto-sending voice message:', finalTranscript);
+                handleSendMessage(true);
+              }, 800);
             }
           }
         };
@@ -168,10 +176,7 @@ export function FloatingChatbot() {
         
         recognitionRef.current.onend = () => {
           console.log('Main voice input ended');
-          // Only set to idle if not processing auto-send
-          if (voiceState !== 'processing') {
-            setVoiceState('idle');
-          }
+          // Don't change state here - let auto-send or manual stop handle it
         };
         
         recognitionRef.current.onerror = (event: any) => {
@@ -218,7 +223,8 @@ export function FloatingChatbot() {
         
         wakeWordRecognitionRef.current.onerror = (event: any) => {
           console.log('Wake word recognition error:', event.error);
-          if (event.error !== 'aborted') {
+          // Only restart for specific errors, ignore no-speech
+          if (event.error !== 'aborted' && event.error !== 'no-speech') {
             restartWakeWordRecognition();
           }
         };
@@ -566,11 +572,15 @@ export function FloatingChatbot() {
     } finally {
       setIsLoading(false);
       // Complete voice state transition after message processing
-      if (voiceState === 'completing') {
+      if (isVoiceMessage) {
+        console.log('Voice message sent successfully');
         setVoiceState('idle');
         // Restart wake word detection after completing voice message
         if (isBackgroundListening) {
-          setTimeout(() => startWakeWordRecognition(), 1000);
+          setTimeout(() => {
+            console.log('Restarting wake word detection after voice message');
+            startWakeWordRecognition();
+          }, 2000);
         }
       }
     }
