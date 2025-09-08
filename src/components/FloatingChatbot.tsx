@@ -124,15 +124,14 @@ export function FloatingChatbot() {
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [tableTitle, setTableTitle] = useState('');
   
-  // Voice recognition states
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isWaitingForWakeWord, setIsWaitingForWakeWord] = useState(false);
-  const [isRecognitionActive, setIsRecognitionActive] = useState(false);
-  const [shouldAutoRestart, setShouldAutoRestart] = useState(true);
-  const [isProcessingVoiceMessage, setIsProcessingVoiceMessage] = useState(false);
+  // Enhanced voice recognition states
+  type VoiceState = 'idle' | 'listening' | 'processing' | 'completing';
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [isBackgroundListening, setIsBackgroundListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const wakeWordRecognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
+  const autoSendTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
 
@@ -159,22 +158,28 @@ export function FloatingChatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-scroll to bottom when chat interface is expanded from minimized state
+  // Cleanup voice states when chat closes
   useEffect(() => {
-    if (!isMinimized && isOpen) {
-      // Use a longer delay to ensure the transition animation completes
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 350); // Matches the transition duration
+    if (!isOpen) {
+      setVoiceState('idle');
+      setInputValue('');
+      if (autoSendTimeoutRef.current) {
+        clearTimeout(autoSendTimeoutRef.current);
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
     }
-  }, [isMinimized, isOpen]);
+  }, [isOpen]);
 
   // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      // Main speech recognition for voice input
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
+      recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
       
@@ -182,7 +187,6 @@ export function FloatingChatbot() {
         let finalTranscript = '';
         let interimTranscript = '';
         
-        // Process all results
         for (let i = 0; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
@@ -192,118 +196,132 @@ export function FloatingChatbot() {
           }
         }
         
-        // Combine final and interim transcripts for display
-        const fullTranscript = finalTranscript + interimTranscript;
+        const fullTranscript = (finalTranscript + interimTranscript).trim();
         
-        console.log('Speech recognition transcript:', fullTranscript);
-        console.log('finalTranscript:', finalTranscript);
-        console.log('interimTranscript:', interimTranscript);
-        console.log('isOpen:', isOpen);
-        
-        // Always show transcription in input field (both interim and final)
-        if (fullTranscript.trim()) {
+        if (voiceState === 'listening' && fullTranscript) {
           setInputValue(fullTranscript);
-        }
-        
-        // Only process final transcripts for wake word detection and completion
-        if (finalTranscript.trim()) {
-          // If not open, check for wake word to open chatbot
-          if (!isOpen) {
-            if (finalTranscript.toLowerCase().includes('hey intel')) {
-              console.log('Wake word "Hey Intel" detected! Opening chatbot');
-              setIsOpen(true);
-              setInputValue(''); // Clear the wake word from input
-              return;
-            }
-          }
           
-          // If chatbot is open and speech is final, auto-send the message
-          if (isOpen) {
-            // Don't show wake word in input
-            const cleanTranscript = finalTranscript.toLowerCase().trim();
-            if (!cleanTranscript.includes('hey intel')) {
-              console.log('Voice input complete - auto-sending:', finalTranscript);
-              setInputValue(finalTranscript); // Set final transcript
-              setIsProcessingVoiceMessage(true); // Show processing state
-              // Auto-send after a brief delay to show the transcription
-              setTimeout(() => {
-                if (finalTranscript.trim()) {
-                  handleSendMessage(true); // Pass flag for voice message
-                }
-              }, 500);
-            } else {
-              setInputValue(''); // Clear wake word
-            }
+          if (finalTranscript.trim()) {
+            console.log('Voice input complete:', finalTranscript);
+            setVoiceState('processing');
+            
+            // Auto-send after brief delay to show transcription
+            autoSendTimeoutRef.current = setTimeout(() => {
+              if (finalTranscript.trim()) {
+                handleSendMessage(true);
+              }
+            }, 800);
           }
         }
       };
       
       recognitionRef.current.onstart = () => {
-        console.log('Speech recognition started successfully');
-        setIsRecognitionActive(true);
+        console.log('Voice input started');
+        setVoiceState('listening');
       };
       
       recognitionRef.current.onend = () => {
-        console.log('Speech recognition ended');
-        setIsRecognitionActive(false);
-        
-        // Clear any pending restart timeouts
-        if (restartTimeoutRef.current) {
-          clearTimeout(restartTimeoutRef.current);
-        }
-        
-        // Only restart if voice is enabled AND we should auto-restart (one-shot behavior)
-        if (isVoiceEnabled && shouldAutoRestart) {
-          restartTimeoutRef.current = setTimeout(() => {
-            if (isVoiceEnabled && !isRecognitionActive && recognitionRef.current) {
-              try {
-                console.log('Restarting speech recognition...');
-                recognitionRef.current.start();
-              } catch (e) {
-                console.error('Failed to restart recognition:', e);
-              }
-            }
-          }, 500);
-        } else if (!shouldAutoRestart) {
-          console.log('Voice recognition stopped after auto-send - manual restart required');
-          setIsVoiceEnabled(false); // Turn off voice recognition
+        console.log('Voice input ended');
+        if (voiceState === 'listening') {
+          setVoiceState('idle');
         }
       };
       
       recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        console.log('Error details:', event);
-        setIsRecognitionActive(false);
+        console.error('Voice recognition error:', event.error);
+        setVoiceState('idle');
         
-        // Don't restart on abort errors to prevent loops
-        if (event.error === 'aborted') {
-          console.log('Recognition aborted - not restarting to prevent loops');
-          return;
-        }
-        
-        if (isVoiceEnabled) {
-          // Simplified: just restart if voice is still enabled
-          // Clear any pending restarts
-          if (restartTimeoutRef.current) {
-            clearTimeout(restartTimeoutRef.current);
-          }
-          // Try to restart after a longer delay for errors
-          restartTimeoutRef.current = setTimeout(() => {
-            if (isVoiceEnabled && !isRecognitionActive && recognitionRef.current) {
-              try {
-                console.log('Restarting after error...');
-                recognitionRef.current.start();
-              } catch (e) {
-                console.error('Failed to restart after error:', e);
-              }
-            }
-          }, 1500);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          const message = isMobile 
+            ? 'Microphone permission denied. Please enable microphone access for voice input.'
+            : 'Microphone access denied. Please allow microphone permissions and try again.';
+          alert(message);
         }
       };
-    }
-  }, [isVoiceEnabled, isWaitingForWakeWord, isListening]);
 
-  const toggleVoiceRecognition = () => {
+      // Background wake word recognition
+      wakeWordRecognitionRef.current = new SpeechRecognition();
+      wakeWordRecognitionRef.current.continuous = true;
+      wakeWordRecognitionRef.current.interimResults = false;
+      wakeWordRecognitionRef.current.lang = 'en-US';
+      
+      wakeWordRecognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        
+        if (transcript.includes('hey intel')) {
+          console.log('Wake word detected! Opening chatbot...');
+          
+          if (!isOpen) {
+            setIsOpen(true);
+            setTimeout(() => {
+              if (voiceState === 'idle') {
+                startVoiceInput();
+              }
+            }, 500);
+          } else if (voiceState === 'idle') {
+            startVoiceInput();
+          }
+        }
+      };
+      
+      wakeWordRecognitionRef.current.onend = () => {
+        if (isBackgroundListening) {
+          setTimeout(() => {
+            if (isBackgroundListening && wakeWordRecognitionRef.current) {
+              try {
+                wakeWordRecognitionRef.current.start();
+              } catch (e) {
+                console.log('Wake word recognition restart failed:', e);
+              }
+            }
+          }, 1000);
+        }
+      };
+      
+      wakeWordRecognitionRef.current.onerror = (event: any) => {
+        if (event.error !== 'aborted' && isBackgroundListening) {
+          setTimeout(() => {
+            if (isBackgroundListening && wakeWordRecognitionRef.current) {
+              try {
+                wakeWordRecognitionRef.current.start();
+              } catch (e) {
+                console.log('Wake word recognition restart failed:', e);
+              }
+            }
+          }, 2000);
+        }
+      };
+
+      // Start background wake word detection
+      setIsBackgroundListening(true);
+      try {
+        wakeWordRecognitionRef.current.start();
+        console.log('Wake word detection started');
+      } catch (e) {
+        console.log('Could not start wake word detection:', e);
+        setIsBackgroundListening(false);
+      }
+    }
+
+    return () => {
+      // Cleanup
+      if (autoSendTimeoutRef.current) {
+        clearTimeout(autoSendTimeoutRef.current);
+      }
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (wakeWordRecognitionRef.current) {
+        wakeWordRecognitionRef.current.stop();
+      }
+      setIsBackgroundListening(false);
+    };
+  }, [voiceState, isOpen, isBackgroundListening, isMobile]);
+
+  const startVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       const message = isMobile 
         ? 'Voice input is not available on your device. Please type your message.'
@@ -312,39 +330,43 @@ export function FloatingChatbot() {
       return;
     }
     
-    // Clear any pending timeouts
-    if (restartTimeoutRef.current) {
-      clearTimeout(restartTimeoutRef.current);
+    if (voiceState !== 'idle') {
+      stopVoiceInput();
+      return;
     }
     
-    if (isVoiceEnabled) {
-      // Turn off voice recognition
-      console.log('Turning OFF voice recognition');
-      setIsVoiceEnabled(false);
-      setIsRecognitionActive(false);
-      setIsProcessingVoiceMessage(false);
-      setShouldAutoRestart(true); // Reset for next time
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    } else {
-      // Turn on voice recognition
-      console.log('Turning ON voice recognition');
-      setIsVoiceEnabled(true);
-      setIsProcessingVoiceMessage(false);
-      setShouldAutoRestart(true); // Enable auto-restart for manual activation
-      if (recognitionRef.current && !isRecognitionActive) {
-        try {
-          recognitionRef.current.start();
-          console.log('Speech recognition started');
-        } catch (e) {
-          console.error('Failed to start speech recognition:', e);
-          if (isMobile) {
-            alert('Unable to start voice input. Please check your microphone permissions.');
-          }
-        }
+    // Clear input and start listening
+    setInputValue('');
+    
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+        console.log('Voice input started');
+      } catch (e) {
+        console.error('Failed to start voice input:', e);
+        const message = isMobile 
+          ? 'Unable to start voice input. Please check your microphone permissions.'
+          : 'Failed to start voice input. Please try again.';
+        alert(message);
+        setVoiceState('idle');
       }
     }
+  };
+
+  const stopVoiceInput = () => {
+    if (autoSendTimeoutRef.current) {
+      clearTimeout(autoSendTimeoutRef.current);
+    }
+    
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.error('Failed to stop voice input:', e);
+      }
+    }
+    
+    setVoiceState('idle');
   };
 
   const handleAddToDashboard = (chart: ChartData) => {
@@ -480,7 +502,14 @@ export function FloatingChatbot() {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
-
+    
+    // Handle voice completion
+    if (isVoiceMessage) {
+      setVoiceState('idle');
+      if (autoSendTimeoutRef.current) {
+        clearTimeout(autoSendTimeoutRef.current);
+      }
+    }
     
     try {
       const res = await fetch(`${API_BASE_URL}/ask`, {
@@ -718,37 +747,54 @@ export function FloatingChatbot() {
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !isRecognitionActive && handleSendMessage()}
+                    onKeyPress={(e) => e.key === 'Enter' && voiceState === 'idle' && handleSendMessage()}
                     placeholder="Ask me anything about your business data..."
                     className="flex-1 text-sm bg-white dark:bg-background border-gray-200 dark:border-border text-gray-900 dark:text-foreground"
-                    disabled={isLoading}
+                    disabled={isLoading || voiceState === 'processing'}
                   />
-                  {(!inputValue.trim() || (isRecognitionActive && !isProcessingVoiceMessage)) && !isLoading ? (
+                  {/* Google Assistant-like button behavior */}
+                  {voiceState === 'idle' && !inputValue.trim() && !isLoading ? (
                     <Button 
                       variant="gradient"
-                      onClick={toggleVoiceRecognition}
-                      className={`relative ${isVoiceEnabled ? 'animate-pulse' : ''}`}
-                      title={isVoiceEnabled ? 'Voice listening ON - Speak your question or say "Hey Intel"' : 'Enable voice input - Say "Hey Intel" to activate'}
+                      onClick={startVoiceInput}
+                      className="relative transition-all duration-200"
+                      title="Start voice input or say 'Hey Intel'"
+                      size="sm"
+                      disabled={isLoading}
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                  ) : voiceState === 'listening' ? (
+                    <Button 
+                      variant="gradient"
+                      onClick={stopVoiceInput}
+                      className="relative scale-110 animate-pulse bg-green-500 hover:bg-green-600"
+                      title="Listening... Click to stop"
                       size="sm"
                     >
-                      {isVoiceEnabled ? (
-                        <Mic className={`h-4 w-4 ${isRecognitionActive ? 'animate-pulse' : ''}`} />
-                      ) : (
-                        <Mic className="h-4 w-4" />
-                      )}
-                      {isVoiceEnabled && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      )}
+                      <Mic className="h-4 w-4 text-white" />
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                    </Button>
+                  ) : voiceState === 'processing' ? (
+                    <Button 
+                      variant="gradient"
+                      disabled
+                      className="relative"
+                      title="Processing voice..."
+                      size="sm"
+                    >
+                      <RefreshCw className="h-4 w-4 animate-spin" />
                     </Button>
                   ) : (
-                    inputValue.trim() && !isRecognitionActive && (
+                    inputValue.trim() && voiceState === 'idle' && !isLoading && (
                       <Button 
                         onClick={() => handleSendMessage(false)}
-                        disabled={isLoading || !inputValue.trim() || isProcessingVoiceMessage}
+                        disabled={isLoading || !inputValue.trim()}
                         variant="gradient"
                         size="sm"
+                        title="Send message"
                       >
-                        {isLoading || isProcessingVoiceMessage ? (
+                        {isLoading ? (
                           <RefreshCw className="h-4 w-4 animate-spin" />
                         ) : (
                           <Send className="h-4 w-4" />
