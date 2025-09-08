@@ -217,15 +217,28 @@ export function FloatingChatbot() {
           }
         };
         
+        // Flag to track if recognition ended due to an ignored error
+        let errorOccurred = false;
+        
         wakeWordRecognitionRef.current.onend = () => {
-          console.log('Wake word recognition ended, triggering restart...');
+          if (errorOccurred) {
+            console.log('Wake word recognition ended due to ignored error, skipping restart');
+            return;
+          }
+          console.log('Wake word recognition ended naturally, triggering restart...');
           setWakeWordRestartTrigger(prev => prev + 1);
         };
         
         wakeWordRecognitionRef.current.onerror = (event: any) => {
           console.log('Wake word recognition error:', event.error);
-          // Only restart for specific errors, ignore no-speech
-          if (event.error !== 'aborted' && event.error !== 'no-speech') {
+          
+          // Mark that an error occurred for ignored error types
+          if (event.error === 'aborted' || event.error === 'no-speech') {
+            errorOccurred = true;
+            console.log('Wake word error will be ignored, preventing restart loop');
+          } else {
+            // For other errors, allow restart
+            console.log('Wake word error requires restart');
             setWakeWordRestartTrigger(prev => prev + 1);
           }
         };
