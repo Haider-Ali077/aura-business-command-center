@@ -215,13 +215,19 @@ export function FloatingChatbot() {
             }
           }
           
-          // If chatbot is open and speech is final, process the input
+          // If chatbot is open and speech is final, auto-send the message
           if (isOpen) {
             // Don't show wake word in input
             const cleanTranscript = finalTranscript.toLowerCase().trim();
             if (!cleanTranscript.includes('hey agent')) {
-              console.log('Voice input complete - ready for manual send:', finalTranscript);
-              setInputValue(finalTranscript); // Set only final transcript without interim
+              console.log('Voice input complete - auto-sending:', finalTranscript);
+              setInputValue(finalTranscript); // Set final transcript
+              // Auto-send after a brief delay to show the transcription
+              setTimeout(() => {
+                if (finalTranscript.trim()) {
+                  handleSendMessage();
+                }
+              }, 500);
             } else {
               setInputValue(''); // Clear wake word
             }
@@ -606,22 +612,6 @@ export function FloatingChatbot() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={toggleVoiceRecognition}
-                className={`text-white p-1 relative ${isVoiceEnabled ? 'bg-white/20' : ''}`}
-                title={isVoiceEnabled ? 'Voice commands ON - Say "Hey Agent"' : 'Enable voice commands'}
-              >
-                {isVoiceEnabled ? (
-                  <Mic className={`h-3 w-3 ${isRecognitionActive ? 'text-green-300 animate-pulse' : ''}`} />
-                ) : (
-                  <MicOff className="h-3 w-3" />
-                )}
-                {isVoiceEnabled && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                )}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
                 onClick={clearChatHistory}
                 className="text-white p-1"
                 title="Clear chat history"
@@ -717,14 +707,33 @@ export function FloatingChatbot() {
                     className="flex-1 text-sm bg-white dark:bg-background border-gray-200 dark:border-border text-gray-900 dark:text-foreground"
                     disabled={isLoading}
                   />
-                  <Button 
-                    variant="gradient"
-                    onClick={handleSendMessage} 
-                    disabled={isLoading || !inputValue.trim()}
-                    size="sm"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+                  {!inputValue.trim() && !isLoading ? (
+                    <Button 
+                      variant="ghost"
+                      onClick={toggleVoiceRecognition}
+                      className={`border border-gray-200 dark:border-border hover:bg-gray-50 dark:hover:bg-muted relative ${isVoiceEnabled ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : ''}`}
+                      title={isVoiceEnabled ? 'Voice listening ON - Speak your question' : 'Enable voice input'}
+                      size="sm"
+                    >
+                      {isVoiceEnabled ? (
+                        <Mic className={`h-4 w-4 text-blue-600 dark:text-blue-400 ${isRecognitionActive ? 'animate-pulse' : ''}`} />
+                      ) : (
+                        <Mic className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                      )}
+                      {isVoiceEnabled && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="gradient"
+                      onClick={handleSendMessage} 
+                      disabled={isLoading || !inputValue.trim()}
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 
                 {showDashboardSelect && (
