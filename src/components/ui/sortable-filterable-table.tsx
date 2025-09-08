@@ -7,10 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TableColumnHeader, type SortDirection } from "./table-column-header";
+import { Button } from "@/components/ui/button";
 import { FilterDropdown, type FilterConfig, type FilterType } from "./table-filters";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronUp, ChevronDown, Filter, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ChartMetadata } from "@/types/chart";
+
+export type SortDirection = 'asc' | 'desc' | null;
 
 interface SortConfig {
   key: string;
@@ -221,31 +225,69 @@ export function SortableFilterableTable({
             <TableRow>
               {tableKeys.map((key) => (
                 <TableHead key={key} className="text-xs px-2 py-1">
-                  <DropdownMenu 
-                    open={openFilterKey === key}
-                    onOpenChange={(open) => setOpenFilterKey(open ? key : null)}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <div className="cursor-pointer">
-                        <TableColumnHeader
-                          label={getColumnLabel(key)}
-                          sortDirection={sortConfig?.key === key ? sortConfig.direction : null}
-                          hasActiveFilter={hasActiveFilter(key)}
-                          onSort={() => handleSort(key)}
-                          onFilterToggle={() => setOpenFilterKey(openFilterKey === key ? null : key)}
-                          onClearFilter={() => handleFilter(key, null)}
-                        />
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="p-0">
-                      <FilterDropdown
-                        type={getColumnType(key)}
-                        config={getActiveFilter(key)}
-                        onFilterChange={(config) => handleFilter(key, config)}
-                        uniqueValues={getUniqueValues(key)}
-                      />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-1 group">
+                    <span className="text-xs font-medium flex-1 truncate">{getColumnLabel(key)}</span>
+                    
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Sort Button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 hover:bg-muted"
+                        onClick={() => handleSort(key)}
+                      >
+                        {sortConfig?.key === key && sortConfig.direction === 'asc' ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : sortConfig?.key === key && sortConfig.direction === 'desc' ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <div className="h-3 w-3 flex flex-col justify-center">
+                            <ChevronUp className="h-1.5 w-3 -mb-0.5" />
+                            <ChevronDown className="h-1.5 w-3" />
+                          </div>
+                        )}
+                      </Button>
+                      
+                      {/* Filter Dropdown */}
+                      <DropdownMenu 
+                        open={openFilterKey === key}
+                        onOpenChange={(open) => setOpenFilterKey(open ? key : null)}
+                      >
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "h-5 w-5 p-0 hover:bg-muted",
+                              hasActiveFilter(key) && "text-primary bg-primary/10"
+                            )}
+                          >
+                            <Filter className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="p-0">
+                          <FilterDropdown
+                            type={getColumnType(key)}
+                            config={getActiveFilter(key)}
+                            onFilterChange={(config) => handleFilter(key, config)}
+                            uniqueValues={getUniqueValues(key)}
+                          />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      
+                      {/* Clear Filter Button */}
+                      {hasActiveFilter(key) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          onClick={() => handleFilter(key, null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </TableHead>
               ))}
             </TableRow>
