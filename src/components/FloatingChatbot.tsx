@@ -130,6 +130,7 @@ export function FloatingChatbot() {
   const [isWaitingForWakeWord, setIsWaitingForWakeWord] = useState(false);
   const [isRecognitionActive, setIsRecognitionActive] = useState(false);
   const [shouldAutoRestart, setShouldAutoRestart] = useState(true);
+  const [isProcessingVoiceMessage, setIsProcessingVoiceMessage] = useState(false);
   const recognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -223,12 +224,11 @@ export function FloatingChatbot() {
             if (!cleanTranscript.includes('hey intel')) {
               console.log('Voice input complete - auto-sending:', finalTranscript);
               setInputValue(finalTranscript); // Set final transcript
-              // Stop auto-restart after auto-send
-              setShouldAutoRestart(false);
+              setIsProcessingVoiceMessage(true); // Show processing state
               // Auto-send after a brief delay to show the transcription
               setTimeout(() => {
                 if (finalTranscript.trim()) {
-                  handleSendMessage();
+                  handleSendMessage(true); // Pass flag for voice message
                 }
               }, 500);
             } else {
@@ -305,7 +305,10 @@ export function FloatingChatbot() {
 
   const toggleVoiceRecognition = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      const message = isMobile 
+        ? 'Voice input is not available on your device. Please type your message.'
+        : 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.';
+      alert(message);
       return;
     }
     
@@ -319,6 +322,7 @@ export function FloatingChatbot() {
       console.log('Turning OFF voice recognition');
       setIsVoiceEnabled(false);
       setIsRecognitionActive(false);
+      setIsProcessingVoiceMessage(false);
       setShouldAutoRestart(true); // Reset for next time
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -327,6 +331,7 @@ export function FloatingChatbot() {
       // Turn on voice recognition
       console.log('Turning ON voice recognition');
       setIsVoiceEnabled(true);
+      setIsProcessingVoiceMessage(false);
       setShouldAutoRestart(true); // Enable auto-restart for manual activation
       if (recognitionRef.current && !isRecognitionActive) {
         try {
@@ -334,6 +339,9 @@ export function FloatingChatbot() {
           console.log('Speech recognition started');
         } catch (e) {
           console.error('Failed to start speech recognition:', e);
+          if (isMobile) {
+            alert('Unable to start voice input. Please check your microphone permissions.');
+          }
         }
       }
     }
@@ -459,7 +467,7 @@ export function FloatingChatbot() {
     }
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (isVoiceMessage = false) => {
     if (!inputValue.trim() || isLoading || !session) return;
 
     const userMessage: Message = {
@@ -710,12 +718,12 @@ export function FloatingChatbot() {
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    onKeyPress={(e) => e.key === 'Enter' && !isRecognitionActive && handleSendMessage()}
                     placeholder="Ask me anything about your business data..."
                     className="flex-1 text-sm bg-white dark:bg-background border-gray-200 dark:border-border text-gray-900 dark:text-foreground"
                     disabled={isLoading}
                   />
-                  {!inputValue.trim() && !isLoading ? (
+                  {(!inputValue.trim() || (isRecognitionActive && !isProcessingVoiceMessage)) && !isLoading ? (
                     <Button 
                       variant="gradient"
                       onClick={toggleVoiceRecognition}
@@ -733,14 +741,20 @@ export function FloatingChatbot() {
                       )}
                     </Button>
                   ) : (
-                    <Button 
-                      variant="gradient"
-                      onClick={handleSendMessage} 
-                      disabled={isLoading || !inputValue.trim()}
-                      size="sm"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+                    inputValue.trim() && !isRecognitionActive && (
+                      <Button 
+                        onClick={() => handleSendMessage(false)}
+                        disabled={isLoading || !inputValue.trim() || isProcessingVoiceMessage}
+                        variant="gradient"
+                        size="sm"
+                      >
+                        {isLoading || isProcessingVoiceMessage ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )
                   )}
                 </div>
                 
