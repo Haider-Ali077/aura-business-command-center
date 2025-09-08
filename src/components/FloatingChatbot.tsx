@@ -129,6 +129,7 @@ export function FloatingChatbot() {
   const [isListening, setIsListening] = useState(false);
   const [isWaitingForWakeWord, setIsWaitingForWakeWord] = useState(false);
   const [isRecognitionActive, setIsRecognitionActive] = useState(false);
+  const [shouldAutoRestart, setShouldAutoRestart] = useState(true);
   const recognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -207,8 +208,8 @@ export function FloatingChatbot() {
         if (finalTranscript.trim()) {
           // If not open, check for wake word to open chatbot
           if (!isOpen) {
-            if (finalTranscript.toLowerCase().includes('hey agent')) {
-              console.log('Wake word detected! Opening chatbot');
+            if (finalTranscript.toLowerCase().includes('hey intel')) {
+              console.log('Wake word "Hey Intel" detected! Opening chatbot');
               setIsOpen(true);
               setInputValue(''); // Clear the wake word from input
               return;
@@ -219,9 +220,11 @@ export function FloatingChatbot() {
           if (isOpen) {
             // Don't show wake word in input
             const cleanTranscript = finalTranscript.toLowerCase().trim();
-            if (!cleanTranscript.includes('hey agent')) {
+            if (!cleanTranscript.includes('hey intel')) {
               console.log('Voice input complete - auto-sending:', finalTranscript);
               setInputValue(finalTranscript); // Set final transcript
+              // Stop auto-restart after auto-send
+              setShouldAutoRestart(false);
               // Auto-send after a brief delay to show the transcription
               setTimeout(() => {
                 if (finalTranscript.trim()) {
@@ -249,8 +252,8 @@ export function FloatingChatbot() {
           clearTimeout(restartTimeoutRef.current);
         }
         
-        // Always restart if voice is enabled (simplified logic)
-        if (isVoiceEnabled) {
+        // Only restart if voice is enabled AND we should auto-restart (one-shot behavior)
+        if (isVoiceEnabled && shouldAutoRestart) {
           restartTimeoutRef.current = setTimeout(() => {
             if (isVoiceEnabled && !isRecognitionActive && recognitionRef.current) {
               try {
@@ -261,6 +264,9 @@ export function FloatingChatbot() {
               }
             }
           }, 500);
+        } else if (!shouldAutoRestart) {
+          console.log('Voice recognition stopped after auto-send - manual restart required');
+          setIsVoiceEnabled(false); // Turn off voice recognition
         }
       };
       
@@ -313,6 +319,7 @@ export function FloatingChatbot() {
       console.log('Turning OFF voice recognition');
       setIsVoiceEnabled(false);
       setIsRecognitionActive(false);
+      setShouldAutoRestart(true); // Reset for next time
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -320,6 +327,7 @@ export function FloatingChatbot() {
       // Turn on voice recognition
       console.log('Turning ON voice recognition');
       setIsVoiceEnabled(true);
+      setShouldAutoRestart(true); // Enable auto-restart for manual activation
       if (recognitionRef.current && !isRecognitionActive) {
         try {
           recognitionRef.current.start();
@@ -709,16 +717,16 @@ export function FloatingChatbot() {
                   />
                   {!inputValue.trim() && !isLoading ? (
                     <Button 
-                      variant="ghost"
+                      variant="gradient"
                       onClick={toggleVoiceRecognition}
-                      className={`border border-gray-200 dark:border-border hover:bg-gray-50 dark:hover:bg-muted relative ${isVoiceEnabled ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : ''}`}
-                      title={isVoiceEnabled ? 'Voice listening ON - Speak your question' : 'Enable voice input'}
+                      className={`relative ${isVoiceEnabled ? 'animate-pulse' : ''}`}
+                      title={isVoiceEnabled ? 'Voice listening ON - Speak your question or say "Hey Intel"' : 'Enable voice input - Say "Hey Intel" to activate'}
                       size="sm"
                     >
                       {isVoiceEnabled ? (
-                        <Mic className={`h-4 w-4 text-blue-600 dark:text-blue-400 ${isRecognitionActive ? 'animate-pulse' : ''}`} />
+                        <Mic className={`h-4 w-4 ${isRecognitionActive ? 'animate-pulse' : ''}`} />
                       ) : (
-                        <Mic className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                        <Mic className="h-4 w-4" />
                       )}
                       {isVoiceEnabled && (
                         <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
