@@ -179,7 +179,7 @@ export function FloatingChatbot() {
       
       // Main speech recognition for voice input
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
+      recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
       
@@ -205,12 +205,12 @@ export function FloatingChatbot() {
             console.log('Voice input complete:', finalTranscript);
             setVoiceState('processing');
             
-            // Auto-send after brief delay to show transcription
+            // Auto-send after longer delay to allow complete speech
             autoSendTimeoutRef.current = setTimeout(() => {
               if (finalTranscript.trim()) {
                 handleSendMessage(true);
               }
-            }, 800);
+            }, 2000);
           }
         }
       };
@@ -248,8 +248,8 @@ export function FloatingChatbot() {
       wakeWordRecognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
         
-        if (transcript.includes('hey intel')) {
-          console.log('Wake word detected! Opening chatbot...');
+        if (transcript.includes('hey agent')) {
+          console.log('Wake word "Hey Agent" detected! Opening chatbot...');
           
           if (!isOpen) {
             setIsOpen(true);
@@ -758,7 +758,7 @@ export function FloatingChatbot() {
                       variant="gradient"
                       onClick={startVoiceInput}
                       className="relative transition-all duration-200"
-                      title="Start voice input or say 'Hey Intel'"
+                      title="Start voice input or say 'Hey Agent'"
                       size="sm"
                       disabled={isLoading}
                     >
