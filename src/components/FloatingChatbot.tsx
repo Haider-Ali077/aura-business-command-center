@@ -15,6 +15,7 @@ import { API_BASE_URL } from '@/config/api';
 import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
 import { ChartConfig, EnhancedChartData } from "@/types/chart";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useStableChatStore, Message } from "@/store/chatStore";
 
 interface ChartData {
   chart_type: string;
@@ -63,59 +64,19 @@ const convertChatbotChartData = (chart: ChartData): {
   return { data, config };
 };
 
-interface Message {
-  id: string;
-  type: 'user' | 'bot';
-  content: string;
-  timestamp: Date;
-  chart?: ChartData;
-}
+// Message interface imported from chatStore
 
 export function FloatingChatbot() {
   const { session } = useAuthStore();
   const { addWidget } = useWidgetStore();
   const { getAccessibleModules } = useRoleStore();
   const isMobile = useIsMobile();
-
-  // Get user-specific localStorage keys
-  const getUserStorageKey = (key: string) => {
-    const userId = session?.user?.user_id || 'anonymous';
-    return `intellyca-${userId}-${key}`;
-  };
-
-  // Load initial state from localStorage if available (user-specific)
-  const loadInitialMessages = () => {
-    try {
-      const saved = localStorage.getItem(getUserStorageKey('chat-messages'));
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading chat messages:', error);
-    }
-    
-    return [{
-      id: '1',
-      type: 'bot' as const,
-      content: `Hello! I'm Intellyca, your AI-powered business intelligence assistant. What would you like to explore today?`,
-      timestamp: new Date(),
-    }];
-  };
-
-  const [isOpen, setIsOpen] = useState(() => {
-    try {
-      const saved = localStorage.getItem(getUserStorageKey('chat-open'));
-      return saved ? JSON.parse(saved) : false;
-    } catch {
-      return false;
-    }
-  });
+  
+  // Use session-only chat store - NO localStorage persistence
+  const chatStore = useStableChatStore(session?.user?.user_id?.toString() || null);
+  
+  const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(loadInitialMessages);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDashboard, setSelectedDashboard] = useState<string>('');
@@ -134,29 +95,10 @@ export function FloatingChatbot() {
   const autoSendTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-
-  // Save messages to localStorage whenever messages change (user-specific)
-  useEffect(() => {
-    try {
-      localStorage.setItem(getUserStorageKey('chat-messages'), JSON.stringify(messages));
-    } catch (error) {
-      console.error('Error saving chat messages:', error);
-    }
-  }, [messages, session?.user?.user_id]);
-
-  // Save isOpen state to localStorage (user-specific)
-  useEffect(() => {
-    try {
-      localStorage.setItem(getUserStorageKey('chat-open'), JSON.stringify(isOpen));
-    } catch (error) {
-      console.error('Error saving chat open state:', error);
-    }
-  }, [isOpen, session?.user?.user_id]);
-
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [chatStore.messages]);
 
   // Cleanup voice states when chat closes
   useEffect(() => {
@@ -226,7 +168,10 @@ export function FloatingChatbot() {
         
         recognitionRef.current.onend = () => {
           console.log('Main voice input ended');
-          setVoiceState('idle');
+          // Only set to idle if not processing auto-send
+          if (voiceState !== 'processing') {
+            setVoiceState('idle');
+          }
         };
         
         recognitionRef.current.onerror = (event: any) => {
@@ -489,14 +434,15 @@ export function FloatingChatbot() {
       
       // Show success message
       const dashboardName = getAccessibleModules().find(m => m.id === dashboardId)?.name || dashboardId;
-      const successMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        type: 'bot',
-        content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard with proper axis labels!`,
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, successMessage]);
+        const successMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          type: 'bot',
+          content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard with proper axis labels!`,
+          timestamp: new Date(),
+          chart: undefined,
+        };
+        
+        chatStore.addMessage(successMessage);
       
       // Reset state
       setShowDashboardSelect(false);
@@ -505,30 +451,21 @@ export function FloatingChatbot() {
     } catch (error) {
       console.error('Error adding chart to dashboard:', error);
       
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        type: 'bot',
-        content: '❌ Failed to add chart to dashboard. Please try again.',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
+        const errorMessage: Message = {
+          id: (Date.now() + 3).toString(),
+          type: 'bot',
+          content: '❌ Failed to add chart to dashboard. Please try again.',
+          timestamp: new Date(),
+          chart: undefined,
+        };
+        
+        chatStore.addMessage(errorMessage);
     }
   };
 
   const clearChatHistory = () => {
-    const initialMessage = {
-      id: '1',
-      type: 'bot' as const,
-      content: `Hello! I'm Intellyca, your AI-powered business intelligence assistant. What would you like to explore today?`,
-      timestamp: new Date(),
-    };
-    setMessages([initialMessage]);
-    try {
-      localStorage.removeItem(getUserStorageKey('chat-messages'));
-    } catch (error) {
-      console.error('Error clearing chat history:', error);
-    }
+    // Use chat store to clear - no localStorage
+    chatStore.clearChat();
   };
 
   const handleSendMessage = async (isVoiceMessage = false) => {
@@ -539,15 +476,17 @@ export function FloatingChatbot() {
       type: 'user',
       content: inputValue,
       timestamp: new Date(),
+      chart: undefined,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Use chat store instead of local state
+    chatStore.addMessage(userMessage);
     setInputValue('');
     setIsLoading(true);
     
-    // Handle voice completion
+    // Handle voice completion - delay state change until after processing
     if (isVoiceMessage) {
-      setVoiceState('idle');
+      setVoiceState('completing');
       if (autoSendTimeoutRef.current) {
         clearTimeout(autoSendTimeoutRef.current);
       }
@@ -617,7 +556,8 @@ export function FloatingChatbot() {
         chart,
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      // Use chat store instead of local state
+      chatStore.addMessage(botMessage);
 
       // Save conversation to database
       await saveConversation(userMessage.content, data.response);
@@ -625,6 +565,14 @@ export function FloatingChatbot() {
       console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
+      // Complete voice state transition after message processing
+      if (voiceState === 'completing') {
+        setVoiceState('idle');
+        // Restart wake word detection after completing voice message
+        if (isBackgroundListening) {
+          setTimeout(() => startWakeWordRecognition(), 1000);
+        }
+      }
     }
   };
 
@@ -719,7 +667,7 @@ export function FloatingChatbot() {
               {/* Messages Area - SAP Joule AI Style */}
               <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
                 <div className="space-y-3">
-                  {messages.map((message) => (
+                  {chatStore.messages.map((message) => (
                      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                        <div className={`${message.chart ? 'w-full' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                          {message.type === 'user' ? (
