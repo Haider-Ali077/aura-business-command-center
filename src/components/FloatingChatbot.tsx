@@ -163,7 +163,7 @@ export function FloatingChatbot() {
               }
               autoSendTimeoutRef.current = setTimeout(() => {
                 console.log('Auto-sending voice message:', finalTranscript);
-                handleSendMessage(true);
+                handleSendMessage(true, finalTranscript);
               }, 800);
             }
           }
@@ -474,13 +474,19 @@ export function FloatingChatbot() {
     chatStore.clearChat();
   };
 
-  const handleSendMessage = async (isVoiceMessage = false) => {
-    if (!inputValue.trim() || isLoading || !session) return;
+  const handleSendMessage = async (isVoiceMessage = false, messageText?: string) => {
+    if (isLoading || !session) return;
+    
+    const message = messageText || inputValue.trim();
+    if (!message) {
+      console.log('No message to send:', { messageText, inputValue });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputValue,
+      content: message,
       timestamp: new Date(),
       chart: undefined,
     };
