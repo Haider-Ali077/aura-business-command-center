@@ -201,10 +201,12 @@ export function FloatingChatbot() {
         wakeWordRecognitionRef.current.lang = 'en-US';
         
         wakeWordRecognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+          console.log('Wake word heard:', transcript);
           
-          if (transcript.includes('hey agent')) {
-            console.log('Wake word "Hey Agent" detected! Opening chatbot...');
+          // More flexible wake word detection
+          if (transcript.includes('hey agent') || transcript.includes('agent')) {
+            console.log('🎯 Wake word "Hey Agent" detected! Opening chatbot...');
             
             if (!isOpen) {
               setIsOpen(true);
@@ -217,29 +219,38 @@ export function FloatingChatbot() {
           }
         };
         
-        // Flag to track if recognition ended due to an ignored error
-        let errorOccurred = false;
-        
         wakeWordRecognitionRef.current.onend = () => {
-          if (errorOccurred) {
-            console.log('Wake word recognition ended due to ignored error, skipping restart');
-            return;
-          }
-          console.log('Wake word recognition ended naturally, triggering restart...');
-          setWakeWordRestartTrigger(prev => prev + 1);
+          console.log('🔄 Wake word recognition session ended, restarting...');
+          // Always restart for continuous listening like other voice assistants
+          setTimeout(() => {
+            if (isBackgroundListening && wakeWordRecognitionRef.current) {
+              triggerWakeWordRestart();
+            }
+          }, 500);
         };
         
         wakeWordRecognitionRef.current.onerror = (event: any) => {
-          console.log('Wake word recognition error:', event.error);
+          console.log('⚠️ Wake word recognition error:', event.error);
           
-          // Mark that an error occurred for ignored error types
-          if (event.error === 'aborted' || event.error === 'no-speech') {
-            errorOccurred = true;
-            console.log('Wake word error will be ignored, preventing restart loop');
+          // Handle different error types appropriately
+          if (event.error === 'no-speech') {
+            // No speech is normal, just continue listening
+            console.log('No speech detected, continuing to listen...');
+          } else if (event.error === 'aborted') {
+            // Aborted is usually manual stop, don't restart immediately
+            console.log('Recognition aborted, will restart on next cycle');
+          } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            // Permission issues
+            console.error('Microphone permission denied for wake word');
+            setIsBackgroundListening(false);
           } else {
-            // For other errors, allow restart
-            console.log('Wake word error requires restart');
-            setWakeWordRestartTrigger(prev => prev + 1);
+            // Other errors, restart after delay
+            console.log('Error occurred, will restart wake word detection');
+            setTimeout(() => {
+              if (isBackgroundListening && wakeWordRecognitionRef.current) {
+                triggerWakeWordRestart();
+              }
+            }, 1000);
           }
         };
       }
@@ -272,15 +283,17 @@ export function FloatingChatbot() {
     }
   }, []);
 
-  // Handle wake word restart trigger
+  // Handle wake word restart trigger with better reliability
   useEffect(() => {
     if (wakeWordRestartTrigger > 0 && isBackgroundListening) {
-      console.log('Wake word restart triggered, restarting detection...');
+      console.log('🔄 Wake word restart triggered, restarting detection...');
+      
+      // Ensure clean restart with proper timing
       const restartTimeout = setTimeout(() => {
         if (wakeWordRecognitionRef.current && isBackgroundListening) {
           startWakeWordRecognition();
         }
-      }, 100);
+      }, 500); // Longer delay for more reliable restart
       
       return () => clearTimeout(restartTimeout);
     }
@@ -300,28 +313,37 @@ export function FloatingChatbot() {
         // Ignore stop errors
       }
       
-      // Small delay to ensure cleanup, then start
+      // Start with proper delay to ensure clean state
       setTimeout(() => {
         if (wakeWordRecognitionRef.current && isBackgroundListening) {
           try {
             wakeWordRecognitionRef.current.start();
-            console.log('Wake word detection started successfully');
-          } catch (startError) {
+            console.log('🎤 Wake word detection started - listening for "Hey Agent"');
+          } catch (startError: any) {
+            // Handle "already started" error gracefully
+            if (startError.name === 'InvalidStateError') {
+              console.log('Wake word detection already running');
+              return;
+            }
+            
             console.error('Failed to start wake word detection:', startError);
-            // Retry once after a brief delay
+            
+            // Retry after delay for network or temporary issues
             setTimeout(() => {
               if (wakeWordRecognitionRef.current && isBackgroundListening) {
                 try {
                   wakeWordRecognitionRef.current.start();
-                  console.log('Wake word detection started on retry');
+                  console.log('🎤 Wake word detection started on retry');
                 } catch (retryError) {
                   console.error('Wake word detection retry failed:', retryError);
+                  // Try again after longer delay
+                  setTimeout(() => triggerWakeWordRestart(), 3000);
                 }
               }
-            }, 500);
+            }, 1000);
           }
         }
-      }, 100);
+      }, 200);
     } catch (e) {
       console.error('Wake word detection setup error:', e);
     }
