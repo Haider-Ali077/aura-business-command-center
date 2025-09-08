@@ -1,5 +1,5 @@
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableFilterableTable } from '@/components/ui/sortable-filterable-table';
 import { EnhancedChartData, ChartConfig, ChartMetadata } from '@/types/chart';
 
 // Custom tooltip component with better formatting
@@ -233,42 +233,13 @@ export const UnifiedChartRenderer = ({
 
     case 'table':
       return (
-        <div className="h-full w-full overflow-hidden" style={{ maxHeight: chartHeight }}>
-          {tableName && context !== 'chatbot' && (
-            <div className="mb-2 px-2 py-1 bg-muted/50 rounded-t-md border-b">
-              <h4 className="text-sm font-medium text-foreground truncate">{tableName}</h4>
-            </div>
-          )}
-          <div className="h-full overflow-auto">
-            <Table className="min-w-full">
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  {tableKeys.map((key) => (
-                    <TableHead key={key} className="text-xs px-2 py-1">
-                      {metadata?.columns.find(col => col.key === key)?.label || key}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {safeData.map((row, index) => (
-                  <TableRow key={index}>
-                    {tableKeys.map((key, cellIndex) => (
-                      <TableCell key={cellIndex} className="text-xs px-2 py-1">
-                        {typeof row[key] === 'number' ? 
-                          (key.toLowerCase().includes('year') || 
-                           (typeof row[key] === 'number' && row[key] >= 1900 && row[key] <= 2100 && row[key] % 1 === 0)) 
-                            ? row[key].toString() 
-                            : row[key].toLocaleString() 
-                          : String(row[key] || '')}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <SortableFilterableTable
+          data={safeData}
+          metadata={metadata}
+          tableName={tableName}
+          context={context}
+          maxHeight={chartHeight}
+        />
       );
 
     default:
