@@ -1015,7 +1015,7 @@ export function FloatingChatbot() {
                     }`}
                     disabled={isLoading || voiceState === 'processing'}
                   />
-                  {/* Enhanced voice button with mobile optimization */}
+                   {/* Enhanced voice button with mobile optimization */}
                   {voiceState === 'idle' && !inputValue.trim() && !isLoading ? (
                     <Button 
                       variant="gradient"
@@ -1053,23 +1053,22 @@ export function FloatingChatbot() {
                     >
                       <RefreshCw className="h-4 w-4 animate-spin" />
                     </Button>
-                  ) : (
-                    inputValue.trim() && voiceState === 'idle' && !isLoading && (
-                      <Button 
-                        onClick={() => handleSendMessage(false)}
-                        disabled={isLoading || !inputValue.trim()}
-                        variant="gradient"
-                        size="sm"
-                        title="Send message"
-                      >
-                        {isLoading ? (
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )
-                  )}
+                  ) : inputValue.trim() && voiceState === 'idle' && !isLoading ? (
+                    <Button 
+                      onClick={() => handleSendMessage(false)}
+                      disabled={isLoading || !inputValue.trim()}
+                      variant="gradient"
+                      size="sm"
+                      title="Send message"
+                    >
+                      {isLoading ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  ) : null
+                  }
                 </div>
                 
                 {showDashboardSelect && (
@@ -1109,7 +1108,7 @@ export function FloatingChatbot() {
                       >
                         Cancel
                       </Button>
-                    </div>
+                     </div>
                   </div>
                 )}
               </div>
