@@ -85,16 +85,26 @@ export function FloatingChatbot() {
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [tableTitle, setTableTitle] = useState('');
   
-  // Enhanced voice recognition states
+  // Enhanced voice recognition states with mobile optimization
   type VoiceState = 'idle' | 'listening' | 'processing' | 'completing';
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [isBackgroundListening, setIsBackgroundListening] = useState(false);
   const [wakeWordRestartTrigger, setWakeWordRestartTrigger] = useState(0);
+  const [transcript, setTranscript] = useState('');
+  const [processedTranscriptLength, setProcessedTranscriptLength] = useState(0);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
   const autoSendTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Mobile-specific settings
+  const isMobileDevice = isMobile;
+  const mobileSettings = {
+    autoSendDelay: isMobileDevice ? 2500 : 800,
+    silenceTimeout: isMobileDevice ? 5000 : 3000,
+    restartDelay: isMobileDevice ? 1000 : 500,
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -127,45 +137,68 @@ export function FloatingChatbot() {
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'en-US';
         
+        // Mobile-specific optimizations
+        if (isMobileDevice) {
+          recognitionRef.current.maxAlternatives = 1;
+          // Some mobile browsers support these settings
+          if ('grammars' in recognitionRef.current) {
+            recognitionRef.current.grammars = null;
+          }
+        }
+        
         recognitionRef.current.onresult = (event: any) => {
-          let finalTranscript = '';
+          let newFinalTranscript = '';
           let interimTranscript = '';
           
-          for (let i = 0; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
+          // Smart de-duplication: only process new final results
+          for (let i = processedTranscriptLength; i < event.results.length; i++) {
+            const transcriptSegment = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += transcript;
+              newFinalTranscript += transcriptSegment;
             } else {
-              interimTranscript += transcript;
+              interimTranscript += transcriptSegment;
             }
           }
           
-          const fullTranscript = (finalTranscript + interimTranscript).trim();
+          // Build cumulative transcript
+          const currentTranscript = transcript + newFinalTranscript;
+          const displayTranscript = currentTranscript + interimTranscript;
           
-          if (fullTranscript) {
-            setInputValue(fullTranscript);
+          if (displayTranscript.trim()) {
+            setInputValue(displayTranscript.trim());
             
-            if (finalTranscript.trim()) {
-              console.log('Voice input complete:', finalTranscript);
-              setVoiceState('processing');
+            // Update processed length and transcript state
+            if (newFinalTranscript.trim()) {
+              setTranscript(currentTranscript);
+              setProcessedTranscriptLength(event.results.length);
               
-              // Stop recognition immediately after final transcript
-              if (recognitionRef.current) {
-                try {
-                  recognitionRef.current.stop();
-                } catch (e) {
-                  console.log('Recognition already stopped');
-                }
-              }
+              console.log('Voice input progress:', currentTranscript);
               
-              // Auto-send after shorter delay
+              // Mobile-optimized pause detection
               if (autoSendTimeoutRef.current) {
                 clearTimeout(autoSendTimeoutRef.current);
               }
-              autoSendTimeoutRef.current = setTimeout(() => {
-                console.log('Auto-sending voice message:', finalTranscript);
-                handleSendMessage(true, finalTranscript);
-              }, 800);
+              
+              // Don't auto-send immediately on mobile - wait for longer pause
+              if (!isMobileDevice || currentTranscript.length > 10) {
+                autoSendTimeoutRef.current = setTimeout(() => {
+                  if (voiceState === 'listening') {
+                    console.log('Auto-sending voice message:', currentTranscript);
+                    setVoiceState('processing');
+                    
+                    // Stop recognition before sending
+                    if (recognitionRef.current) {
+                      try {
+                        recognitionRef.current.stop();
+                      } catch (e) {
+                        console.log('Recognition already stopped');
+                      }
+                    }
+                    
+                    handleSendMessage(true, currentTranscript);
+                  }
+                }, mobileSettings.autoSendDelay);
+              }
             }
           }
         };
@@ -369,7 +402,7 @@ export function FloatingChatbot() {
 
   const startVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      const message = isMobile 
+      const message = isMobileDevice 
         ? 'Voice input is not available on your device. Please type your message.'
         : 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.';
       alert(message);
@@ -386,24 +419,26 @@ export function FloatingChatbot() {
       stopWakeWordRecognition();
     }
     
-    // Clear input and start listening
+    // Reset transcript state for new input
     setInputValue('');
+    setTranscript('');
+    setProcessedTranscriptLength(0);
     setVoiceState('listening');
     
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
-        console.log('Starting main voice input');
+        console.log('Starting main voice input (mobile optimized)');
       } catch (e) {
         console.error('Failed to start voice input:', e);
-        const message = isMobile 
+        const message = isMobileDevice 
           ? 'Unable to start voice input. Please check your microphone permissions.'
           : 'Failed to start voice input. Please try again.';
         alert(message);
         setVoiceState('idle');
         // Restart wake word detection if main voice input failed
         if (isBackgroundListening) {
-          triggerWakeWordRestart();
+          setTimeout(() => triggerWakeWordRestart(), mobileSettings.restartDelay);
         }
       }
     }
@@ -423,12 +458,15 @@ export function FloatingChatbot() {
       }
     }
     
+    // Reset transcript state
+    setTranscript('');
+    setProcessedTranscriptLength(0);
     setVoiceState('idle');
     
-    // Restart wake word detection after stopping main voice input
+    // Restart wake word detection after stopping main voice input (mobile optimized)
     if (isBackgroundListening) {
       console.log('Restarting wake word detection after stopping voice input');
-      triggerWakeWordRestart();
+      setTimeout(() => triggerWakeWordRestart(), mobileSettings.restartDelay);
     }
   };
 
@@ -875,10 +913,30 @@ export function FloatingChatbot() {
                         )}
                       </Button>
                     )
-                  )}
-                </div>
-                
-                {showDashboardSelect && (
+                   )}
+                 </div>
+                 
+                 {/* Voice Input Preview - Mobile Optimized */}
+                 {voiceState === 'listening' && inputValue && (
+                   <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                     <div className="flex items-center gap-2 mb-1">
+                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                       <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                         {isMobileDevice ? 'Speaking...' : 'Listening...'}
+                       </span>
+                     </div>
+                     <p className="text-sm text-blue-800 dark:text-blue-200 bg-white dark:bg-blue-900/20 rounded px-2 py-1 border border-blue-100 dark:border-blue-800">
+                       {inputValue}
+                     </p>
+                     {isMobileDevice && (
+                       <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                         Tap the microphone to finish
+                       </p>
+                     )}
+                   </div>
+                 )}
+                 
+                 {showDashboardSelect && (
                   <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg">
                     <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">Select Dashboard:</p>
                     <div className="flex gap-2">
