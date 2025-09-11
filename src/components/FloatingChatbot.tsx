@@ -2,16 +2,40 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Bot, User, X, Minimize2, Maximize2, Plus, Mic, MicOff, RefreshCw } from "lucide-react";
+import {
+  MessageSquare,
+  Send,
+  Bot,
+  User,
+  X,
+  Minimize2,
+  Maximize2,
+  Plus,
+  Mic,
+  MicOff,
+  RefreshCw,
+} from "lucide-react";
 import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRoleStore } from "@/store/roleStore";
 import { dataService } from "@/services/dataService";
-import { ResponsiveContainer } from 'recharts';
-import { API_BASE_URL } from '@/config/api';
+import { ResponsiveContainer } from "recharts";
+import { API_BASE_URL } from "@/config/api";
 import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
 import { ChartConfig, EnhancedChartData } from "@/types/chart";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,22 +54,31 @@ interface ChartData {
 }
 
 // Convert chatbot chart data to unified format
-const convertChatbotChartData = (chart: ChartData): {
+const convertChatbotChartData = (
+  chart: ChartData
+): {
   data: EnhancedChartData[];
   config: ChartConfig;
 } => {
   // For tables, use raw data if available to preserve all columns
-  if (chart.chart_type === 'table' && chart.rawData) {
+  if (chart.chart_type === "table" && chart.rawData) {
     const config: ChartConfig = {
       xLabel: chart.xLabel,
       yLabel: chart.yLabel,
-      chartType: 'table',
-      colors: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'],
+      chartType: "table",
+      colors: [
+        "#3B82F6",
+        "#10B981",
+        "#EF4444",
+        "#F59E0B",
+        "#8B5CF6",
+        "#06B6D4",
+      ],
       showGrid: true,
     };
     return { data: chart.rawData, config };
   }
-  
+
   // For charts, use the transformed data
   const data = chart.x.map((label, idx) => ({
     name: label,
@@ -56,8 +89,8 @@ const convertChatbotChartData = (chart: ChartData): {
   const config: ChartConfig = {
     xLabel: chart.xLabel,
     yLabel: chart.yLabel,
-    chartType: chart.chart_type as 'line' | 'bar' | 'area' | 'pie' | 'table',
-    colors: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4'],
+    chartType: chart.chart_type as "line" | "bar" | "area" | "pie" | "table",
+    colors: ["#3B82F6", "#10B981", "#EF4444", "#F59E0B", "#8B5CF6", "#06B6D4"],
     showGrid: true,
   };
 
@@ -71,23 +104,25 @@ export function FloatingChatbot() {
   const { addWidget } = useWidgetStore();
   const { getAccessibleModules } = useRoleStore();
   const isMobile = useIsMobile();
-  
+
   // Use session-only chat store - NO localStorage persistence
-  const chatStore = useStableChatStore(session?.user?.user_id?.toString() || null);
-  
+  const chatStore = useStableChatStore(
+    session?.user?.user_id?.toString() || null
+  );
+
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedDashboard, setSelectedDashboard] = useState<string>('');
+  const [selectedDashboard, setSelectedDashboard] = useState<string>("");
   const [showDashboardSelect, setShowDashboardSelect] = useState(false);
   const [pendingChart, setPendingChart] = useState<ChartData | null>(null);
   const [showTitleDialog, setShowTitleDialog] = useState(false);
-  const [tableTitle, setTableTitle] = useState('');
-  
+  const [tableTitle, setTableTitle] = useState("");
+
   // Enhanced voice recognition states
-  type VoiceState = 'idle' | 'listening' | 'processing' | 'completing';
-  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  type VoiceState = "idle" | "listening" | "processing" | "completing";
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [isBackgroundListening, setIsBackgroundListening] = useState(false);
   const [wakeWordRestartTrigger, setWakeWordRestartTrigger] = useState(0);
   const recognitionRef = useRef<any>(null);
@@ -98,14 +133,14 @@ export function FloatingChatbot() {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatStore.messages]);
 
   // Cleanup voice states when chat closes
   useEffect(() => {
     if (!isOpen) {
-      setVoiceState('idle');
-      setInputValue('');
+      setVoiceState("idle");
+      setInputValue("");
       if (autoSendTimeoutRef.current) {
         clearTimeout(autoSendTimeoutRef.current);
       }
@@ -117,20 +152,94 @@ export function FloatingChatbot() {
 
   // Initialize speech recognition - only once on mount
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
+
+      // Main speech recognition for voice input
+      // if (!recognitionRef.current) {
+      //   recognitionRef.current = new SpeechRecognition();
+      //   recognitionRef.current.continuous = true;
+      //   recognitionRef.current.interimResults = true;
+      //   recognitionRef.current.lang = 'en-US';
+
+      //   recognitionRef.current.onresult = (event: any) => {
+      //     let finalTranscript = '';
+      //     let interimTranscript = '';
+
+      //     for (let i = 0; i < event.results.length; i++) {
+      //       const transcript = event.results[i][0].transcript;
+      //       if (event.results[i].isFinal) {
+      //         finalTranscript += transcript;
+      //       } else {
+      //         interimTranscript += transcript;
+      //       }
+      //     }
+
+      //     const fullTranscript = (finalTranscript + interimTranscript).trim();
+
+      //     if (fullTranscript) {
+      //       setInputValue(fullTranscript);
+
+      //       if (finalTranscript.trim()) {
+      //         console.log('Voice input complete:', finalTranscript);
+      //         setVoiceState('processing');
+
+      //         // Stop recognition immediately after final transcript
+      //         if (recognitionRef.current) {
+      //           try {
+      //             recognitionRef.current.stop();
+      //           } catch (e) {
+      //             console.log('Recognition already stopped');
+      //           }
+      //         }
+
+      //         // Auto-send after shorter delay
+      //         if (autoSendTimeoutRef.current) {
+      //           clearTimeout(autoSendTimeoutRef.current);
+      //         }
+      //         autoSendTimeoutRef.current = setTimeout(() => {
+      //           console.log('Auto-sending voice message:', finalTranscript);
+      //           handleSendMessage(true, finalTranscript);
+      //         }, 800);
+      //       }
+      //     }
+      //   };
+
+      //   recognitionRef.current.onstart = () => {
+      //     console.log('Main voice input started');
+      //     setVoiceState('listening');
+      //   };
+
+      //   recognitionRef.current.onend = () => {
+      //     console.log('Main voice input ended');
+      //     // Don't change state here - let auto-send or manual stop handle it
+      //   };
+
+      //   recognitionRef.current.onerror = (event: any) => {
+      //     console.error('Voice recognition error:', event.error);
+      //     setVoiceState('idle');
+
+      //     if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      //       const message = isMobile
+      //         ? 'Microphone permission denied. Please enable microphone access for voice input.'
+      //         : 'Microphone access denied. Please allow microphone permissions and try again.';
+      //       alert(message);
+      //     }
+      //   };
+      // }
       // Main speech recognition for voice input
       if (!recognitionRef.current) {
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = true;
+        recognitionRef.current.continuous = false; // better on mobile (one phrase per session)
         recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'en-US';
-        
+        recognitionRef.current.lang = "en-US";
+
         recognitionRef.current.onresult = (event: any) => {
-          let finalTranscript = '';
-          let interimTranscript = '';
-          
+          let finalTranscript = "";
+          let interimTranscript = "";
+
           for (let i = 0; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
@@ -139,113 +248,198 @@ export function FloatingChatbot() {
               interimTranscript += transcript;
             }
           }
-          
-          const fullTranscript = (finalTranscript + interimTranscript).trim();
-          
-          if (fullTranscript) {
-            setInputValue(fullTranscript);
-            
-            if (finalTranscript.trim()) {
-              console.log('Voice input complete:', finalTranscript);
-              setVoiceState('processing');
-              
-              // Stop recognition immediately after final transcript
-              if (recognitionRef.current) {
-                try {
-                  recognitionRef.current.stop();
-                } catch (e) {
-                  console.log('Recognition already stopped');
-                }
-              }
-              
-              // Auto-send after shorter delay
-              if (autoSendTimeoutRef.current) {
-                clearTimeout(autoSendTimeoutRef.current);
-              }
-              autoSendTimeoutRef.current = setTimeout(() => {
-                console.log('Auto-sending voice message:', finalTranscript);
-                handleSendMessage(true, finalTranscript);
-              }, 800);
+
+          // Show interim separately (typing effect)
+          if (interimTranscript) {
+            setInputValue(interimTranscript.trim());
+          }
+
+          // Only commit when final is ready (fixes mobile duplication)
+          if (finalTranscript.trim()) {
+            console.log("Voice input complete:", finalTranscript);
+            setInputValue(finalTranscript.trim());
+            setVoiceState("processing");
+
+            // Stop recognition immediately after final transcript
+            try {
+              recognitionRef.current?.stop();
+            } catch {
+              console.log("Recognition already stopped");
             }
+
+            // Auto-send after short delay
+            if (autoSendTimeoutRef.current) {
+              clearTimeout(autoSendTimeoutRef.current);
+            }
+            autoSendTimeoutRef.current = setTimeout(() => {
+              console.log("Auto-sending voice message:", finalTranscript);
+              handleSendMessage(true, finalTranscript.trim());
+            }, 800);
           }
         };
-        
+
         recognitionRef.current.onstart = () => {
-          console.log('Main voice input started');
-          setVoiceState('listening');
+          console.log("Main voice input started");
+          setVoiceState("listening");
         };
-        
+
         recognitionRef.current.onend = () => {
-          console.log('Main voice input ended');
-          // Don't change state here - let auto-send or manual stop handle it
+          console.log("Main voice input ended");
+          // Restart wake word detection after main input ends
+          if (isBackgroundListening) {
+            console.log("Restarting wake word after main input");
+            triggerWakeWordRestart();
+          }
         };
-        
+
         recognitionRef.current.onerror = (event: any) => {
-          console.error('Voice recognition error:', event.error);
-          setVoiceState('idle');
-          
-          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            const message = isMobile 
-              ? 'Microphone permission denied. Please enable microphone access for voice input.'
-              : 'Microphone access denied. Please allow microphone permissions and try again.';
+          console.error("Voice recognition error:", event.error);
+          setVoiceState("idle");
+
+          if (
+            event.error === "not-allowed" ||
+            event.error === "service-not-allowed"
+          ) {
+            const message = isMobile
+              ? "Microphone permission denied. Please enable microphone access for voice input."
+              : "Microphone access denied. Please allow microphone permissions and try again.";
             alert(message);
+          }
+
+          // Restart wake word even if error happens
+          if (isBackgroundListening) {
+            triggerWakeWordRestart();
           }
         };
       }
 
       // Background wake word recognition
+      // if (!wakeWordRecognitionRef.current) {
+      //   wakeWordRecognitionRef.current = new SpeechRecognition();
+      //   wakeWordRecognitionRef.current.continuous = true;
+      //   wakeWordRecognitionRef.current.interimResults = false;
+      //   wakeWordRecognitionRef.current.lang = 'en-US';
+
+      //   wakeWordRecognitionRef.current.onresult = (event: any) => {
+      //     const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+      //     console.log('Wake word heard:', transcript);
+
+      //     // More flexible wake word detection
+      //     if (transcript.includes('hey agent') || transcript.includes('agent')) {
+      //       console.log('🎯 Wake word "Hey Agent" detected! Opening chatbot...');
+
+      //       if (!isOpen) {
+      //         setIsOpen(true);
+      //         setTimeout(() => {
+      //           startVoiceInput();
+      //         }, 500);
+      //       } else {
+      //         startVoiceInput();
+      //       }
+      //     }
+      //   };
+
+      //   wakeWordRecognitionRef.current.onend = () => {
+      //     console.log('🔄 Wake word recognition session ended, restarting...');
+      //     // Always restart for continuous listening like other voice assistants
+      //     setTimeout(() => {
+      //       if (isBackgroundListening && wakeWordRecognitionRef.current) {
+      //         triggerWakeWordRestart();
+      //       }
+      //     }, 500);
+      //   };
+
+      //   wakeWordRecognitionRef.current.onerror = (event: any) => {
+      //     console.log('⚠️ Wake word recognition error:', event.error);
+
+      //     // Handle different error types appropriately
+      //     if (event.error === 'no-speech') {
+      //       // No speech is normal, just continue listening
+      //       console.log('No speech detected, continuing to listen...');
+      //     } else if (event.error === 'aborted') {
+      //       // Aborted is usually manual stop, don't restart immediately
+      //       console.log('Recognition aborted, will restart on next cycle');
+      //     } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      //       // Permission issues
+      //       console.error('Microphone permission denied for wake word');
+      //       setIsBackgroundListening(false);
+      //     } else {
+      //       // Other errors, restart after delay
+      //       console.log('Error occurred, will restart wake word detection');
+      //       setTimeout(() => {
+      //         if (isBackgroundListening && wakeWordRecognitionRef.current) {
+      //           triggerWakeWordRestart();
+      //         }
+      //       }, 1000);
+      //     }
+      //   };
+      // }
+      // Background wake word recognition
       if (!wakeWordRecognitionRef.current) {
         wakeWordRecognitionRef.current = new SpeechRecognition();
         wakeWordRecognitionRef.current.continuous = true;
-        wakeWordRecognitionRef.current.interimResults = false;
-        wakeWordRecognitionRef.current.lang = 'en-US';
-        
+        wakeWordRecognitionRef.current.interimResults = true; // use interim but act only on final
+        wakeWordRecognitionRef.current.lang = "en-US";
+
         wakeWordRecognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-          console.log('Wake word heard:', transcript);
-          
-          // More flexible wake word detection
-          if (transcript.includes('hey agent') || transcript.includes('agent')) {
-            console.log('🎯 Wake word "Hey Agent" detected! Opening chatbot...');
-            
-            if (!isOpen) {
-              setIsOpen(true);
-              setTimeout(() => {
+          let finalTranscript = "";
+
+          for (let i = 0; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          if (finalTranscript) {
+            const transcript = finalTranscript.toLowerCase().trim();
+            console.log("Wake word heard:", transcript);
+
+            // More flexible wake word detection
+            if (
+              transcript.includes("hey agent") ||
+              transcript.includes("agent")
+            ) {
+              console.log(
+                '🎯 Wake word "Hey Agent" detected! Opening chatbot...'
+              );
+
+              if (!isOpen) {
+                setIsOpen(true);
+                setTimeout(() => {
+                  startVoiceInput();
+                }, 500);
+              } else {
                 startVoiceInput();
-              }, 500);
-            } else {
-              startVoiceInput();
+              }
             }
           }
         };
-        
+
         wakeWordRecognitionRef.current.onend = () => {
-          console.log('🔄 Wake word recognition session ended, restarting...');
-          // Always restart for continuous listening like other voice assistants
+          console.log("🔄 Wake word recognition session ended, restarting...");
+          // Always restart for continuous listening
           setTimeout(() => {
             if (isBackgroundListening && wakeWordRecognitionRef.current) {
               triggerWakeWordRestart();
             }
           }, 500);
         };
-        
+
         wakeWordRecognitionRef.current.onerror = (event: any) => {
-          console.log('⚠️ Wake word recognition error:', event.error);
-          
-          // Handle different error types appropriately
-          if (event.error === 'no-speech') {
-            // No speech is normal, just continue listening
-            console.log('No speech detected, continuing to listen...');
-          } else if (event.error === 'aborted') {
-            // Aborted is usually manual stop, don't restart immediately
-            console.log('Recognition aborted, will restart on next cycle');
-          } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            // Permission issues
-            console.error('Microphone permission denied for wake word');
+          console.log("⚠️ Wake word recognition error:", event.error);
+
+          if (event.error === "no-speech") {
+            console.log("No speech detected, continuing...");
+          } else if (event.error === "aborted") {
+            console.log("Recognition aborted, will restart later");
+          } else if (
+            event.error === "not-allowed" ||
+            event.error === "service-not-allowed"
+          ) {
+            console.error("Microphone permission denied for wake word");
             setIsBackgroundListening(false);
           } else {
-            // Other errors, restart after delay
-            console.log('Error occurred, will restart wake word detection');
+            console.log("Error occurred, restarting wake word detection");
             setTimeout(() => {
               if (isBackgroundListening && wakeWordRecognitionRef.current) {
                 triggerWakeWordRestart();
@@ -278,7 +472,7 @@ export function FloatingChatbot() {
 
   // Start wake word detection on mount
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       setIsBackgroundListening(true);
     }
   }, []);
@@ -286,25 +480,25 @@ export function FloatingChatbot() {
   // Handle wake word restart trigger with better reliability
   useEffect(() => {
     if (wakeWordRestartTrigger > 0 && isBackgroundListening) {
-      console.log('🔄 Wake word restart triggered, restarting detection...');
-      
+      console.log("🔄 Wake word restart triggered, restarting detection...");
+
       // Ensure clean restart with proper timing
       const restartTimeout = setTimeout(() => {
         if (wakeWordRecognitionRef.current && isBackgroundListening) {
           startWakeWordRecognition();
         }
       }, 500); // Longer delay for more reliable restart
-      
+
       return () => clearTimeout(restartTimeout);
     }
   }, [wakeWordRestartTrigger, isBackgroundListening]);
 
   const startWakeWordRecognition = () => {
     if (!wakeWordRecognitionRef.current || !isBackgroundListening) {
-      console.log('Wake word recognition not available or disabled');
+      console.log("Wake word recognition not available or disabled");
       return;
     }
-    
+
     try {
       // Stop any existing recognition first
       try {
@@ -312,30 +506,35 @@ export function FloatingChatbot() {
       } catch (e) {
         // Ignore stop errors
       }
-      
+
       // Start with proper delay to ensure clean state
       setTimeout(() => {
         if (wakeWordRecognitionRef.current && isBackgroundListening) {
           try {
             wakeWordRecognitionRef.current.start();
-            console.log('🎤 Wake word detection started - listening for "Hey Agent"');
+            console.log(
+              '🎤 Wake word detection started - listening for "Hey Agent"'
+            );
           } catch (startError: any) {
             // Handle "already started" error gracefully
-            if (startError.name === 'InvalidStateError') {
-              console.log('Wake word detection already running');
+            if (startError.name === "InvalidStateError") {
+              console.log("Wake word detection already running");
               return;
             }
-            
-            console.error('Failed to start wake word detection:', startError);
-            
+
+            console.error("Failed to start wake word detection:", startError);
+
             // Retry after delay for network or temporary issues
             setTimeout(() => {
               if (wakeWordRecognitionRef.current && isBackgroundListening) {
                 try {
                   wakeWordRecognitionRef.current.start();
-                  console.log('🎤 Wake word detection started on retry');
+                  console.log("🎤 Wake word detection started on retry");
                 } catch (retryError) {
-                  console.error('Wake word detection retry failed:', retryError);
+                  console.error(
+                    "Wake word detection retry failed:",
+                    retryError
+                  );
                   // Try again after longer delay
                   setTimeout(() => triggerWakeWordRestart(), 3000);
                 }
@@ -345,62 +544,64 @@ export function FloatingChatbot() {
         }
       }, 200);
     } catch (e) {
-      console.error('Wake word detection setup error:', e);
+      console.error("Wake word detection setup error:", e);
     }
   };
 
   const stopWakeWordRecognition = () => {
     if (!wakeWordRecognitionRef.current) return;
-    
+
     try {
       wakeWordRecognitionRef.current.stop();
-      console.log('Wake word detection stopped');
+      console.log("Wake word detection stopped");
     } catch (e) {
-      console.log('Could not stop wake word detection:', e);
+      console.log("Could not stop wake word detection:", e);
     }
   };
 
   const triggerWakeWordRestart = () => {
     if (isBackgroundListening) {
-      console.log('Triggering wake word restart via state...');
-      setWakeWordRestartTrigger(prev => prev + 1);
+      console.log("Triggering wake word restart via state...");
+      setWakeWordRestartTrigger((prev) => prev + 1);
     }
   };
 
   const startVoiceInput = () => {
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      const message = isMobile 
-        ? 'Voice input is not available on your device. Please type your message.'
-        : 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.';
+    if (
+      !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)
+    ) {
+      const message = isMobile
+        ? "Voice input is not available on your device. Please type your message."
+        : "Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.";
       alert(message);
       return;
     }
-    
-    if (voiceState !== 'idle') {
+
+    if (voiceState !== "idle") {
       stopVoiceInput();
       return;
     }
-    
+
     // Stop wake word recognition while using main voice input
     if (wakeWordRecognitionRef.current) {
       stopWakeWordRecognition();
     }
-    
+
     // Clear input and start listening
-    setInputValue('');
-    setVoiceState('listening');
-    
+    setInputValue("");
+    setVoiceState("listening");
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
-        console.log('Starting main voice input');
+        console.log("Starting main voice input");
       } catch (e) {
-        console.error('Failed to start voice input:', e);
-        const message = isMobile 
-          ? 'Unable to start voice input. Please check your microphone permissions.'
-          : 'Failed to start voice input. Please try again.';
+        console.error("Failed to start voice input:", e);
+        const message = isMobile
+          ? "Unable to start voice input. Please check your microphone permissions."
+          : "Failed to start voice input. Please try again.";
         alert(message);
-        setVoiceState('idle');
+        setVoiceState("idle");
         // Restart wake word detection if main voice input failed
         if (isBackgroundListening) {
           triggerWakeWordRestart();
@@ -413,33 +614,33 @@ export function FloatingChatbot() {
     if (autoSendTimeoutRef.current) {
       clearTimeout(autoSendTimeoutRef.current);
     }
-    
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-        console.log('Stopping main voice input');
+        console.log("Stopping main voice input");
       } catch (e) {
-        console.error('Failed to stop voice input:', e);
+        console.error("Failed to stop voice input:", e);
       }
     }
-    
-    setVoiceState('idle');
-    
+
+    setVoiceState("idle");
+
     // Restart wake word detection after stopping main voice input
     if (isBackgroundListening) {
-      console.log('Restarting wake word detection after stopping voice input');
+      console.log("Restarting wake word detection after stopping voice input");
       triggerWakeWordRestart();
     }
   };
 
   const handleAddToDashboard = (chart: ChartData) => {
     // If it's a table, show title dialog first
-    if (chart.chart_type === 'table') {
+    if (chart.chart_type === "table") {
       setPendingChart(chart);
       setShowTitleDialog(true);
       return;
     }
-    
+
     const accessibleModules = getAccessibleModules();
     if (accessibleModules.length === 1) {
       // If user has access to only one dashboard, add directly
@@ -453,16 +654,16 @@ export function FloatingChatbot() {
 
   const handleTitleConfirm = () => {
     if (!tableTitle.trim() || !pendingChart) return;
-    
+
     // Update the chart with the provided title
     const updatedChart = {
       ...pendingChart,
-      title: tableTitle.trim()
+      title: tableTitle.trim(),
     };
-    
+
     setShowTitleDialog(false);
-    setTableTitle('');
-    
+    setTableTitle("");
+
     const accessibleModules = getAccessibleModules();
     if (accessibleModules.length === 1) {
       // If user has access to only one dashboard, add directly
@@ -476,14 +677,17 @@ export function FloatingChatbot() {
 
   const handleTitleCancel = () => {
     setShowTitleDialog(false);
-    setTableTitle('');
+    setTableTitle("");
     setPendingChart(null);
   };
 
-  const confirmAddToDashboard = async (chart: ChartData, dashboardId: string) => {
+  const confirmAddToDashboard = async (
+    chart: ChartData,
+    dashboardId: string
+  ) => {
     try {
       if (!session?.user.tenant_id) {
-        console.error('No tenant session found');
+        console.error("No tenant session found");
         return;
       }
 
@@ -497,45 +701,49 @@ export function FloatingChatbot() {
         span: 1,
         position: { x: 0, y: 0 },
         size: { width: 300, height: 350 },
-        sqlQuery: chart.sqlQuery || `SELECT '${chart.xLabel}' as name, ${chart.y[0]} as value`,
+        sqlQuery:
+          chart.sqlQuery ||
+          `SELECT '${chart.xLabel}' as name, ${chart.y[0]} as value`,
         tableName: chart.tableName, // Include table name for table widgets
         config: {
-          dataSource: 'chatbot',
+          dataSource: "chatbot",
           chartData: data,
           chartConfig: config, // Enhanced configuration with labels
-        }
+        },
       };
-      
+
       await addWidget(newWidget, session.user.tenant_id, dashboardId);
-      
+
       // Show success message
-      const dashboardName = getAccessibleModules().find(m => m.id === dashboardId)?.name || dashboardId;
-        const successMessage: Message = {
-          id: (Date.now() + 2).toString(),
-          type: 'bot',
-          content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard with proper axis labels!`,
-          timestamp: new Date(),
-          chart: undefined,
-        };
-        
-        chatStore.addMessage(successMessage);
-      
+      const dashboardName =
+        getAccessibleModules().find((m) => m.id === dashboardId)?.name ||
+        dashboardId;
+      const successMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        type: "bot",
+        content: `Chart "${chart.title}" has been added to your ${dashboardName} dashboard with proper axis labels!`,
+        timestamp: new Date(),
+        chart: undefined,
+      };
+
+      chatStore.addMessage(successMessage);
+
       // Reset state
       setShowDashboardSelect(false);
       setPendingChart(null);
-      setSelectedDashboard('');
+      setSelectedDashboard("");
     } catch (error) {
-      console.error('Error adding chart to dashboard:', error);
-      
-        const errorMessage: Message = {
-          id: (Date.now() + 3).toString(),
-          type: 'bot',
-          content: '❌ Failed to add chart to dashboard. Please try again.',
-          timestamp: new Date(),
-          chart: undefined,
-        };
-        
-        chatStore.addMessage(errorMessage);
+      console.error("Error adding chart to dashboard:", error);
+
+      const errorMessage: Message = {
+        id: (Date.now() + 3).toString(),
+        type: "bot",
+        content: "❌ Failed to add chart to dashboard. Please try again.",
+        timestamp: new Date(),
+        chart: undefined,
+      };
+
+      chatStore.addMessage(errorMessage);
     }
   };
 
@@ -544,18 +752,21 @@ export function FloatingChatbot() {
     chatStore.clearChat();
   };
 
-  const handleSendMessage = async (isVoiceMessage = false, messageText?: string) => {
+  const handleSendMessage = async (
+    isVoiceMessage = false,
+    messageText?: string
+  ) => {
     if (isLoading || !session) return;
-    
+
     const message = messageText || inputValue.trim();
     if (!message) {
-      console.log('No message to send:', { messageText, inputValue });
+      console.log("No message to send:", { messageText, inputValue });
       return;
     }
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      type: 'user',
+      type: "user",
       content: message,
       timestamp: new Date(),
       chart: undefined,
@@ -563,27 +774,27 @@ export function FloatingChatbot() {
 
     // Use chat store instead of local state
     chatStore.addMessage(userMessage);
-    setInputValue('');
+    setInputValue("");
     setIsLoading(true);
-    
+
     // Handle voice completion - delay state change until after processing
     if (isVoiceMessage) {
-      setVoiceState('completing');
+      setVoiceState("completing");
       if (autoSendTimeoutRef.current) {
         clearTimeout(autoSendTimeoutRef.current);
       }
     }
-    
+
     try {
       const res = await fetch(`${API_BASE_URL}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           prompt: userMessage.content,
           user_id: session.user.user_id,
           tenant_name: session.user.tenant_name,
           role_name: session.user.role_name,
-          token: session.token
+          token: session.token,
         }),
       });
 
@@ -591,48 +802,61 @@ export function FloatingChatbot() {
       console.log("Received response:", data);
 
       let chart: ChartData | undefined;
-      let messageContent = '';
-      
+      let messageContent = "";
+
       // Handle different response types
-      if (data.response?.chart_type && data.response?.x_axis && data.response?.y_axis) {
+      if (
+        data.response?.chart_type &&
+        data.response?.x_axis &&
+        data.response?.y_axis
+      ) {
         // Chart response
         chart = {
           chart_type: data.response.chart_type,
-          title: data.response.chart_type === 'table' 
-            ? "Data Table" 
-            : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+          title:
+            data.response.chart_type === "table"
+              ? "Data Table"
+              : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
           x: data.response.data.map((row: any) => row[data.response.x_axis]),
           y: data.response.data.map((row: any) => row[data.response.y_axis]),
           xLabel: data.response.x_axis,
           yLabel: data.response.y_axis,
-          sqlQuery: data.response.sql_query || `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`,
-          rawData: data.response.chart_type === 'table' ? data.response.data : undefined, // Preserve raw data for tables
-          tableName: data.response.table_name // Include table name for table charts
+          sqlQuery:
+            data.response.sql_query ||
+            `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`,
+          rawData:
+            data.response.chart_type === "table"
+              ? data.response.data
+              : undefined, // Preserve raw data for tables
+          tableName: data.response.table_name, // Include table name for table charts
         };
-        messageContent = data.response.chart_type === 'table' 
-          ? `📋 Here's your data table`
-          : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
+        messageContent =
+          data.response.chart_type === "table"
+            ? `📋 Here's your data table`
+            : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
       } else if (data.response?.text && data.response?.data) {
         // Text response with data
-        messageContent = `${data.response.text}\n\n📋 Data Summary: ${data.response.summary || `Found ${data.response.data.length} rows`}`;
+        messageContent = `${data.response.text}\n\n📋 Data Summary: ${
+          data.response.summary || `Found ${data.response.data.length} rows`
+        }`;
       } else if (data.response?.text) {
         // Text response without data (including single value responses)
         messageContent = data.response.text;
       } else if (data.response?.value) {
         // Single value response (legacy format)
         messageContent = `📊 Result: ${data.response.value}`;
-      } else if (typeof data.response === 'string') {
+      } else if (typeof data.response === "string") {
         // Plain text response
         messageContent = data.response;
       } else {
         // Fallback
-        messageContent = 'Something went wrong. Please try again with another query, and if error presists please contact Admin.';
+        messageContent =
+          "Something went wrong. Please try again with another query, and if error presists please contact Admin.";
       }
-      
-      
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'bot',
+        type: "bot",
         content: messageContent,
         timestamp: new Date(),
         chart,
@@ -649,11 +873,11 @@ export function FloatingChatbot() {
       setIsLoading(false);
       // Complete voice state transition after message processing
       if (isVoiceMessage) {
-        console.log('Voice message sent successfully');
-        setVoiceState('idle');
+        console.log("Voice message sent successfully");
+        setVoiceState("idle");
         // Immediately restart wake word detection after completing voice message
         if (isBackgroundListening) {
-          console.log('Restarting wake word detection after voice message');
+          console.log("Restarting wake word detection after voice message");
           triggerWakeWordRestart();
         }
       }
@@ -664,36 +888,38 @@ export function FloatingChatbot() {
     try {
       const authStore = useAuthStore.getState();
       const session = authStore.session;
-      console.log("Session user_id: ",session.user.user_id)
-      console.log("prompt: ",userPrompt)
-      console.log("response: ",apiResponse)
-      
+      console.log("Session user_id: ", session.user.user_id);
+      console.log("prompt: ", userPrompt);
+      console.log("response: ", apiResponse);
+
       if (!session) return;
 
       await fetch(`${API_BASE_URL}/save-response`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           user_id: session.user.user_id,
           prompt: userPrompt,
           // response: apiResponse.toString()
-          response: typeof apiResponse === 'object' ? JSON.stringify(apiResponse) : apiResponse
+          response:
+            typeof apiResponse === "object"
+              ? JSON.stringify(apiResponse)
+              : apiResponse,
         }),
       });
     } catch (error) {
-      console.error('Error saving conversation:', error);
+      console.error("Error saving conversation:", error);
     }
   };
 
-
   const renderChart = (chart: ChartData) => {
     const { data, config } = convertChatbotChartData(chart);
-    
+
     return (
       <UnifiedChartRenderer
-        type={chart.chart_type as 'line' | 'bar' | 'area' | 'pie' | 'table'}
+        type={chart.chart_type as "line" | "bar" | "area" | "pie" | "table"}
         data={data}
         config={config}
         isLoading={false}
@@ -705,7 +931,7 @@ export function FloatingChatbot() {
   };
 
   return (
-    <div className={`fixed bottom-6 z-50 ${isMobile ? 'right-4' : 'right-6'}`}>
+    <div className={`fixed bottom-6 z-50 ${isMobile ? "right-4" : "right-6"}`}>
       {!isOpen ? (
         <Button
           onClick={() => setIsOpen(true)}
@@ -715,7 +941,17 @@ export function FloatingChatbot() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         </Button>
       ) : (
-        <Card className={`${isMobile ? 'w-full' : 'w-96'} shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${isMinimized ? 'h-16' : isMobile ? 'h-[80vh] max-h-[600px]' : 'h-[600px]'}`}>
+        <Card
+          className={`${
+            isMobile ? "w-full" : "w-96"
+          } shadow-xl flex flex-col transition-all duration-300 bg-card border-border ${
+            isMinimized
+              ? "h-16"
+              : isMobile
+              ? "h-[80vh] max-h-[600px]"
+              : "h-[600px]"
+          }`}
+        >
           {/* Fixed Header */}
           <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-between flex-shrink-0 relative z-10">
             <div className="flex items-center gap-2">
@@ -728,19 +964,33 @@ export function FloatingChatbot() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={clearChatHistory}
                 className="text-white p-1"
                 title="Clear chat history"
               >
                 <RefreshCw className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setIsMinimized(!isMinimized)} className="text-white p-0">
-                {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="text-white p-0"
+              >
+                {isMinimized ? (
+                  <Maximize2 className="h-3 w-3" />
+                ) : (
+                  <Minimize2 className="h-3 w-3" />
+                )}
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="text-white p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(false)}
+                className="text-white p-0"
+              >
                 <X className="h-3 w-3" />
               </Button>
             </div>
@@ -752,55 +1002,86 @@ export function FloatingChatbot() {
               <div className="flex-1 p-3 overflow-y-auto bg-gray-50/50 dark:bg-background/50">
                 <div className="space-y-3">
                   {chatStore.messages.map((message) => (
-                     <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`${message.chart ? 'w-full' : 'max-w-[85%]'} ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
-                         {message.type === 'user' ? (
-                           // User message bubble - SAP Joule style
-                            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm">
-                              <p className="text-xs font-medium leading-relaxed">{message.content}</p>
-                              <p className="text-xs text-blue-100 mt-1 opacity-80">{message.timestamp.toLocaleTimeString()}</p>
-                            </div>
-                         ) : (
-            // Bot message - clean style without avatar
-                             <div className="w-full">
-                {message.content.trim() && (
-                  <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
-                    <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    {!message.chart && (
-                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">{message.timestamp.toLocaleTimeString()}</p>
-                    )}
-                  </div>
-                )}
-                               {message.chart && (
-                                  <div className="mt-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-3 shadow-sm">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">{message.chart.title}</h4>
-                                      <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                                    </div>
-                                    <div className={`w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 ${message.chart.chart_type === 'table' ? 'overflow-auto' : 'overflow-hidden'}`}>
-                                       <div className="w-full h-full">
-                                         {renderChart(message.chart)}
-                                       </div>
-                                   </div>
-                                   <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-border">
-                                     <p className="text-xs text-gray-500 dark:text-muted-foreground opacity-70">{message.timestamp.toLocaleTimeString()}</p>
-                                     <Button 
-                                       size="sm" 
-                                       onClick={() => handleAddToDashboard(message.chart!)}
-                                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full h-7"
-                                     >
-                                       <Plus className="h-3 w-3 mr-1" />
-                                       Add to Dashboard
-                                     </Button>
-                                   </div>
-                                 </div>
-                               )}
-                            </div>
-                          )}
-                        </div>
+                    <div
+                      key={message.id}
+                      className={`flex ${
+                        message.type === "user"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`${
+                          message.chart ? "w-full" : "max-w-[85%]"
+                        } ${message.type === "user" ? "order-2" : "order-1"}`}
+                      >
+                        {message.type === "user" ? (
+                          // User message bubble - SAP Joule style
+                          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm">
+                            <p className="text-xs font-medium leading-relaxed">
+                              {message.content}
+                            </p>
+                            <p className="text-xs text-blue-100 mt-1 opacity-80">
+                              {message.timestamp.toLocaleTimeString()}
+                            </p>
+                          </div>
+                        ) : (
+                          // Bot message - clean style without avatar
+                          <div className="w-full">
+                            {message.content.trim() && (
+                              <div className="bg-white dark:bg-card border border-gray-100 dark:border-border rounded-2xl rounded-tl-md px-3 py-2 shadow-sm">
+                                <p className="text-xs text-gray-800 dark:text-card-foreground leading-relaxed whitespace-pre-wrap">
+                                  {message.content}
+                                </p>
+                                {!message.chart && (
+                                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">
+                                    {message.timestamp.toLocaleTimeString()}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            {message.chart && (
+                              <div className="mt-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl p-3 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="text-sm font-semibold text-gray-800 dark:text-card-foreground">
+                                    {message.chart.title}
+                                  </h4>
+                                  <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                                </div>
+                                <div
+                                  className={`w-full h-56 bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 ${
+                                    message.chart.chart_type === "table"
+                                      ? "overflow-auto"
+                                      : "overflow-hidden"
+                                  }`}
+                                >
+                                  <div className="w-full h-full">
+                                    {renderChart(message.chart)}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-border">
+                                  <p className="text-xs text-gray-500 dark:text-muted-foreground opacity-70">
+                                    {message.timestamp.toLocaleTimeString()}
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handleAddToDashboard(message.chart!)
+                                    }
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full h-7"
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add to Dashboard
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                   ))}
-                   {isLoading && (
+                    </div>
+                  ))}
+                  {isLoading && (
                     <div className="flex justify-start mb-4">
                       <div className="bg-gray-100 dark:bg-muted border dark:border-border p-3 rounded-lg">
                         <div className="flex space-x-1">
@@ -821,14 +1102,18 @@ export function FloatingChatbot() {
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && voiceState === 'idle' && handleSendMessage()}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      voiceState === "idle" &&
+                      handleSendMessage()
+                    }
                     placeholder="Ask me anything about your business data..."
                     className="flex-1 text-sm bg-white dark:bg-background border-gray-200 dark:border-border text-gray-900 dark:text-foreground"
-                    disabled={isLoading || voiceState === 'processing'}
+                    disabled={isLoading || voiceState === "processing"}
                   />
                   {/* Google Assistant-like button behavior */}
-                  {voiceState === 'idle' && !inputValue.trim() && !isLoading ? (
-                    <Button 
+                  {voiceState === "idle" && !inputValue.trim() && !isLoading ? (
+                    <Button
                       variant="gradient"
                       onClick={startVoiceInput}
                       className="relative transition-all duration-200"
@@ -838,8 +1123,8 @@ export function FloatingChatbot() {
                     >
                       <Mic className="h-4 w-4" />
                     </Button>
-                  ) : voiceState === 'listening' ? (
-                    <Button 
+                  ) : voiceState === "listening" ? (
+                    <Button
                       variant="gradient"
                       onClick={stopVoiceInput}
                       className="relative scale-110 animate-pulse bg-green-500 hover:bg-green-600"
@@ -849,8 +1134,8 @@ export function FloatingChatbot() {
                       <Mic className="h-4 w-4 text-white" />
                       <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
                     </Button>
-                  ) : voiceState === 'processing' ? (
-                    <Button 
+                  ) : voiceState === "processing" ? (
+                    <Button
                       variant="gradient"
                       disabled
                       className="relative"
@@ -860,8 +1145,10 @@ export function FloatingChatbot() {
                       <RefreshCw className="h-4 w-4 animate-spin" />
                     </Button>
                   ) : (
-                    inputValue.trim() && voiceState === 'idle' && !isLoading && (
-                      <Button 
+                    inputValue.trim() &&
+                    voiceState === "idle" &&
+                    !isLoading && (
+                      <Button
                         onClick={() => handleSendMessage(false)}
                         disabled={isLoading || !inputValue.trim()}
                         variant="gradient"
@@ -877,39 +1164,53 @@ export function FloatingChatbot() {
                     )
                   )}
                 </div>
-                
+
                 {showDashboardSelect && (
                   <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg">
-                    <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">Select Dashboard:</p>
+                    <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">
+                      Select Dashboard:
+                    </p>
                     <div className="flex gap-2">
-                      <Select value={selectedDashboard} onValueChange={setSelectedDashboard}>
+                      <Select
+                        value={selectedDashboard}
+                        onValueChange={setSelectedDashboard}
+                      >
                         <SelectTrigger className="flex-1 text-xs bg-white dark:bg-background border-gray-200 dark:border-border">
                           <SelectValue placeholder="Choose dashboard" />
                         </SelectTrigger>
                         <SelectContent>
                           {getAccessibleModules().map((module) => (
-                            <SelectItem key={module.id} value={module.id} className="text-xs">
+                            <SelectItem
+                              key={module.id}
+                              value={module.id}
+                              className="text-xs"
+                            >
                               {module.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button 
+                      <Button
                         variant="gradient"
-                        size="sm" 
-                        onClick={() => confirmAddToDashboard(pendingChart!, selectedDashboard)}
+                        size="sm"
+                        onClick={() =>
+                          confirmAddToDashboard(
+                            pendingChart!,
+                            selectedDashboard
+                          )
+                        }
                         disabled={!selectedDashboard}
                         className="text-xs"
                       >
                         Add
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => {
                           setShowDashboardSelect(false);
                           setPendingChart(null);
-                          setSelectedDashboard('');
+                          setSelectedDashboard("");
                         }}
                         className="text-xs"
                       >
@@ -923,7 +1224,7 @@ export function FloatingChatbot() {
           )}
         </Card>
       )}
-      
+
       {/* Table Title Dialog */}
       <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
         <DialogContent className="sm:max-w-[425px]">
@@ -934,7 +1235,9 @@ export function FloatingChatbot() {
             <Input
               value={tableTitle}
               onChange={(e) => setTableTitle(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && tableTitle.trim() && handleTitleConfirm()}
+              onKeyPress={(e) =>
+                e.key === "Enter" && tableTitle.trim() && handleTitleConfirm()
+              }
               placeholder="Enter a title for your table..."
               className="w-full"
               autoFocus
@@ -944,10 +1247,7 @@ export function FloatingChatbot() {
             <Button variant="outline" onClick={handleTitleCancel}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleTitleConfirm} 
-              disabled={!tableTitle.trim()}
-            >
+            <Button onClick={handleTitleConfirm} disabled={!tableTitle.trim()}>
               Add Table
             </Button>
           </DialogFooter>
