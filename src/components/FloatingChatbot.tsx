@@ -134,7 +134,7 @@ export function FloatingChatbot() {
       if (!recognitionRef.current) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
+        recognitionRef.current.interimResults = !isMobileDevice; // Disable interim results on mobile
         recognitionRef.current.lang = 'en-US';
         
         // Mobile-specific optimizations
@@ -147,46 +147,75 @@ export function FloatingChatbot() {
         }
         
         recognitionRef.current.onresult = (event: any) => {
-          let newFinalTranscript = '';
-          let interimTranscript = '';
-          
-          // Smart de-duplication: only process new final results
-          for (let i = processedTranscriptLength; i < event.results.length; i++) {
-            const transcriptSegment = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-              newFinalTranscript += transcriptSegment;
-            } else {
-              interimTranscript += transcriptSegment;
+          if (isMobileDevice) {
+            // Mobile: Simple final-only processing
+            let finalTranscript = '';
+            for (let i = 0; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+              }
             }
-          }
-          
-          // Build cumulative transcript
-          const currentTranscript = transcript + newFinalTranscript;
-          const displayTranscript = currentTranscript + interimTranscript;
-          
-          if (displayTranscript.trim()) {
-            setInputValue(displayTranscript.trim());
             
-            // Update processed length and transcript state
-            if (newFinalTranscript.trim()) {
-              setTranscript(currentTranscript);
-              setProcessedTranscriptLength(event.results.length);
+            if (finalTranscript.trim()) {
+              setInputValue(finalTranscript.trim());
+              setTranscript(finalTranscript);
+              console.log('Mobile voice input final:', finalTranscript);
               
-              console.log('Voice input progress:', currentTranscript);
-              
-              // Mobile-optimized pause detection
+              // Auto-send after longer pause on mobile
               if (autoSendTimeoutRef.current) {
                 clearTimeout(autoSendTimeoutRef.current);
               }
               
-              // Don't auto-send immediately on mobile - wait for longer pause
-              if (!isMobileDevice || currentTranscript.length > 10) {
+              autoSendTimeoutRef.current = setTimeout(() => {
+                if (voiceState === 'listening') {
+                  console.log('Auto-sending mobile voice message:', finalTranscript);
+                  setVoiceState('processing');
+                  
+                  if (recognitionRef.current) {
+                    try {
+                      recognitionRef.current.stop();
+                    } catch (e) {
+                      console.log('Recognition already stopped');
+                    }
+                  }
+                  
+                  handleSendMessage(true, finalTranscript);
+                }
+              }, 3000); // 3 second delay for mobile
+            }
+          } else {
+            // Desktop: Original logic with interim results
+            let newFinalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = processedTranscriptLength; i < event.results.length; i++) {
+              const transcriptSegment = event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                newFinalTranscript += transcriptSegment;
+              } else {
+                interimTranscript += transcriptSegment;
+              }
+            }
+            
+            const currentTranscript = transcript + newFinalTranscript;
+            const displayTranscript = currentTranscript + interimTranscript;
+            
+            if (displayTranscript.trim()) {
+              setInputValue(displayTranscript.trim());
+              
+              if (newFinalTranscript.trim()) {
+                setTranscript(currentTranscript);
+                setProcessedTranscriptLength(event.results.length);
+                
+                if (autoSendTimeoutRef.current) {
+                  clearTimeout(autoSendTimeoutRef.current);
+                }
+                
                 autoSendTimeoutRef.current = setTimeout(() => {
                   if (voiceState === 'listening') {
-                    console.log('Auto-sending voice message:', currentTranscript);
+                    console.log('Auto-sending desktop voice message:', currentTranscript);
                     setVoiceState('processing');
                     
-                    // Stop recognition before sending
                     if (recognitionRef.current) {
                       try {
                         recognitionRef.current.stop();
@@ -197,7 +226,7 @@ export function FloatingChatbot() {
                     
                     handleSendMessage(true, currentTranscript);
                   }
-                }, mobileSettings.autoSendDelay);
+                }, 800);
               }
             }
           }
@@ -881,7 +910,7 @@ export function FloatingChatbot() {
                       variant="gradient"
                       onClick={stopVoiceInput}
                       className="relative scale-110 animate-pulse bg-green-500 hover:bg-green-600"
-                      title="Listening... Click to stop"
+                      title={isMobileDevice ? "Recording... Tap to stop" : "Listening... Click to stop"}
                       size="sm"
                     >
                       <Mic className="h-4 w-4 text-white" />
@@ -892,7 +921,7 @@ export function FloatingChatbot() {
                       variant="gradient"
                       disabled
                       className="relative"
-                      title="Processing voice..."
+                      title={isMobileDevice ? "Processing..." : "Processing voice..."}
                       size="sm"
                     >
                       <RefreshCw className="h-4 w-4 animate-spin" />
