@@ -268,12 +268,29 @@ export function FloatingChatbot() {
             }
 
             // Auto-send after short delay
+            // if (autoSendTimeoutRef.current) {
+            //   clearTimeout(autoSendTimeoutRef.current);
+            // }
+            // autoSendTimeoutRef.current = setTimeout(() => {
+            //   console.log("Auto-sending voice message:", finalTranscript);
+            //   handleSendMessage(true, finalTranscript.trim());
+            // }, 800);
+
+            // Auto-send after short delay
             if (autoSendTimeoutRef.current) {
               clearTimeout(autoSendTimeoutRef.current);
             }
             autoSendTimeoutRef.current = setTimeout(() => {
               console.log("Auto-sending voice message:", finalTranscript);
               handleSendMessage(true, finalTranscript.trim());
+
+              // ✅ Restart wake word listener after message is sent
+              setTimeout(() => {
+                if (isBackgroundListening) {
+                  console.log("Restarting wake word after sending message");
+                  triggerWakeWordRestart();
+                }
+              }, 1000);
             }, 800);
           }
         };
@@ -396,8 +413,8 @@ export function FloatingChatbot() {
 
             // More flexible wake word detection
             if (
-              transcript.includes("hey agent") ||
-              transcript.includes("agent")
+              transcript.includes("hey i see") ||
+              transcript.includes("i see")
             ) {
               console.log(
                 '🎯 Wake word "Hey Agent" detected! Opening chatbot...'
