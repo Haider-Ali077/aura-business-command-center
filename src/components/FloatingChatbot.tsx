@@ -85,26 +85,16 @@ export function FloatingChatbot() {
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [tableTitle, setTableTitle] = useState('');
   
-  // Enhanced voice recognition states with mobile optimization
+  // Enhanced voice recognition states
   type VoiceState = 'idle' | 'listening' | 'processing' | 'completing';
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [isBackgroundListening, setIsBackgroundListening] = useState(false);
   const [wakeWordRestartTrigger, setWakeWordRestartTrigger] = useState(0);
-  const [transcript, setTranscript] = useState('');
-  const [processedTranscriptLength, setProcessedTranscriptLength] = useState(0);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);
   const restartTimeoutRef = useRef<any>(null);
   const autoSendTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Mobile-specific settings
-  const isMobileDevice = isMobile;
-  const mobileSettings = {
-    autoSendDelay: isMobileDevice ? 2500 : 800,
-    silenceTimeout: isMobileDevice ? 5000 : 3000,
-    restartDelay: isMobileDevice ? 1000 : 500,
-  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -134,100 +124,48 @@ export function FloatingChatbot() {
       if (!recognitionRef.current) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = !isMobileDevice; // Disable interim results on mobile
+        recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'en-US';
         
-        // Mobile-specific optimizations
-        if (isMobileDevice) {
-          recognitionRef.current.maxAlternatives = 1;
-          // Some mobile browsers support these settings
-          if ('grammars' in recognitionRef.current) {
-            recognitionRef.current.grammars = null;
-          }
-        }
-        
         recognitionRef.current.onresult = (event: any) => {
-          if (isMobileDevice) {
-            // Mobile: Simple final-only processing
-            let finalTranscript = '';
-            for (let i = 0; i < event.results.length; i++) {
-              if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-              }
+          let finalTranscript = '';
+          let interimTranscript = '';
+          
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
             }
+          }
+          
+          const fullTranscript = (finalTranscript + interimTranscript).trim();
+          
+          if (fullTranscript) {
+            setInputValue(fullTranscript);
             
             if (finalTranscript.trim()) {
-              setInputValue(finalTranscript.trim());
-              setTranscript(finalTranscript);
-              console.log('Mobile voice input final:', finalTranscript);
+              console.log('Voice input complete:', finalTranscript);
+              setVoiceState('processing');
               
-              // Auto-send after longer pause on mobile
+              // Stop recognition immediately after final transcript
+              if (recognitionRef.current) {
+                try {
+                  recognitionRef.current.stop();
+                } catch (e) {
+                  console.log('Recognition already stopped');
+                }
+              }
+              
+              // Auto-send after shorter delay
               if (autoSendTimeoutRef.current) {
                 clearTimeout(autoSendTimeoutRef.current);
               }
-              
               autoSendTimeoutRef.current = setTimeout(() => {
-                if (voiceState === 'listening') {
-                  console.log('Auto-sending mobile voice message:', finalTranscript);
-                  setVoiceState('processing');
-                  
-                  if (recognitionRef.current) {
-                    try {
-                      recognitionRef.current.stop();
-                    } catch (e) {
-                      console.log('Recognition already stopped');
-                    }
-                  }
-                  
-                  handleSendMessage(true, finalTranscript);
-                }
-              }, 3000); // 3 second delay for mobile
-            }
-          } else {
-            // Desktop: Original logic with interim results
-            let newFinalTranscript = '';
-            let interimTranscript = '';
-            
-            for (let i = processedTranscriptLength; i < event.results.length; i++) {
-              const transcriptSegment = event.results[i][0].transcript;
-              if (event.results[i].isFinal) {
-                newFinalTranscript += transcriptSegment;
-              } else {
-                interimTranscript += transcriptSegment;
-              }
-            }
-            
-            const currentTranscript = transcript + newFinalTranscript;
-            const displayTranscript = currentTranscript + interimTranscript;
-            
-            if (displayTranscript.trim()) {
-              setInputValue(displayTranscript.trim());
-              
-              if (newFinalTranscript.trim()) {
-                setTranscript(currentTranscript);
-                setProcessedTranscriptLength(event.results.length);
-                
-                if (autoSendTimeoutRef.current) {
-                  clearTimeout(autoSendTimeoutRef.current);
-                }
-                
-                autoSendTimeoutRef.current = setTimeout(() => {
-                  if (voiceState === 'listening') {
-                    console.log('Auto-sending desktop voice message:', currentTranscript);
-                    setVoiceState('processing');
-                    
-                    if (recognitionRef.current) {
-                      try {
-                        recognitionRef.current.stop();
-                      } catch (e) {
-                        console.log('Recognition already stopped');
-                      }
-                    }
-                    
-                    handleSendMessage(true, currentTranscript);
-                  }
-                }, 800);
-              }
+                console.log('Auto-sending voice message:', finalTranscript);
+                handleSendMessage(true, finalTranscript);
+              }, 800);
             }
           }
         };
@@ -431,7 +369,7 @@ export function FloatingChatbot() {
 
   const startVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      const message = isMobileDevice 
+      const message = isMobile 
         ? 'Voice input is not available on your device. Please type your message.'
         : 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.';
       alert(message);
@@ -448,26 +386,24 @@ export function FloatingChatbot() {
       stopWakeWordRecognition();
     }
     
-    // Reset transcript state for new input
+    // Clear input and start listening
     setInputValue('');
-    setTranscript('');
-    setProcessedTranscriptLength(0);
     setVoiceState('listening');
     
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
-        console.log('Starting main voice input (mobile optimized)');
+        console.log('Starting main voice input');
       } catch (e) {
         console.error('Failed to start voice input:', e);
-        const message = isMobileDevice 
+        const message = isMobile 
           ? 'Unable to start voice input. Please check your microphone permissions.'
           : 'Failed to start voice input. Please try again.';
         alert(message);
         setVoiceState('idle');
         // Restart wake word detection if main voice input failed
         if (isBackgroundListening) {
-          setTimeout(() => triggerWakeWordRestart(), mobileSettings.restartDelay);
+          triggerWakeWordRestart();
         }
       }
     }
@@ -487,15 +423,12 @@ export function FloatingChatbot() {
       }
     }
     
-    // Reset transcript state
-    setTranscript('');
-    setProcessedTranscriptLength(0);
     setVoiceState('idle');
     
-    // Restart wake word detection after stopping main voice input (mobile optimized)
+    // Restart wake word detection after stopping main voice input
     if (isBackgroundListening) {
       console.log('Restarting wake word detection after stopping voice input');
-      setTimeout(() => triggerWakeWordRestart(), mobileSettings.restartDelay);
+      triggerWakeWordRestart();
     }
   };
 
@@ -910,7 +843,7 @@ export function FloatingChatbot() {
                       variant="gradient"
                       onClick={stopVoiceInput}
                       className="relative scale-110 animate-pulse bg-green-500 hover:bg-green-600"
-                      title={isMobileDevice ? "Recording... Tap to stop" : "Listening... Click to stop"}
+                      title="Listening... Click to stop"
                       size="sm"
                     >
                       <Mic className="h-4 w-4 text-white" />
@@ -921,7 +854,7 @@ export function FloatingChatbot() {
                       variant="gradient"
                       disabled
                       className="relative"
-                      title={isMobileDevice ? "Processing..." : "Processing voice..."}
+                      title="Processing voice..."
                       size="sm"
                     >
                       <RefreshCw className="h-4 w-4 animate-spin" />
@@ -942,30 +875,10 @@ export function FloatingChatbot() {
                         )}
                       </Button>
                     )
-                   )}
-                 </div>
-                 
-                 {/* Voice Input Preview - Mobile Optimized */}
-                 {voiceState === 'listening' && inputValue && (
-                   <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                     <div className="flex items-center gap-2 mb-1">
-                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                       <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                         {isMobileDevice ? 'Speaking...' : 'Listening...'}
-                       </span>
-                     </div>
-                     <p className="text-sm text-blue-800 dark:text-blue-200 bg-white dark:bg-blue-900/20 rounded px-2 py-1 border border-blue-100 dark:border-blue-800">
-                       {inputValue}
-                     </p>
-                     {isMobileDevice && (
-                       <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                         Tap the microphone to finish
-                       </p>
-                     )}
-                   </div>
-                 )}
-                 
-                 {showDashboardSelect && (
+                  )}
+                </div>
+                
+                {showDashboardSelect && (
                   <div className="mt-2 p-3 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-border rounded-lg">
                     <p className="text-sm font-medium mb-2 text-gray-900 dark:text-foreground">Select Dashboard:</p>
                     <div className="flex gap-2">
