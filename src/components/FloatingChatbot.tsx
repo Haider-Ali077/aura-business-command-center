@@ -847,10 +847,14 @@ export function FloatingChatbot() {
               : undefined, // Preserve raw data for tables
           tableName: data.response.table_name, // Include table name for table charts
         };
-        messageContent =
-          data.response.chart_type === "table"
+        // Use the text field if available, otherwise use generic message
+        if (data.response.text) {
+          messageContent = data.response.text;
+        } else {
+          messageContent = data.response.chart_type === 'table' 
             ? `📋 Here's your data table`
             : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
+        }
       } else if (data.response?.text && data.response?.data) {
         // Text response with data
         messageContent = `${data.response.text}\n\n📋 Data Summary: ${
