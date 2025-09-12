@@ -212,6 +212,8 @@ export function SortableFilterableTable({
     return filters.find(f => f.key === key)?.config || null;
   };
 
+  const isMobile = context === 'chatbot'; // Assume chatbot context means potentially mobile
+
   return (
     <div className="h-full w-full overflow-hidden" style={{ maxHeight }}>
       {tableName && context !== 'chatbot' && (
@@ -220,13 +222,14 @@ export function SortableFilterableTable({
         </div>
       )}
       <div className="h-full overflow-auto">
-        <Table className="min-w-full">
-          <TableHeader className="sticky top-0 bg-background">
-            <TableRow>
-              {tableKeys.map((key) => (
-                <TableHead key={key} className="text-xs px-2 py-1">
-                  <div className="flex items-center gap-1 group">
-                    <span className="text-xs font-medium flex-1 truncate">{getColumnLabel(key)}</span>
+        <div className={isMobile ? "overflow-x-auto" : ""}>
+          <Table className={`${isMobile ? "min-w-max" : "min-w-full"}`}>
+            <TableHeader className="sticky top-0 bg-background z-10">
+              <TableRow>
+                {tableKeys.map((key) => (
+                  <TableHead key={key} className={`${isMobile ? "text-xs px-1 py-1 min-w-[80px]" : "text-xs px-2 py-1"}`}>
+                    <div className="flex items-center gap-1 group">
+                      <span className={`${isMobile ? "text-xs" : "text-xs"} font-medium flex-1 truncate`}>{getColumnLabel(key)}</span>
                     
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       {/* Sort Button */}
@@ -292,18 +295,21 @@ export function SortableFilterableTable({
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {filteredData.map((row, index) => (
-              <TableRow key={index}>
-                {tableKeys.map((key, cellIndex) => (
-                  <TableCell key={cellIndex} className="text-xs px-2 py-1">
-                    {formatCellValue(row[key], key)}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            <TableBody>
+              {filteredData.map((row, index) => (
+                <TableRow key={index}>
+                  {tableKeys.map((key, cellIndex) => (
+                    <TableCell key={cellIndex} className={`${isMobile ? "text-xs px-1 py-1 min-w-[80px]" : "text-xs px-2 py-1"}`}>
+                      <div className={isMobile ? "truncate max-w-[120px]" : ""} title={isMobile ? String(formatCellValue(row[key], key)) : ""}>
+                        {formatCellValue(row[key], key)}
+                      </div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
         
         {filteredData.length === 0 && data.length > 0 && (
           <div className="text-center py-8 text-muted-foreground text-sm">
