@@ -203,9 +203,6 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
                 query: sqlQuery,
                 database_name: databaseName,
                 user_id: session?.user.user_id,
-                tenant_name: session?.user.tenant_id,
-                token: session?.token,
-                role_name: session?.user.role_name
               }),
             });
             
