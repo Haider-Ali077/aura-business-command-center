@@ -29,7 +29,11 @@ class SqlService {
         },
         body: JSON.stringify({ 
           query,
-          database_name: databaseName || session.user.tenant_name
+          database_name: databaseName || session.user.tenant_name,
+          user_id: session.user.user_id,
+          tenant_name: session.user.tenant_id,
+          token: session.token,
+          role_name: session.user.role_name
         }),
       });
 

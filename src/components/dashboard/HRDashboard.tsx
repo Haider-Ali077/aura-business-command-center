@@ -33,6 +33,7 @@ export function HRDashboard() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          user_id: session.user.user_id,
           tenant_id: session.user.tenant_id,
           dashboard: 'hr'
         })
