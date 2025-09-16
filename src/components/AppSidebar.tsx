@@ -258,7 +258,8 @@ import {
   TrendingUp,
   Package,
   Users,
-  Building2
+  Building2,
+  Shield
 } from "lucide-react";
 
 import {
@@ -541,6 +542,46 @@ export function AppSidebar() {
                       {!collapsed && (
                         <span className="font-medium text-sm truncate">
                           Roles
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Permission Management for CEO and Finance Manager */}
+        {session?.user?.role_name && ['CEO', 'Finance Manager'].includes(session.user.role_name) && (
+          <SidebarGroup className="px-3 py-4">
+            <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wide text-xs font-medium mb-3">
+              {!collapsed && "Management"}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-2">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="p-0">
+                    <NavLink
+                      to="/permissions"
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group focus:outline-none min-w-0 ${
+                        collapsed ? "justify-center px-2" : ""
+                      } ${
+                        isActive("/permissions")
+                          ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-primary font-medium border-r-2 border-primary shadow-sm"
+                          : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 hover:text-primary"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 ${
+                          isActive("/permissions") ? "bg-sidebar-primary-foreground/20" : "bg-sidebar-foreground/10"
+                        }`}
+                      >
+                        <Shield className="h-5 w-5" />
+                      </div>
+                      {!collapsed && (
+                        <span className="font-medium text-sm truncate">
+                          Permissions
                         </span>
                       )}
                     </NavLink>

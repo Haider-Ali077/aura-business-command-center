@@ -131,7 +131,7 @@ function App() {
                   <RoleManagement />
                 </AdminProtectedRoute>
               } />
-              <Route path="/admin/permissions" element={
+              <Route path="/permissions" element={
                 <PermissionProtectedRoute>
                   <PermissionManagement />
                 </PermissionProtectedRoute>
