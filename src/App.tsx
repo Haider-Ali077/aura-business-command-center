@@ -10,6 +10,7 @@ import UserManagement from '@/pages/admin/UserManagement';
 import KpiManagement from '@/pages/admin/KpiManagement';
 import WidgetManagement from '@/pages/admin/WidgetManagement';
 import RoleManagement from '@/pages/admin/RoleManagement';
+import PermissionManagement from '@/pages/admin/PermissionManagement';
 import { ExecutiveDashboard } from "@/components/dashboard/ExecutiveDashboard";
 import { FinanceDashboard } from "@/components/dashboard/FinanceDashboard";
 import { SalesDashboard } from "@/components/dashboard/SalesDashboard";
@@ -23,6 +24,7 @@ import { useRoleStore } from '@/store/roleStore';
 import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AdminProtectedRoute } from '@/components/AdminProtectedRoute';
+import { PermissionProtectedRoute } from '@/components/PermissionProtectedRoute';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -128,6 +130,11 @@ function App() {
                 <AdminProtectedRoute>
                   <RoleManagement />
                 </AdminProtectedRoute>
+              } />
+              <Route path="/admin/permissions" element={
+                <PermissionProtectedRoute>
+                  <PermissionManagement />
+                </PermissionProtectedRoute>
               } />
               
               <Route path="*" element={<NotFound />} />

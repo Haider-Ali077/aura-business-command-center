@@ -13,7 +13,7 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground">Manage tenants, users, and system configurations</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tenant Management</CardTitle>
@@ -90,6 +90,22 @@ export default function AdminDashboard() {
             </p>
             <Button asChild className="w-full">
               <Link to="/admin/roles">Manage Roles</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Permission Management</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold mb-2">Permissions</div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Manage user data access permissions
+            </p>
+            <Button asChild className="w-full">
+              <Link to="/admin/permissions">Manage Permissions</Link>
             </Button>
           </CardContent>
         </Card>
