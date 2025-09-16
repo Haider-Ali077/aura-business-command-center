@@ -29,21 +29,21 @@ export const dashboardModules: DashboardModule[] = [
     name: 'Sales',
     icon: 'TrendingUp',
     description: 'Sales funnel, lead conversion, revenue tracking',
-    roles: ['CEO']
+    roles: ['CEO','Finance Manager','Sales user','Sales/Inventory user','Sales/Purchase user']
   },
   {
     id: 'purchase',
     name: 'Purchase',
     icon: 'ShoppingCart',
     description: 'Purchase orders, supplier management, procurement',
-    roles: ['CEO']
+    roles: ['CEO','Finance Manager','Purchase user','Purchase/Inventory user','Sales/Purchase user']
   },
   {
     id: 'inventory',
     name: 'Inventory & Supply Chain',
     icon: 'Package',
     description: 'Stock levels, turnover, supplier metrics',
-    roles: ['CEO']
+    roles: ['CEO','Finance Manager','Inventory user','Sales/Inventory user','Purchase/Inventory user']
   },
   {
     id: 'hr',
