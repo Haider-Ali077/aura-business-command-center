@@ -471,7 +471,7 @@ export default function PermissionManagement() {
                   {/* Add New Sales Permission */}
                   <div className="border rounded-lg p-4 space-y-4">
                     <h4 className="font-medium">Add Sales Restriction</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                       <div>
                         <Label>Sales Employee</Label>
                         <Select onValueChange={(value) => 
@@ -504,6 +504,44 @@ export default function PermissionManagement() {
                             {locations.cities.map((city) => (
                               <SelectItem key={city} value={city}>
                                 {city}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label>State</Label>
+                        <Select onValueChange={(value) => 
+                          setNewSalesPermission(prev => ({ ...prev, ship_to_state: value === 'all' ? null : value }))
+                        }>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All states" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All States</SelectItem>
+                            {locations.states.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label>Country</Label>
+                        <Select onValueChange={(value) => 
+                          setNewSalesPermission(prev => ({ ...prev, ship_to_country: value === 'all' ? null : value }))
+                        }>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All countries" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Countries</SelectItem>
+                            {locations.countries.map((country) => (
+                              <SelectItem key={country} value={country}>
+                                {country}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -550,6 +588,12 @@ export default function PermissionManagement() {
                               )}
                               {perm.ship_to_city && (
                                 <Badge variant="outline">City: {perm.ship_to_city}</Badge>
+                              )}
+                              {perm.ship_to_state && (
+                                <Badge variant="outline">State: {perm.ship_to_state}</Badge>
+                              )}
+                              {perm.ship_to_country && (
+                                <Badge variant="outline">Country: {perm.ship_to_country}</Badge>
                               )}
                               {perm.product_id && (
                                 <Badge variant="outline">Product: {perm.product_id}</Badge>
