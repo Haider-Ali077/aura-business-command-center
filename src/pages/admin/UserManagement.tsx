@@ -157,13 +157,30 @@ export default function UserManagement() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    // Create clean payload with only defined values
+    // Create clean payload with proper validation
     const cleanPayload: any = {};
     
-    if (formData.email) cleanPayload.email = formData.email;
-    if (formData.user_name) cleanPayload.user_name = formData.user_name;
-    if (formData.role_id !== null) cleanPayload.role_id = formData.role_id;
+    // Handle email - include if it's a non-empty string
+    if (formData.email && formData.email.trim()) {
+      cleanPayload.email = formData.email.trim();
+    }
+    
+    // Handle user_name - include even if empty string (backend might expect it)
+    if (formData.user_name !== null && formData.user_name !== undefined) {
+      cleanPayload.user_name = formData.user_name.trim();
+    }
+    
+    // Handle role_id - include if it's a valid number
+    if (formData.role_id !== null && formData.role_id !== undefined) {
+      cleanPayload.role_id = formData.role_id;
+    }
+    
+    // Always include is_active
     cleanPayload.is_active = formData.is_active;
+    
+    // Debug logging
+    console.log('Update payload for user', selectedUser.user_id, ':', cleanPayload);
+    console.log('Original formData:', formData);
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.user_id}`, {
@@ -180,9 +197,14 @@ export default function UserManagement() {
         setSelectedUser(null);
         fetchUsers();
       } else {
-        toast.error('Failed to update user');
+        // Get detailed error information
+        const errorData = await response.text();
+        console.error('Update failed with status:', response.status);
+        console.error('Error response:', errorData);
+        toast.error(`Failed to update user: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
+      console.error('Network error during update:', error);
       toast.error('Error updating user');
     }
   };
