@@ -161,24 +161,8 @@ export default function UserManagement() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    // Exclude password_hash from update and clean the payload
+    // Exclude password_hash from update
     const { password_hash, ...updateData } = formData;
-    
-    // Create clean payload - only include defined values
-    const cleanPayload: any = {};
-    
-    // Add non-empty string values
-    Object.entries(updateData).forEach(([key, value]) => {
-      if (value !== undefined && value !== '' && value !== null) {
-        if (key === 'tenant_id' || key === 'role_id') {
-          cleanPayload[key] = parseInt(value as string);
-        } else {
-          cleanPayload[key] = value;
-        }
-      }
-    });
-    
-    console.log('Sending payload:', cleanPayload); // Debug log
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.user_id}`, {
@@ -186,7 +170,11 @@ export default function UserManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(cleanPayload),
+        body: JSON.stringify({
+          ...updateData,
+          tenant_id: updateData.tenant_id ? parseInt(updateData.tenant_id) : undefined,
+          role_id: updateData.role_id ? parseInt(updateData.role_id) : undefined
+        }),
       });
 
       if (response.ok) {
