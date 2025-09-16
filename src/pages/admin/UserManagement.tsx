@@ -162,7 +162,6 @@ export default function UserManagement() {
     
     if (formData.email) cleanPayload.email = formData.email;
     if (formData.user_name) cleanPayload.user_name = formData.user_name;
-    if (formData.tenant_id !== null) cleanPayload.tenant_id = formData.tenant_id;
     if (formData.role_id !== null) cleanPayload.role_id = formData.role_id;
     cleanPayload.is_active = formData.is_active;
     
