@@ -44,8 +44,8 @@ export default function UserManagement() {
   const [formData, setFormData] = useState({
     email: '',
     password_hash: '',
-    tenant_id: '',
-    role_id: '2', // Default to regular user role
+    tenant_id: null as number | null,
+    role_id: 2, // Default to regular user role
     is_active: true,
     user_name: ''
   });
@@ -130,11 +130,7 @@ export default function UserManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          tenant_id: parseInt(formData.tenant_id),
-          role_id: parseInt(formData.role_id)
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
@@ -143,8 +139,8 @@ export default function UserManagement() {
         setFormData({
           email: '',
           password_hash: '',
-          tenant_id: '',
-          role_id: '2',
+          tenant_id: null,
+          role_id: 2,
           is_active: true,
           user_name: ''
         });
@@ -161,8 +157,14 @@ export default function UserManagement() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    // Exclude password_hash from update
-    const { password_hash, ...updateData } = formData;
+    // Create clean payload with only defined values
+    const cleanPayload: any = {};
+    
+    if (formData.email) cleanPayload.email = formData.email;
+    if (formData.user_name) cleanPayload.user_name = formData.user_name;
+    if (formData.tenant_id !== null) cleanPayload.tenant_id = formData.tenant_id;
+    if (formData.role_id !== null) cleanPayload.role_id = formData.role_id;
+    cleanPayload.is_active = formData.is_active;
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.user_id}`, {
@@ -170,11 +172,7 @@ export default function UserManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...updateData,
-          tenant_id: updateData.tenant_id ? parseInt(updateData.tenant_id) : undefined,
-          role_id: updateData.role_id ? parseInt(updateData.role_id) : undefined
-        }),
+        body: JSON.stringify(cleanPayload),
       });
 
       if (response.ok) {
@@ -214,8 +212,8 @@ export default function UserManagement() {
     setFormData({
       email: user.email,
       password_hash: '', // Don't populate password
-      tenant_id: user.tenant_id.toString(),
-      role_id: user.role_id.toString(),
+      tenant_id: user.tenant_id,
+      role_id: user.role_id,
       is_active: user.is_active,
       user_name: user.user_name || ''
     });
@@ -287,7 +285,7 @@ export default function UserManagement() {
               </div>
               <div>
                 <Label htmlFor="tenant_id">Tenant</Label>
-                <Select onValueChange={(value) => setFormData({ ...formData, tenant_id: value })}>
+                <Select onValueChange={(value) => setFormData({ ...formData, tenant_id: parseInt(value) })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select tenant" />
                   </SelectTrigger>
@@ -302,7 +300,7 @@ export default function UserManagement() {
               </div>
               <div>
                 <Label htmlFor="role_id">Role</Label>
-                <Select value={formData.role_id} onValueChange={(value) => setFormData({ ...formData, role_id: value })}>
+                <Select value={formData.role_id?.toString()} onValueChange={(value) => setFormData({ ...formData, role_id: parseInt(value) })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -439,7 +437,7 @@ export default function UserManagement() {
             </div>
             <div>
               <Label htmlFor="edit_role_id">Role</Label>
-              <Select value={formData.role_id} onValueChange={(value) => setFormData({ ...formData, role_id: value })}>
+              <Select value={formData.role_id?.toString()} onValueChange={(value) => setFormData({ ...formData, role_id: parseInt(value) })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
