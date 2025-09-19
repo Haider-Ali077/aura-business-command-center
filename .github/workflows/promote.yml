@@ -1,28 +1,28 @@
-name: Promote to Prod
+name: Mirror Dev to Prod
 
 on:
-  workflow_dispatch: # Manual trigger from Actions tab
+  workflow_dispatch: # manual trigger
+  # Uncomment below if you want auto-sync whenever dev changes
+  # repository_dispatch:
+  #   types: [sync-to-prod]
 
 jobs:
-  promote:
+  mirror:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Dev Repo
+      - name: Checkout Prod Repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Get full history
+          fetch-depth: 0
 
-      - name: Configure Git
+      - name: Add Dev Remote
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git remote add dev https://github.com/Haider-Ali077/aura-business-command-center.git
+          git fetch dev
 
-      - name: Push to Prod Repo
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Mirror Dev → Prod
         run: |
-          git remote add prod https://Haider-Ali077:${GH_PAT}@github.com/Haider-Ali077/Intelllyca_frontend_prod.git
-          git push prod HEAD:main --force-with-lease
-
-
+          git checkout main
+          git reset --hard dev/main
+          git push origin main --force
