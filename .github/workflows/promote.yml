@@ -21,10 +21,8 @@ jobs:
       - name: Push to Prod Repo
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-          PROD_REPO: Haider-Ali077/Intelllyca_frontend_prod
         run: |
-          echo "Prod repo: $PROD_REPO"
-          echo "GH_PAT length: ${#GH_PAT}"
-          git remote add prod https://Haider-Ali077:${GH_PAT}@github.com/${PROD_REPO}.git
+          git remote add prod https://Haider-Ali077:${GH_PAT}@github.com/Haider-Ali077/Intelllyca_frontend_prod.git
           git push prod HEAD:main --force-with-lease
+
 
