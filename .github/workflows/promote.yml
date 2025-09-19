@@ -1,22 +1,27 @@
 name: Promote to Prod
 
 on:
-  workflow_dispatch:   # Adds a button in the Actions tab
+  workflow_dispatch: # Manual trigger from Actions tab
 
 jobs:
   promote:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Dev Repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # full history
+          fetch-depth: 0 # Get full history
 
-      - name: Push to Prod Repo
-        env:
-          PROD_REPO: "Haider-Ali077/Intelllyca_frontend_prod.git"   # change YourUsername
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git remote add prod https://x-access-token:${{ secrets.GH_PAT }}@github.com/${PROD_REPO}
+
+      - name: Push to Prod Repo
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          PROD_REPO: Haider-Ali077/Intelllyca_frontend_prod
+        run: |
+          git remote add prod https://x-access-token:${GH_PAT}@github.com/${PROD_REPO}.git
           git push prod HEAD:main --force-with-lease
