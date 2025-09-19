@@ -23,7 +23,14 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           PROD_REPO: Haider-Ali077/Intelllyca_frontend_prod
         run: |
-          echo "Prod repo: $PROD_REPO"
+          echo "Prod repo (raw): $PROD_REPO"
           echo "GH_PAT length: ${#GH_PAT}"
-          git remote add prod https://x-access-token:${GH_PAT}@github.com/${PROD_REPO}.git
+
+          # Remove any accidental trailing slash
+          CLEAN_REPO=${PROD_REPO%/}
+          echo "Prod repo (clean): $CLEAN_REPO"
+
+          git remote add prod https://x-access-token:${GH_PAT}@github.com/${CLEAN_REPO}.git
+          git remote -v   # Verify remote URL
           git push prod HEAD:main --force-with-lease
+
