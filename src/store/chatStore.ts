@@ -140,6 +140,54 @@ export const useChatStore = create<ChatStore>()(
         lastUpdated: state.lastUpdated,
         currentUserId: state.currentUserId,
       }),
+      storage: {
+        getItem: (name) => {
+          const value = localStorage.getItem(name);
+          if (!value) return null;
+          
+          try {
+            const parsed = JSON.parse(value);
+            // Convert timestamp strings back to Date objects
+            if (parsed.state?.messages) {
+              parsed.state.messages = parsed.state.messages.map((msg: any) => ({
+                ...msg,
+                timestamp: new Date(msg.timestamp),
+              }));
+            }
+            if (parsed.state?.lastUpdated) {
+              parsed.state.lastUpdated = new Date(parsed.state.lastUpdated);
+            }
+            return parsed;
+          } catch (error) {
+            console.error('Error parsing chat store data:', error);
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            // Convert Date objects to ISO strings for storage
+            const serializedValue = {
+              ...value,
+              state: {
+                ...value.state,
+                messages: value.state?.messages?.map((msg: Message) => ({
+                  ...msg,
+                  timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp,
+                })) || [],
+                lastUpdated: value.state?.lastUpdated instanceof Date 
+                  ? value.state.lastUpdated.toISOString() 
+                  : value.state?.lastUpdated,
+              }
+            };
+            localStorage.setItem(name, JSON.stringify(serializedValue));
+          } catch (error) {
+            console.error('Error serializing chat store data:', error);
+          }
+        },
+        removeItem: (name) => {
+          localStorage.removeItem(name);
+        },
+      },
     }
   )
 );

@@ -1053,7 +1053,7 @@ export function FloatingChatbot() {
                               {message.content}
                             </p>
                             <p className="text-xs text-blue-100 mt-1 opacity-80">
-                              {message.timestamp.toLocaleTimeString()}
+                              {new Date(message.timestamp).toLocaleTimeString()}
                             </p>
                           </div>
                         ) : (
@@ -1066,7 +1066,7 @@ export function FloatingChatbot() {
                                 </p>
                                 {!message.chart && (
                                   <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1 opacity-70">
-                                    {message.timestamp.toLocaleTimeString()}
+                                    {new Date(message.timestamp).toLocaleTimeString()}
                                   </p>
                                 )}
                               </div>
@@ -1092,7 +1092,7 @@ export function FloatingChatbot() {
                                 </div>
                                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-border">
                                   <p className="text-xs text-gray-500 dark:text-muted-foreground opacity-70">
-                                    {message.timestamp.toLocaleTimeString()}
+                                    {new Date(message.timestamp).toLocaleTimeString()}
                                   </p>
                                   <Button
                                     size="sm"
