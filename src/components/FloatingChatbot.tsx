@@ -105,7 +105,7 @@ export function FloatingChatbot() {
   const { getAccessibleModules } = useRoleStore();
   const isMobile = useIsMobile();
 
-  // Use session-only chat store - NO localStorage persistence
+  // Use persistent chat store with user-specific storage
   const chatStore = useStableChatStore(
     session?.user?.user_id?.toString() || null
   );

@@ -83,9 +83,10 @@ export const useAuthStore = create<AuthStore>()(
         // Clear chatbot history before logging out
         if (session?.user?.user_id) {
           try {
-            const userId = session.user.user_id;
-            localStorage.removeItem(`intellyca-${userId}-chat-messages`);
-            localStorage.removeItem(`intellyca-${userId}-chat-open`);
+            const userId = session.user.user_id.toString();
+            // Clear user-specific chat storage
+            const chatKey = `chat-store-${userId}`;
+            localStorage.removeItem(chatKey);
             console.log('Cleared chatbot history for user:', userId);
           } catch (error) {
             console.error('Error clearing chatbot history on logout:', error);
