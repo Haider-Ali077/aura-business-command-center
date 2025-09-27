@@ -131,10 +131,20 @@ export function FloatingChatbot() {
   const autoSendTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or chat opens
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatStore.messages]);
+
+  // Scroll to bottom when chat window opens
+  useEffect(() => {
+    if (isOpen && !isMinimized && chatStore.messages.length > 0) {
+      // Small delay to ensure DOM is fully rendered
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [isOpen, isMinimized]);
 
   // Cleanup voice states when chat closes
   useEffect(() => {

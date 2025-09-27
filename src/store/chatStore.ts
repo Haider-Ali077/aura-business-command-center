@@ -58,27 +58,17 @@ const getWelcomeMessage = (): Message => ({
 export const useChatStore = create<ChatStore>()(
   persist(
     (set, get) => ({
-      // Initial state - START EMPTY, no welcome message
+      // Initial state
       sessionId: null,
-      messages: [], // Start with NO messages
-      isInitialized: false, // Start as not initialized
+      messages: [],
+      isInitialized: false,
       lastUpdated: new Date(),
-      currentUserId: null, // Track current user
+      currentUserId: null,
       
-      // Initialize chat - ALWAYS start completely fresh
+      // Initialize chat for user
       initializeChat: async (userId: string) => {
-        console.log(`🆕 Starting completely fresh chat for user ${userId}...`);
+        console.log(`🆕 Initializing chat for user ${userId}...`);
         
-        // ✅ FORCE: Clear everything and start empty
-        set({
-          sessionId: null,
-          messages: [], // Start with NO messages
-          isInitialized: false,
-          lastUpdated: new Date(),
-          currentUserId: null,
-        });
-        
-        // Now add welcome message
         const welcomeMessage = getWelcomeMessage();
         set({ 
           messages: [welcomeMessage],
@@ -87,103 +77,71 @@ export const useChatStore = create<ChatStore>()(
           lastUpdated: new Date(),
           currentUserId: userId,
         });
-        console.log('🆕 Fresh chat started - completely empty start');
+        console.log('🆕 Chat initialized with welcome message');
       },
   
-  // Add a new message to the chat
-  addMessage: (message: Message) => {
-    set((state) => ({ 
-      messages: [...state.messages, message],
-      lastUpdated: new Date()
-    }));
-  },
-  
-  // Set all messages (for bulk operations)
-  setMessages: (messages: Message[]) => {
-    set({ 
-      messages,
-      lastUpdated: new Date()
-    });
-  },
-  
-  // Clear chat - back to welcome message
-  clearChat: () => {
-    const welcomeMessage = getWelcomeMessage();
-    set({ 
-      messages: [welcomeMessage],
-      lastUpdated: new Date(),
-    });
-  },
-  
-  // Set session ID
-  setSessionId: (sessionId: string) => {
-    set({ sessionId });
-  },
-  
-  // Mark chat as initialized
-  markAsInitialized: () => {
-    set({ isInitialized: true });
-  },
-  
-  // ✅ CRITICAL: Force reset for user change - start completely empty
-  resetForNewUser: (userId: string) => {
-    console.log(`🔄 Resetting chat for new user: ${userId} - starting completely empty`);
-    
-    // First clear everything
-    set({
-      sessionId: null,
-      messages: [], // Start completely empty
-      isInitialized: false,
-      lastUpdated: new Date(),
-      currentUserId: null,
-    });
-    
-    // Then add welcome message
-    const welcomeMessage = getWelcomeMessage();
-    set({
-      sessionId: null,
-      messages: [welcomeMessage],
-      isInitialized: true,
-      lastUpdated: new Date(),
-      currentUserId: userId,
-    });
-    
-    console.log('🔄 Chat reset complete - fresh start for new user');
-  },
-}),
-{
-  name: 'chat-store',
-  partialize: (state) => ({
-    sessionId: state.sessionId,
-    messages: state.messages,
-    isInitialized: state.isInitialized,
-    lastUpdated: state.lastUpdated,
-    currentUserId: state.currentUserId,
-  }),
-  // Use user-specific storage key
-  storage: {
-    getItem: (name) => {
-      const state = useChatStore.getState();
-      const userId = state.currentUserId || 'anonymous';
-      const key = `${name}-${userId}`;
-      const value = localStorage.getItem(key);
-      return value ? JSON.parse(value) : null;
-    },
-    setItem: (name, value) => {
-      const state = useChatStore.getState();
-      const userId = state.currentUserId || 'anonymous';
-      const key = `${name}-${userId}`;
-      localStorage.setItem(key, JSON.stringify(value));
-    },
-    removeItem: (name) => {
-      const state = useChatStore.getState();
-      const userId = state.currentUserId || 'anonymous';
-      const key = `${name}-${userId}`;
-      localStorage.removeItem(key);
-    },
-  },
-}
-)
+      // Add a new message to the chat
+      addMessage: (message: Message) => {
+        set((state) => ({ 
+          messages: [...state.messages, message],
+          lastUpdated: new Date()
+        }));
+      },
+      
+      // Set all messages (for bulk operations)
+      setMessages: (messages: Message[]) => {
+        set({ 
+          messages,
+          lastUpdated: new Date()
+        });
+      },
+      
+      // Clear chat - back to welcome message
+      clearChat: () => {
+        const welcomeMessage = getWelcomeMessage();
+        set({ 
+          messages: [welcomeMessage],
+          lastUpdated: new Date(),
+        });
+      },
+      
+      // Set session ID
+      setSessionId: (sessionId: string) => {
+        set({ sessionId });
+      },
+      
+      // Mark chat as initialized
+      markAsInitialized: () => {
+        set({ isInitialized: true });
+      },
+      
+      // Reset for new user - clear everything
+      resetForNewUser: (userId: string) => {
+        console.log(`🔄 Resetting chat for new user: ${userId}`);
+        
+        const welcomeMessage = getWelcomeMessage();
+        set({
+          sessionId: null,
+          messages: [welcomeMessage],
+          isInitialized: true,
+          lastUpdated: new Date(),
+          currentUserId: userId,
+        });
+        
+        console.log('🔄 Chat reset complete - fresh start for new user');
+      },
+    }),
+    {
+      name: 'chat-store',
+      partialize: (state) => ({
+        sessionId: state.sessionId,
+        messages: state.messages,
+        isInitialized: state.isInitialized,
+        lastUpdated: state.lastUpdated,
+        currentUserId: state.currentUserId,
+      }),
+    }
+  )
 );
 
 // ✅ CRITICAL: Create a user-specific hook that forces isolation
@@ -206,30 +164,119 @@ export const useUserChatStore = (userId: string | null) => {
   return store;
 };
 
-// ✅ ADDITIONAL: Create a more stable store that persists during navigation
+// Create user-specific store instance
+const createUserChatStore = (userId: string) => {
+  return create<ChatStore>()(
+    persist(
+      (set, get) => ({
+        sessionId: null,
+        messages: [],
+        isInitialized: false,
+        lastUpdated: new Date(),
+        currentUserId: userId,
+        
+        initializeChat: async (userId: string) => {
+          console.log(`🆕 Initializing chat for user ${userId}...`);
+          const welcomeMessage = getWelcomeMessage();
+          set({ 
+            messages: [welcomeMessage],
+            sessionId: null,
+            isInitialized: true,
+            lastUpdated: new Date(),
+            currentUserId: userId,
+          });
+        },
+    
+        addMessage: (message: Message) => {
+          set((state) => ({ 
+            messages: [...state.messages, message],
+            lastUpdated: new Date()
+          }));
+        },
+        
+        setMessages: (messages: Message[]) => {
+          set({ 
+            messages,
+            lastUpdated: new Date()
+          });
+        },
+        
+        clearChat: () => {
+          const welcomeMessage = getWelcomeMessage();
+          set({ 
+            messages: [welcomeMessage],
+            lastUpdated: new Date(),
+          });
+        },
+        
+        setSessionId: (sessionId: string) => {
+          set({ sessionId });
+        },
+        
+        markAsInitialized: () => {
+          set({ isInitialized: true });
+        },
+        
+        resetForNewUser: (newUserId: string) => {
+          console.log(`🔄 Resetting chat for new user: ${newUserId}`);
+          const welcomeMessage = getWelcomeMessage();
+          set({
+            sessionId: null,
+            messages: [welcomeMessage],
+            isInitialized: true,
+            lastUpdated: new Date(),
+            currentUserId: newUserId,
+          });
+        },
+      }),
+      {
+        name: `chat-store-${userId || 'anonymous'}`,
+        partialize: (state) => ({
+          sessionId: state.sessionId,
+          messages: state.messages,
+          isInitialized: state.isInitialized,
+          lastUpdated: state.lastUpdated,
+          currentUserId: state.currentUserId,
+        }),
+      }
+    )
+  );
+};
+
+// Store instances cache
+const storeInstances = new Map<string, ReturnType<typeof createUserChatStore>>();
+
+// Stable store that persists during navigation and refresh
 export const useStableChatStore = (userId: string | null) => {
-  const store = useChatStore();
+  const storeKey = userId || 'anonymous';
   
-  // Only reset on actual user change, preserve during navigation and refresh
+  // Get or create store instance for this user
+  if (!storeInstances.has(storeKey)) {
+    storeInstances.set(storeKey, createUserChatStore(storeKey));
+  }
+  
+  const store = storeInstances.get(storeKey)!();
+  
+  // Initialize chat if not already done
+  useEffect(() => {
+    if (userId && !store.isInitialized) {
+      console.log(`🚀 Initializing chat for user: ${userId}`);
+      store.initializeChat(userId);
+    }
+  }, [userId, store.isInitialized]);
+  
+  // Clear store instances on logout
   useEffect(() => {
     if (!userId) {
-      // User logged out - clear everything
-      console.log('🚪 User logged out, clearing chat');
-      store.resetForNewUser('');
-      return;
+      console.log('🚪 User logged out, clearing all store instances');
+      storeInstances.clear();
+    } else if (store.currentUserId !== userId) {
+      console.log(`🔄 User changed: ${store.currentUserId} -> ${userId}`);
+      // Clear old instances and create new one
+      storeInstances.clear();
+      storeInstances.set(storeKey, createUserChatStore(storeKey));
     }
-
-    if (store.currentUserId && store.currentUserId !== userId) {
-      // User actually changed (different account)
-      console.log(`🔄 Different user detected: ${store.currentUserId} -> ${userId}`);
-      store.resetForNewUser(userId);
-    } else if (!store.currentUserId || !store.isInitialized) {
-      // First time for this user or not initialized
-      console.log(`🚀 First time or reinitializing for user: ${userId}`);
-      store.resetForNewUser(userId);
-    }
-    // If same user and initialized, preserve messages during navigation/refresh
-  }, [userId, store.currentUserId, store.isInitialized]);
+  }, [userId]);
   
   return store;
 };
