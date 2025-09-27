@@ -39,7 +39,7 @@ import { API_BASE_URL } from "@/config/api";
 import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
 import { ChartConfig, EnhancedChartData } from "@/types/chart";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useStableChatStore, Message } from "@/store/chatStore";
+import { useUserChatStore, Message } from "@/store/chatStore";
 
 interface ChartData {
   chart_type: string;
@@ -105,8 +105,8 @@ export function FloatingChatbot() {
   const { getAccessibleModules } = useRoleStore();
   const isMobile = useIsMobile();
 
-  // Use persistent chat store with user-specific storage
-  const chatStore = useStableChatStore(
+  // Use in-memory chat store with user isolation
+  const chatStore = useUserChatStore(
     session?.user?.user_id?.toString() || null
   );
 

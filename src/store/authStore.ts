@@ -78,21 +78,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        const { session } = get();
-        
-        // Clear chatbot history before logging out
-        if (session?.user?.user_id) {
-          try {
-            const userId = session.user.user_id.toString();
-            // Clear user-specific chat storage
-            const chatKey = `chat-store-${userId}`;
-            localStorage.removeItem(chatKey);
-            console.log('Cleared chatbot history for user:', userId);
-          } catch (error) {
-            console.error('Error clearing chatbot history on logout:', error);
-          }
-        }
-        
+        // Chat is now in-memory only, no need to clear localStorage
         set({ session: null, error: null, lastActivity: Date.now() });
       },
 
