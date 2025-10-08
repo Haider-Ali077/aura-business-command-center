@@ -774,9 +774,26 @@ export function FloatingChatbot() {
     }
   };
 
-  const clearChatHistory = () => {
-    // Use chat store to clear - no localStorage
+  const clearChatHistory = async () => {
+    // Clear frontend UI
     chatStore.clearChat();
+    
+    // Reset backend session for this user
+    if (session?.user?.user_id) {
+      try {
+        await fetch(`${API_BASE_URL}/session/reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            user_id: session.user.user_id,
+            tenant_name: session.user.tenant_name 
+          })
+        });
+        console.log(`🔄 Backend session reset for user ${session.user.user_id}`);
+      } catch (error) {
+        console.error('Failed to reset backend session:', error);
+      }
+    }
   };
 
   const handleSendMessage = async (
