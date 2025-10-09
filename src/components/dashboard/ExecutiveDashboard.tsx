@@ -77,8 +77,8 @@ export function ExecutiveDashboard() {
   useEffect(() => {
     if (session?.user.tenant_id) {
       console.log('Session user data:', session.user);
-      console.log('Tenant ID:', session.user.tenant_id, 'Type:', typeof session.user.tenant_id);
-      fetchWidgets(session.user.tenant_id, 'executive');
+      console.log('Tenant ID:', session.user.tenant_id, 'User ID:', session.user.user_id);
+      fetchWidgets(session.user.tenant_id, 'executive', session.user.user_id);
       fetchKPIData();
     }
   }, [session, fetchWidgets]);

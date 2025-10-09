@@ -59,7 +59,7 @@ export function InventoryDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(session.user.tenant_id, 'inventory');
+      fetchWidgets(session.user.tenant_id, 'inventory', session.user.user_id);
       fetchKPIData();
     }
   }, [session, fetchWidgets]);

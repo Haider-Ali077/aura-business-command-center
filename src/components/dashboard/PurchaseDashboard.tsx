@@ -66,7 +66,7 @@ const PurchaseDashboard = () => {
 
   useEffect(() => {
     if (session) {
-      fetchWidgets(session.user.tenant_id, 'purchase');
+      fetchWidgets(session.user.tenant_id, 'purchase', session.user.user_id);
       fetchKPIData();
     }
   }, [session, fetchWidgets]);

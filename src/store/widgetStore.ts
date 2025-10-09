@@ -133,8 +133,8 @@ export interface Widget {
 interface WidgetStore {
   widgets: Widget[];
   loading: boolean;
-  fetchWidgets: (tenantId: number, dashboard: string) => Promise<void>;
-  addWidget: (widget: Widget, tenantId: number, dashboard: string) => Promise<void>;
+  fetchWidgets: (tenantId: number, dashboard: string, userId: number) => Promise<void>;
+  addWidget: (widget: Widget, tenantId: number, dashboard: string, userId: number) => Promise<void>;
   removeWidget: (id: string) => void;
   updateWidget: (id: string, updates: Partial<Widget>) => void;
   moveWidget: (id: string, position: { x: number; y: number }) => void;
@@ -146,10 +146,10 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
   widgets: [],
   loading: false,
 
-  fetchWidgets: async (tenantId, dashboard) => {
+  fetchWidgets: async (tenantId, dashboard, userId) => {
     set({ loading: true });
     try {
-      console.log('Fetching widgets with tenantId:', tenantId, 'type:', typeof tenantId);
+      console.log('Fetching widgets with tenantId:', tenantId, 'dashboard:', dashboard, 'userId:', userId);
       
       const res = await fetch(`${API_BASE_URL}/widgetfetch`, {
       method: 'POST',
@@ -157,6 +157,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       body: JSON.stringify({
         tenant_id: tenantId,
         dashboard: dashboard,
+        user_id: userId,
       }),
     });
       
@@ -232,7 +233,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
     }
   },
 
-  addWidget: async (widget, tenantId, dashboard) => {
+  addWidget: async (widget, tenantId, dashboard, userId) => {
   try {
     const payload = {
       tenant_id: tenantId,
@@ -245,6 +246,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       size_width: widget.size?.width ?? 1,
       size_height: widget.size?.height ?? 1,
       sql_query: widget.sqlQuery || '',
+      user_id: userId,
     };
 
     console.log("Final payload for backend:", payload); // Debug
@@ -260,7 +262,7 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
       console.log("Widget added successfully, refreshing dashboard...");
       
       // Refresh the entire widget list to get the new widget with proper data
-      await get().fetchWidgets(tenantId, dashboard);
+      await get().fetchWidgets(tenantId, dashboard, userId);
     } else {
       const errorText = await res.text();
       console.error("Failed response:", errorText);
@@ -283,10 +285,10 @@ export const useWidgetStore = create<WidgetStore>()((set, get) => ({
     const currentPath = window.location.pathname;
     const dashboardType = currentPath.split('/').pop() || 'executive';
     
-    console.log('Refreshing data for dashboard:', dashboardType, 'tenant:', session.user.tenant_id);
+    console.log('Refreshing data for dashboard:', dashboardType, 'tenant:', session.user.tenant_id, 'user:', session.user.user_id);
     
     // Re-fetch widgets from backend to get latest configuration and data
-    await get().fetchWidgets(session.user.tenant_id, dashboardType);
+    await get().fetchWidgets(session.user.tenant_id, dashboardType, session.user.user_id);
   },
 
   removeWidget: (id) =>

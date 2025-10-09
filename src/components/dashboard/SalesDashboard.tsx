@@ -67,7 +67,7 @@ export function SalesDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(session.user.tenant_id, 'sales');
+      fetchWidgets(session.user.tenant_id, 'sales', session.user.user_id);
       fetchKPIData();
     }
   }, [session, fetchWidgets]);

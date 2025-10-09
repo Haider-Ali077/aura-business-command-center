@@ -66,7 +66,7 @@ export function FinanceDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(session.user.tenant_id, 'finance');
+      fetchWidgets(session.user.tenant_id, 'finance', session.user.user_id);
       fetchKPIData();
     }
   }, [session, fetchWidgets]);

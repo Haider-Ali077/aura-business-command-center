@@ -739,7 +739,7 @@ export function FloatingChatbot() {
         },
       };
 
-      await addWidget(newWidget, session.user.tenant_id, dashboardId);
+      await addWidget(newWidget, session.user.tenant_id, dashboardId, session.user.user_id);
 
       // Show success message
       const dashboardName =
