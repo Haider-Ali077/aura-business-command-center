@@ -143,6 +143,22 @@ export function SalesDashboard() {
     console.log('Widgets updated in SalesDashboard:', widgets.length);
   }, [widgets]);
 
+  // Listen for widget added events from chatbot
+  useEffect(() => {
+    const handleWidgetAdded = (event: CustomEvent) => {
+      const { dashboardId } = event.detail;
+      if (dashboardId === 'sales' && session?.user.tenant_id) {
+        console.log('Widget added to sales dashboard, refreshing...');
+        fetchWidgets();
+      }
+    };
+
+    window.addEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    return () => {
+      window.removeEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    };
+  }, [session]);
+
   return (
     <Layout>
       <div className="space-y-6">

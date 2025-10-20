@@ -781,6 +781,11 @@ export function FloatingChatbot() {
 
       chatStore.addMessage(successMessage);
 
+      // Trigger dashboard refresh via custom event
+      window.dispatchEvent(new CustomEvent('widgetAdded', { 
+        detail: { dashboardId, tenantId: session.user.tenant_id } 
+      }));
+
       // Reset state
       setShowDashboardSelect(false);
       setPendingChart(null);

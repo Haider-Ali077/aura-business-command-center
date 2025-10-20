@@ -154,6 +154,22 @@ export function ExecutiveDashboard() {
     console.log('Widgets updated in ExecutiveDashboard:', widgets.length);
   }, [widgets]);
 
+  // Listen for widget added events from chatbot
+  useEffect(() => {
+    const handleWidgetAdded = (event: CustomEvent) => {
+      const { dashboardId } = event.detail;
+      if (dashboardId === 'executive' && session?.user.tenant_id) {
+        console.log('Widget added to executive dashboard, refreshing...');
+        fetchWidgets();
+      }
+    };
+
+    window.addEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    return () => {
+      window.removeEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    };
+  }, [session]);
+
 
   return (
     <Layout>

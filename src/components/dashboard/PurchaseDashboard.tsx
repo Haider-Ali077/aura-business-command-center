@@ -142,6 +142,23 @@ const PurchaseDashboard = () => {
     }
   }, [session]);
 
+  // Listen for widget added events from chatbot
+  useEffect(() => {
+    const handleWidgetAdded = (event: CustomEvent) => {
+      const { dashboardId } = event.detail;
+      // Only refresh if the widget was added to this dashboard
+      if (dashboardId === 'purchase' && session?.user.tenant_id) {
+        console.log('Widget added to purchase dashboard, refreshing...');
+        fetchWidgets();
+      }
+    };
+
+    window.addEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    return () => {
+      window.removeEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    };
+  }, [session]);
+
   const handleRefresh = () => {
     fetchWidgets();
     fetchKPIData();

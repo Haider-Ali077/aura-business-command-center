@@ -142,6 +142,22 @@ export function FinanceDashboard() {
     console.log('Widgets updated in FinanceDashboard:', widgets.length);
   }, [widgets]);
 
+  // Listen for widget added events from chatbot
+  useEffect(() => {
+    const handleWidgetAdded = (event: CustomEvent) => {
+      const { dashboardId } = event.detail;
+      if (dashboardId === 'finance' && session?.user.tenant_id) {
+        console.log('Widget added to finance dashboard, refreshing...');
+        fetchWidgets();
+      }
+    };
+
+    window.addEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    return () => {
+      window.removeEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    };
+  }, [session]);
+
 
   return (
     <Layout>

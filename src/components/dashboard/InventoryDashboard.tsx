@@ -135,6 +135,22 @@ export function InventoryDashboard() {
     console.log('Widgets updated in InventoryDashboard:', widgets.length);
   }, [widgets]);
 
+  // Listen for widget added events from chatbot
+  useEffect(() => {
+    const handleWidgetAdded = (event: CustomEvent) => {
+      const { dashboardId } = event.detail;
+      if (dashboardId === 'inventory' && session?.user.tenant_id) {
+        console.log('Widget added to inventory dashboard, refreshing...');
+        fetchWidgets();
+      }
+    };
+
+    window.addEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    return () => {
+      window.removeEventListener('widgetAdded', handleWidgetAdded as EventListener);
+    };
+  }, [session]);
+
   return (
     <Layout>
       <div className="space-y-6">
