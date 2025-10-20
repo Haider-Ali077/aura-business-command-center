@@ -4,12 +4,16 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { FloatingChatbot } from "@/components/FloatingChatbot";
+import { useUserChangeDetection } from "@/hooks/useUserChangeDetection";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  // Initialize user change detection for automatic cleanup
+  useUserChangeDetection();
+  
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">

@@ -13,7 +13,7 @@ export interface ChartData {
 export type { EnhancedChartData };
 
 class SqlService {
-  async runSql(query: string, databaseName?: string): Promise<SqlResult | any[]> {
+  async runSql(query: string, tenantId?: number): Promise<SqlResult | any[]> {
     try {
       const authStore = useAuthStore.getState();
       const session = authStore.session;
@@ -29,11 +29,8 @@ class SqlService {
         },
         body: JSON.stringify({ 
           query,
-          database_name: databaseName || session.user.tenant_name,
+          tenant_id: tenantId || session.user.tenant_id,  // Use tenant_id instead of database_name
           user_id: session.user.user_id,
-          tenant_name: session.user.tenant_id,
-          token: session.token,
-          role_name: session.user.role_name
         }),
       });
 
@@ -204,8 +201,8 @@ class SqlService {
     });
   }
 
-  async getChartData(query: string, databaseName?: string): Promise<ChartData[]> {
-    const result = await this.runSql(query, databaseName);
+  async getChartData(query: string, tenantId?: number): Promise<ChartData[]> {
+    const result = await this.runSql(query, tenantId);
     
     console.log('SQL Result type:', Array.isArray(result) ? 'Array' : 'Object');
     console.log('SQL Result:', result);
@@ -243,11 +240,11 @@ class SqlService {
   }
 
   // Enhanced method with chart configuration support
-  async getEnhancedChartData(query: string, config?: ChartConfig, databaseName?: string): Promise<{
+  async getEnhancedChartData(query: string, config?: ChartConfig, tenantId?: number): Promise<{
     data: EnhancedChartData[];
     metadata: ChartMetadata;
   }> {
-    const result = await this.runSql(query, databaseName);
+    const result = await this.runSql(query, tenantId);
     
     let dataArray: any[] = [];
     

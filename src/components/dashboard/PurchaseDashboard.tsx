@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { useWidgetStore } from '@/store/widgetStore';
 import { API_BASE_URL } from '@/config/api';
 import { getIconByName } from '@/lib/iconUtils';
 import { ConfigurableWidget } from '@/components/ConfigurableWidget';
@@ -21,8 +20,80 @@ interface PurchaseMetric {
 const PurchaseDashboard = () => {
   const [metrics, setMetrics] = useState<PurchaseMetric[]>([]);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
+  const [widgets, setWidgets] = useState<any[]>([]);
+  const [isLoadingWidgets, setIsLoadingWidgets] = useState(true);
   const { session } = useAuthStore();
-  const { widgets, loading, fetchWidgets, refreshData, removeWidget } = useWidgetStore();
+
+  const fetchWidgets = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    setIsLoadingWidgets(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: session.user.user_id,
+          tenant_id: session.user.tenant_id,
+          dashboard: 'purchase'
+        })
+      });
+      
+      if (response.ok) {
+        const widgetData = await response.json();
+        
+        // Simulate loading delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        if (widgetData.length > 0) {
+          // Process widgets and fetch chart data
+          const processedWidgets = await Promise.all(widgetData.map(async (w: any) => {
+            const widget = {
+              ...w,
+              position: { x: w.position_x, y: w.position_y },
+              size: { width: w.size_width, height: w.size_height },
+            };
+            
+            // Fetch chart data for widgets with SQL queries
+            const sqlQuery = widget.sqlQuery || widget.sql_query;
+            if (sqlQuery) {
+              try {
+                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    query: sqlQuery,
+                    tenant_id: session.user.tenant_id,
+                    user_id: session.user.user_id,
+                  }),
+                });
+                
+                if (chartRes.ok) {
+                  const chartData = await chartRes.json();
+                  widget.config = { ...widget.config, chartData };
+                  widget.sqlQuery = sqlQuery;
+                }
+              } catch (err) {
+                console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
+              }
+            }
+            
+            return widget;
+          }));
+          
+          setWidgets(processedWidgets);
+        } else {
+          setWidgets([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching widget data:', error);
+    } finally {
+      setIsLoadingWidgets(false);
+    }
+  };
 
   const fetchKPIData = async () => {
     if (!session?.user.tenant_id) return;
@@ -66,13 +137,13 @@ const PurchaseDashboard = () => {
 
   useEffect(() => {
     if (session) {
-      fetchWidgets(session.user.tenant_id, 'purchase', session.user.user_id);
+      fetchWidgets();
       fetchKPIData();
     }
-  }, [session, fetchWidgets]);
+  }, [session]);
 
   const handleRefresh = () => {
-    refreshData();
+    fetchWidgets();
     fetchKPIData();
   };
 
@@ -87,10 +158,10 @@ const PurchaseDashboard = () => {
           <Button 
             variant="gradient"
             onClick={handleRefresh} 
-            disabled={loading || isLoadingMetrics}
+            disabled={isLoadingWidgets || isLoadingMetrics}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${(loading || isLoadingMetrics) ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${(isLoadingWidgets || isLoadingMetrics) ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
         </div>
@@ -142,8 +213,8 @@ const PurchaseDashboard = () => {
                 widget={widget}
                 data={widget.config?.chartData || []}
                 onRemove={(id) => {
-                  removeWidget(id);
-                  refreshData();
+                  // Remove widget from local state
+                  setWidgets(prev => prev.filter(w => w.id !== id));
                 }}
                 onUpdate={() => {}}
                 onMove={() => {}}
@@ -151,7 +222,7 @@ const PurchaseDashboard = () => {
               />
             ))}
           </div>
-        ) : !loading && metrics.length === 0 && (
+        ) : !isLoadingWidgets && metrics.length === 0 && (
           <Card className="p-8 text-center">
             <CardContent>
               <div className="text-muted-foreground">

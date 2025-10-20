@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { API_BASE_URL } from "@/config/api";
@@ -19,9 +18,76 @@ interface HRMetric {
 
 export function HRDashboard() {
   const [metrics, setMetrics] = useState<HRMetric[]>([]);
+  const [widgets, setWidgets] = useState<any[]>([]);
+  const [isLoadingWidgets, setIsLoadingWidgets] = useState(true);
   
-  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
+
+  const fetchWidgets = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    setIsLoadingWidgets(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: session.user.user_id,
+          tenant_id: session.user.tenant_id,
+          dashboard: 'hr'
+        })
+      });
+      
+      if (response.ok) {
+        const widgetData = await response.json();
+        
+        if (widgetData.length > 0) {
+          const processedWidgets = await Promise.all(widgetData.map(async (w: any) => {
+            const widget = {
+              ...w,
+              position: { x: w.position_x, y: w.position_y },
+              size: { width: w.size_width, height: w.size_height },
+            };
+            
+            const sqlQuery = widget.sqlQuery || widget.sql_query;
+            if (sqlQuery) {
+              try {
+                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    query: sqlQuery,
+                    tenant_id: session.user.tenant_id,
+                    user_id: session.user.user_id,
+                  }),
+                });
+                
+                if (chartRes.ok) {
+                  const chartData = await chartRes.json();
+                  widget.config = { ...widget.config, chartData };
+                  widget.sqlQuery = sqlQuery;
+                }
+              } catch (err) {
+                console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
+              }
+            }
+            
+            return widget;
+          }));
+          
+          setWidgets(processedWidgets);
+        } else {
+          setWidgets([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching widget data:', error);
+    } finally {
+      setIsLoadingWidgets(false);
+    }
+  };
 
   const fetchKPIData = async () => {
     if (!session?.user.tenant_id) return;
@@ -59,10 +125,10 @@ export function HRDashboard() {
 
   useEffect(() => {
     if (session?.user.tenant_id) {
-      fetchWidgets(session.user.tenant_id, 'hr');
+      fetchWidgets();
       fetchKPIData();
     }
-  }, [session, fetchWidgets]);
+  }, [session]);
 
   // Listen for changes in widgets array to trigger re-renders when new widgets are added
   useEffect(() => {
@@ -80,13 +146,13 @@ export function HRDashboard() {
           <Button 
             variant="gradient"
             onClick={() => {
-              refreshData();
+              fetchWidgets();
               fetchKPIData();
             }} 
-            disabled={loading}
+            disabled={isLoadingWidgets}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isLoadingWidgets ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
         </div>
@@ -133,7 +199,7 @@ export function HRDashboard() {
             />
           ))}
         </div>
-      ) : !loading && metrics.length === 0 && (
+        ) : !isLoadingWidgets && metrics.length === 0 && (
         <Card className="p-8 text-center">
           <CardContent>
             <div className="text-muted-foreground">

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Trash2, Plus, Edit } from 'lucide-react';
@@ -16,6 +17,7 @@ interface Tenant {
   name: string;
   is_active: boolean;
   created_at: string;
+  schema?: string;
 }
 
 export default function TenantManagement() {
@@ -26,7 +28,8 @@ export default function TenantManagement() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    is_active: true
+    is_active: true,
+    schema_text: ''
   });
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export default function TenantManagement() {
       if (response.ok) {
         toast.success('Tenant created successfully');
         setCreateDialogOpen(false);
-        setFormData({ name: '', is_active: true });
+        setFormData({ name: '', is_active: true, schema_text: '' });
         fetchTenants();
       } else {
         toast.error('Failed to create tenant');
@@ -78,7 +81,8 @@ export default function TenantManagement() {
     if (!selectedTenant) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/tenants/${selectedTenant.tenant_id}`, {
+      // Step 1: Update tenant in database
+      const updateResponse = await fetch(`${API_BASE_URL}/api/admin/tenants/${selectedTenant.tenant_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -86,14 +90,39 @@ export default function TenantManagement() {
         body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        toast.success('Tenant updated successfully');
-        setEditDialogOpen(false);
-        setSelectedTenant(null);
-        fetchTenants();
-      } else {
+      if (!updateResponse.ok) {
         toast.error('Failed to update tenant');
+        return;
       }
+
+      // Step 2: Refresh schema cache (only if schema was updated)
+      if (formData.schema_text !== undefined && formData.schema_text !== selectedTenant.schema) {
+        try {
+          const refreshResponse = await fetch(
+            `${API_BASE_URL}/api/admin/tenants/${selectedTenant.tenant_id}/refresh-schema`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (refreshResponse.ok) {
+            toast.success('Tenant and schema cache updated successfully');
+          } else {
+            toast.warning('Tenant updated but schema cache refresh failed');
+          }
+        } catch (error) {
+          toast.warning('Tenant updated but schema cache refresh failed');
+        }
+      } else {
+        toast.success('Tenant updated successfully');
+      }
+
+      setEditDialogOpen(false);
+      setSelectedTenant(null);
+      fetchTenants();
     } catch (error) {
       toast.error('Error updating tenant');
     }
@@ -122,7 +151,8 @@ export default function TenantManagement() {
     setSelectedTenant(tenant);
     setFormData({
       name: tenant.name,
-      is_active: tenant.is_active
+      is_active: tenant.is_active,
+      schema_text: tenant.schema || ''
     });
     setEditDialogOpen(true);
   };
@@ -161,6 +191,20 @@ export default function TenantManagement() {
                   required
                 />
               </div>
+              <div>
+                <Label htmlFor="schema_text">Schema</Label>
+                <Textarea
+                  id="schema_text"
+                  value={formData.schema_text}
+                  onChange={(e) => setFormData({ ...formData, schema_text: e.target.value })}
+                  placeholder="Enter the SQL schema for this tenant..."
+                  rows={8}
+                  className="font-mono text-sm"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Define the database schema and business context for this tenant's AI assistant.
+                </p>
+              </div>
               <div className="flex items-center space-x-2">
                 <Switch
                   id="is_active"
@@ -192,6 +236,7 @@ export default function TenantManagement() {
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Schema</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -208,6 +253,15 @@ export default function TenantManagement() {
                         : 'bg-red-100 text-red-800'
                     }`}>
                       {tenant.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      tenant.schema && tenant.schema.trim()
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {tenant.schema && tenant.schema.trim() ? 'Custom' : 'Default'}
                     </span>
                   </TableCell>
                   <TableCell>{new Date(tenant.created_at).toLocaleDateString()}</TableCell>
@@ -250,8 +304,22 @@ export default function TenantManagement() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
-              </div>
-              <div className="flex items-center space-x-2">
+            </div>
+            <div>
+              <Label htmlFor="edit_schema_text">Schema</Label>
+              <Textarea
+                id="edit_schema_text"
+                value={formData.schema_text}
+                onChange={(e) => setFormData({ ...formData, schema_text: e.target.value })}
+                placeholder="Enter the SQL schema for this tenant..."
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Define the database schema and business context for this tenant's AI assistant.
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
               <Switch
                 id="edit_is_active"
                 checked={formData.is_active}

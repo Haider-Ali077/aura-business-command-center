@@ -30,7 +30,6 @@ import {
   MicOff,
   RefreshCw,
 } from "lucide-react";
-import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRoleStore } from "@/store/roleStore";
 import { dataService } from "@/services/dataService";
@@ -101,9 +100,13 @@ const convertChatbotChartData = (
 
 export function FloatingChatbot() {
   const { session } = useAuthStore();
-  const { addWidget } = useWidgetStore();
   const { getAccessibleModules } = useRoleStore();
   const isMobile = useIsMobile();
+  
+  // Guard against rendering before session is ready to prevent runtime errors
+  if (!session?.user?.user_id) {
+    return null;
+  }
 
   // Use in-memory chat store with user isolation
   const chatStore = useUserChatStore(
@@ -739,7 +742,30 @@ export function FloatingChatbot() {
         },
       };
 
-      await addWidget(newWidget, session.user.tenant_id, dashboardId, session.user.user_id);
+      // Add widget to dashboard using direct API call
+      const response = await fetch(`${API_BASE_URL}/widgets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: session.user.tenant_id,
+          dashboard: dashboardId,
+          title: newWidget.title,
+          type: newWidget.type,
+          span: newWidget.span,
+          position_x: newWidget.position.x,
+          position_y: newWidget.position.y,
+          size_width: newWidget.size.width,
+          size_height: newWidget.size.height,
+          sql_query: newWidget.sqlQuery || '',
+          user_id: session.user.user_id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create widget');
+      }
 
       // Show success message
       const dashboardName =
@@ -837,6 +863,7 @@ export function FloatingChatbot() {
           prompt: userMessage.content,
           user_id: session.user.user_id,
           tenant_name: session.user.tenant_name,
+          tenant_id: session.user.tenant_id,
           role_name: session.user.role_name,
           token: session.token,
         }),

@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { useWidgetStore } from '@/store/widgetStore';
 import { useRoleStore } from '@/store/roleStore';
+import { useAuthStore } from '@/store/authStore';
 
 export interface SearchResult {
   id: string;
@@ -15,8 +15,41 @@ export interface SearchResult {
 export function useSearch(query: string) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { widgets } = useWidgetStore();
+  const { session } = useAuthStore();
   const { getAccessibleModules } = useRoleStore();
+  
+  // Get widgets from session-based API call
+  const [widgets, setWidgets] = useState<any[]>([]);
+  
+  // Fetch widgets when component mounts or session changes
+  useEffect(() => {
+    const fetchWidgets = async () => {
+      if (!session?.user.tenant_id) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: session.user.user_id,
+            tenant_id: session.user.tenant_id,
+            dashboard: 'all' // Get widgets from all dashboards for search
+          })
+        });
+        
+        if (response.ok) {
+          const widgetData = await response.json();
+          setWidgets(widgetData);
+        }
+      } catch (error) {
+        console.error('Error fetching widgets for search:', error);
+      }
+    };
+    
+    fetchWidgets();
+  }, [session]);
   
   // Memoize the accessible modules to prevent infinite re-renders
   const accessibleModules = useMemo(() => getAccessibleModules(), [getAccessibleModules]);

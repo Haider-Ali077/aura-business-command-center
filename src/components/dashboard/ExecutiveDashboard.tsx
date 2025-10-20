@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
-import { useWidgetStore } from "@/store/widgetStore";
 import { useAuthStore } from "@/store/authStore";
 import { Layout } from "@/components/Layout";
 import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
@@ -28,9 +27,76 @@ interface ChartData {
 export function ExecutiveDashboard() {
   const [kpis, setKpis] = useState<ExecutiveKPI[]>([]);
   const [isLoadingKpis, setIsLoadingKpis] = useState(true);
+  const [widgets, setWidgets] = useState<any[]>([]);
+  const [isLoadingWidgets, setIsLoadingWidgets] = useState(true);
   
-  const { widgets, fetchWidgets, loading, refreshData } = useWidgetStore();
   const { session } = useAuthStore();
+
+  const fetchWidgets = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    setIsLoadingWidgets(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: session.user.user_id,
+          tenant_id: session.user.tenant_id,
+          dashboard: 'executive'
+        })
+      });
+      
+      if (response.ok) {
+        const widgetData = await response.json();
+        
+        if (widgetData.length > 0) {
+          const processedWidgets = await Promise.all(widgetData.map(async (w: any) => {
+            const widget = {
+              ...w,
+              position: { x: w.position_x, y: w.position_y },
+              size: { width: w.size_width, height: w.size_height },
+            };
+            
+            const sqlQuery = widget.sqlQuery || widget.sql_query;
+            if (sqlQuery) {
+              try {
+                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    query: sqlQuery,
+                    tenant_id: session.user.tenant_id,
+                    user_id: session.user.user_id,
+                  }),
+                });
+                
+                if (chartRes.ok) {
+                  const chartData = await chartRes.json();
+                  widget.config = { ...widget.config, chartData };
+                  widget.sqlQuery = sqlQuery;
+                }
+              } catch (err) {
+                console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
+              }
+            }
+            
+            return widget;
+          }));
+          
+          setWidgets(processedWidgets);
+        } else {
+          setWidgets([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching widget data:', error);
+    } finally {
+      setIsLoadingWidgets(false);
+    }
+  };
 
   const fetchKPIData = async () => {
     if (!session?.user.tenant_id) return;
@@ -78,10 +144,10 @@ export function ExecutiveDashboard() {
     if (session?.user.tenant_id) {
       console.log('Session user data:', session.user);
       console.log('Tenant ID:', session.user.tenant_id, 'User ID:', session.user.user_id);
-      fetchWidgets(session.user.tenant_id, 'executive', session.user.user_id);
+      fetchWidgets();
       fetchKPIData();
     }
-  }, [session, fetchWidgets]);
+  }, [session]);
 
   // Listen for changes in widgets array to trigger re-renders when new widgets are added
   useEffect(() => {
@@ -100,13 +166,13 @@ export function ExecutiveDashboard() {
         <Button 
           variant="gradient"
           onClick={() => {
-            refreshData();
+            fetchWidgets();
             fetchKPIData();
           }} 
-          disabled={loading || isLoadingKpis}
+          disabled={isLoadingWidgets || isLoadingKpis}
           className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${(loading || isLoadingKpis) ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${(isLoadingWidgets || isLoadingKpis) ? 'animate-spin' : ''}`} />
           Refresh Data
         </Button>
       </div>
@@ -143,7 +209,7 @@ export function ExecutiveDashboard() {
       ) : null}
 
       {/* Dynamic Widgets */}
-      <LoadingOverlay isLoading={loading}>
+      <LoadingOverlay isLoading={isLoadingWidgets}>
         {widgets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {widgets
@@ -165,7 +231,7 @@ export function ExecutiveDashboard() {
               />
             ))}
           </div>
-        ) : !loading && kpis.length === 0 && (
+        ) : !isLoadingWidgets && kpis.length === 0 && (
           <Card className="p-8 text-center">
             <CardContent>
               <div className="text-muted-foreground">
