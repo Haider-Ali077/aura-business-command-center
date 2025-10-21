@@ -861,7 +861,7 @@ export function FloatingChatbot() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/query`, {
+      const res = await fetch(`${API_BASE_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
