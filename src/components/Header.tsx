@@ -1,11 +1,9 @@
-
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { LogOut,Search } from "lucide-react";
 import { useAuthStore } from '@/store/authStore';
 import { SearchDropdown } from "@/components/SearchDropdown";
-import { AlertsDropdown } from "@/components/AlertsDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,19 +36,39 @@ export function Header() {
 
   return (
     <header className="h-16 border-b border-border bg-background flex items-center justify-between px-4 md:px-6">
-      <div className="flex items-center gap-2 md:gap-4 min-w-0">
-        <SidebarTrigger />
-        <div className="">
-          <SearchDropdown />
+      {/* Left: Logo + Sidebar Trigger */}
+      <div className="flex items-center gap-4">
+  <SidebarTrigger />
+  <img
+  src="/Alkaram.png"
+  alt="Technaptix Logo"
+  style={{ height: '3.8rem' }} // Between h-14 (3.5rem) and h-16 (4rem)
+  className="w-auto"
+/>
+
+</div>
+
+      {/* Center: Search */}
+       <div className="flex-1 flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+          {/* <h1 className="text-lg font-bold text-foreground text-center">Dashboard</h1> */}
+          <div className="w-full relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
         </div>
-      </div>
-      
-      <div className="flex items-center gap-2 md:gap-4 min-w-0">
-        {/* <AlertsDropdown /> */}
-        
+      {/* Right: User Avatar + Dropdown */}
+      <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 min-w-0 h-auto py-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 h-auto py-1"
+            >
               <Avatar className="h-8 w-8">
                 <AvatarImage src={profilePictureUrl} alt="Profile picture" />
                 <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white text-xs font-semibold">
@@ -69,7 +87,7 @@ export function Header() {
               <Link to="/settings">Profile Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={handleLogout}
               className="text-red-600 focus:text-red-600"
             >

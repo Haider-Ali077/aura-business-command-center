@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -27,6 +26,9 @@ import { AdminProtectedRoute } from '@/components/AdminProtectedRoute';
 import { PermissionProtectedRoute } from '@/components/PermissionProtectedRoute';
 import './App.css';
 
+// ✅ Added import for Landing Page
+import LandingPage from '@/components/Landing';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -35,15 +37,6 @@ function App() {
   
   // Initialize inactivity timer
   useInactivityTimer();
-
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoginForm />
-        <Toaster />
-      </div>
-    );
-  }
 
   // Get the first accessible dashboard for the user
   const accessibleModules = getAccessibleModules();
@@ -55,7 +48,13 @@ function App() {
         <Router>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
-              <Route path="/" element={<Navigate to={defaultDashboard} replace />} />
+              {/* ✅ Landing Page is now the main route always */}
+              <Route path="/" element={<LandingPage />} />
+
+              {/* ✅ Login page remains separate */}
+              <Route path="/login" element={<LoginForm />} />
+
+              {/* ✅ Dashboards (protected routes) */}
               <Route 
                 path="/dashboard/executive" 
                 element={
@@ -104,8 +103,11 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+
+              {/* ✅ Settings */}
               <Route path="/settings" element={<Settings />} />
-              
+
+              {/* ✅ Admin routes */}
               <Route path="/admin/tenants" element={
                 <AdminProtectedRoute>
                   <TenantManagement />
@@ -136,7 +138,8 @@ function App() {
                   <PermissionManagement />
                 </PermissionProtectedRoute>
               } />
-              
+
+              {/* ✅ Fallback */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
