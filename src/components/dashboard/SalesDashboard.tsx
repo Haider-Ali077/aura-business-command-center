@@ -8,6 +8,8 @@ import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
 import { getIconByName } from '@/lib/iconUtils';
+import { dataService } from '@/services/dataService';
+import { sqlService } from '@/services/sqlService';
 
 interface SalesMetric {
   title: string;
@@ -29,6 +31,8 @@ export function SalesDashboard() {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingWidgets(true);
+    const startTime = Date.now();
+    
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
         method: 'POST',
@@ -56,21 +60,14 @@ export function SalesDashboard() {
             const sqlQuery = widget.sqlQuery || widget.sql_query;
             if (sqlQuery) {
               try {
-                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    query: sqlQuery,
-                    tenant_id: session.user.tenant_id,
-                    user_id: session.user.user_id,
-                  }),
-                });
+                // Use cached sqlService instead of direct fetch
+                const chartData = await sqlService.runSql(
+                  sqlQuery,
+                  session.user.tenant_id
+                );
                 
-                if (chartRes.ok) {
-                  const chartData = await chartRes.json();
-                  widget.config = { ...widget.config, chartData };
-                  widget.sqlQuery = sqlQuery;
-                }
+                widget.config = { ...widget.config, chartData };
+                widget.sqlQuery = sqlQuery;
               } catch (err) {
                 console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
               }
@@ -80,6 +77,7 @@ export function SalesDashboard() {
           }));
           
           setWidgets(processedWidgets);
+          console.log(`[SalesDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
         }
@@ -95,40 +93,41 @@ export function SalesDashboard() {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingMetrics(true);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/kpis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session.user.user_id,
-          tenant_id: session.user.tenant_id,
-          dashboard: 'sales'
-        })
-      });
-      if (response.ok) {
-        const kpiData = await response.json();
-        
-        // Simulate loading delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        if (kpiData.length > 0) {
-          const mappedKpis = kpiData.map((kpi: any) => ({
-            title: kpi.title,
-            value: kpi.value,
-            change: kpi.change,
-            icon: getIconByName(kpi.icon),
-            color: kpi.color
-          }));
-          setMetrics(mappedKpis);
-        }
+      // Use cached dataService.fetchKpis instead of direct fetch
+      const kpiData = await dataService.fetchKpis('sales', session.user.tenant_id);
+      
+      if (kpiData.length > 0) {
+        const mappedKpis = kpiData.map((kpi: any) => ({
+          title: kpi.title,
+          value: kpi.value,
+          change: kpi.change,
+          icon: getIconByName(kpi.icon),
+          color: kpi.color
+        }));
+        setMetrics(mappedKpis);
+        console.log(`[SalesDashboard] KPIs loaded in ${Date.now() - startTime}ms`);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
     } finally {
       setIsLoadingMetrics(false);
     }
+  };
+
+  // Force refresh with cache invalidation
+  const handleRefresh = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    console.log('[SalesDashboard] Force refresh triggered');
+    
+    // Invalidate cache before refetch
+    dataService.invalidateKpis(session.user.tenant_id, 'sales');
+    sqlService.invalidateCache(session.user.tenant_id);
+    
+    await Promise.all([fetchWidgets(), fetchKPIData()]);
   };
 
   useEffect(() => {
@@ -149,6 +148,8 @@ export function SalesDashboard() {
       const { dashboardId } = event.detail;
       if (dashboardId === 'sales' && session?.user.tenant_id) {
         console.log('Widget added to sales dashboard, refreshing...');
+        // Invalidate cache since new widget was added
+        dataService.invalidateKpis(session.user.tenant_id, 'sales');
         fetchWidgets();
       }
     };
@@ -169,10 +170,7 @@ export function SalesDashboard() {
           </div>
           <Button 
             variant="gradient"
-            onClick={() => {
-              fetchWidgets();
-              fetchKPIData();
-            }} 
+            onClick={handleRefresh}
             disabled={isLoadingWidgets || isLoadingMetrics}
             className="flex items-center gap-2"
           >

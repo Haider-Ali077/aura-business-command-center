@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { API_BASE_URL } from '@/config/api';
 import { SqlResult, EnhancedChartData, ChartMetadata, ChartConfig } from '@/types/chart';
+import { cache } from '@/lib/cache';
 
 // Legacy interface for backward compatibility
 export interface ChartData {
@@ -22,6 +23,19 @@ class SqlService {
         throw new Error('No active session');
       }
 
+      const userId = session.user.user_id;
+      const effectiveTenantId = tenantId || session.user.tenant_id;
+
+      // Normalize query for consistent caching (trim & lowercase for key generation)
+      const normalizedQuery = query.trim().replace(/\s+/g, ' ').toLowerCase();
+      const cacheKey = `sql:${effectiveTenantId}:${userId}:${normalizedQuery}`;
+
+      // Check cache first
+      const cached = cache.get<any>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const response = await fetch(`${API_BASE_URL}/execute-sql`, {
         method: 'POST',
         headers: {
@@ -29,8 +43,8 @@ class SqlService {
         },
         body: JSON.stringify({ 
           query,
-          tenant_id: tenantId || session.user.tenant_id,  // Use tenant_id instead of database_name
-          user_id: session.user.user_id,
+          tenant_id: effectiveTenantId,  // Use tenant_id instead of database_name
+          user_id: userId,
         }),
       });
 
@@ -39,6 +53,9 @@ class SqlService {
       }
 
       const data = await response.json();
+      
+      // Cache the result
+      cache.set(cacheKey, data);
       
       // Return raw data if it's already an array of objects
       if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
@@ -302,6 +319,19 @@ class SqlService {
         dataKey: config?.yLabel || metadata.dataKey
       }
     };
+  }
+
+  /**
+   * Invalidate SQL cache for a specific tenant/user or all
+   */
+  invalidateCache(tenantId?: number, userId?: number): void {
+    if (tenantId && userId) {
+      cache.invalidate(`sql:${tenantId}:${userId}:`);
+    } else if (tenantId) {
+      cache.invalidate(`sql:${tenantId}:`);
+    } else {
+      cache.invalidate('sql:');
+    }
   }
 }
 

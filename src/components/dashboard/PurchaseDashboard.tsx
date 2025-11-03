@@ -8,6 +8,8 @@ import { API_BASE_URL } from '@/config/api';
 import { getIconByName } from '@/lib/iconUtils';
 import { ConfigurableWidget } from '@/components/ConfigurableWidget';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { dataService } from '@/services/dataService';
+import { sqlService } from '@/services/sqlService';
 
 interface PurchaseMetric {
   title: string;
@@ -28,6 +30,8 @@ const PurchaseDashboard = () => {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingWidgets(true);
+    const startTime = Date.now();
+    
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
         method: 'POST',
@@ -44,9 +48,6 @@ const PurchaseDashboard = () => {
       if (response.ok) {
         const widgetData = await response.json();
         
-        // Simulate loading delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
         if (widgetData.length > 0) {
           // Process widgets and fetch chart data
           const processedWidgets = await Promise.all(widgetData.map(async (w: any) => {
@@ -60,21 +61,14 @@ const PurchaseDashboard = () => {
             const sqlQuery = widget.sqlQuery || widget.sql_query;
             if (sqlQuery) {
               try {
-                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    query: sqlQuery,
-                    tenant_id: session.user.tenant_id,
-                    user_id: session.user.user_id,
-                  }),
-                });
+                // Use cached sqlService instead of direct fetch
+                const chartData = await sqlService.runSql(
+                  sqlQuery,
+                  session.user.tenant_id
+                );
                 
-                if (chartRes.ok) {
-                  const chartData = await chartRes.json();
-                  widget.config = { ...widget.config, chartData };
-                  widget.sqlQuery = sqlQuery;
-                }
+                widget.config = { ...widget.config, chartData };
+                widget.sqlQuery = sqlQuery;
               } catch (err) {
                 console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
               }
@@ -84,6 +78,7 @@ const PurchaseDashboard = () => {
           }));
           
           setWidgets(processedWidgets);
+          console.log(`[PurchaseDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
         }
@@ -99,40 +94,41 @@ const PurchaseDashboard = () => {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingMetrics(true);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/kpis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session.user.user_id,
-          tenant_id: session.user.tenant_id,
-          dashboard: 'purchase'
-        })
-      });
-      if (response.ok) {
-        const kpiData = await response.json();
-        
-        // Simulate loading delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        if (kpiData.length > 0) {
-          const mappedKpis = kpiData.map((kpi: any) => ({
-            title: kpi.title,
-            value: kpi.value,
-            change: kpi.change,
-            icon: getIconByName(kpi.icon),
-            color: kpi.color
-          }));
-          setMetrics(mappedKpis);
-        }
+      // Use cached dataService.fetchKpis instead of direct fetch
+      const kpiData = await dataService.fetchKpis('purchase', session.user.tenant_id);
+      
+      if (kpiData.length > 0) {
+        const mappedKpis = kpiData.map((kpi: any) => ({
+          title: kpi.title,
+          value: kpi.value,
+          change: kpi.change,
+          icon: getIconByName(kpi.icon),
+          color: kpi.color
+        }));
+        setMetrics(mappedKpis);
+        console.log(`[PurchaseDashboard] KPIs loaded in ${Date.now() - startTime}ms`);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
     } finally {
       setIsLoadingMetrics(false);
     }
+  };
+
+  // Force refresh with cache invalidation
+  const handleRefresh = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    console.log('[PurchaseDashboard] Force refresh triggered');
+    
+    // Invalidate cache before refetch
+    dataService.invalidateKpis(session.user.tenant_id, 'purchase');
+    sqlService.invalidateCache(session.user.tenant_id);
+    
+    await Promise.all([fetchWidgets(), fetchKPIData()]);
   };
 
   useEffect(() => {
@@ -149,6 +145,8 @@ const PurchaseDashboard = () => {
       // Only refresh if the widget was added to this dashboard
       if (dashboardId === 'purchase' && session?.user.tenant_id) {
         console.log('Widget added to purchase dashboard, refreshing...');
+        // Invalidate cache since new widget was added
+        dataService.invalidateKpis(session.user.tenant_id, 'purchase');
         fetchWidgets();
       }
     };
@@ -158,11 +156,6 @@ const PurchaseDashboard = () => {
       window.removeEventListener('widgetAdded', handleWidgetAdded as EventListener);
     };
   }, [session]);
-
-  const handleRefresh = () => {
-    fetchWidgets();
-    fetchKPIData();
-  };
 
   return (
     <Layout>

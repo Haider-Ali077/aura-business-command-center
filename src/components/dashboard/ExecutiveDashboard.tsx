@@ -9,6 +9,8 @@ import { Layout } from "@/components/Layout";
 import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
 import { getIconByName } from '@/lib/iconUtils';
+import { dataService } from '@/services/dataService';
+import { sqlService } from '@/services/sqlService';
 
 interface ExecutiveKPI {
   title: string;
@@ -36,6 +38,8 @@ export function ExecutiveDashboard() {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingWidgets(true);
+    const startTime = Date.now();
+    
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
         method: 'POST',
@@ -63,21 +67,14 @@ export function ExecutiveDashboard() {
             const sqlQuery = widget.sqlQuery || widget.sql_query;
             if (sqlQuery) {
               try {
-                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    query: sqlQuery,
-                    tenant_id: session.user.tenant_id,
-                    user_id: session.user.user_id,
-                  }),
-                });
+                // Use cached sqlService instead of direct fetch
+                const chartData = await sqlService.runSql(
+                  sqlQuery,
+                  session.user.tenant_id
+                );
                 
-                if (chartRes.ok) {
-                  const chartData = await chartRes.json();
-                  widget.config = { ...widget.config, chartData };
-                  widget.sqlQuery = sqlQuery;
-                }
+                widget.config = { ...widget.config, chartData };
+                widget.sqlQuery = sqlQuery;
               } catch (err) {
                 console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
               }
@@ -87,6 +84,7 @@ export function ExecutiveDashboard() {
           }));
           
           setWidgets(processedWidgets);
+          console.log(`[ExecutiveDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
         }
@@ -102,35 +100,25 @@ export function ExecutiveDashboard() {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingKpis(true);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/kpis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session.user.user_id,
-          tenant_id: session.user.tenant_id,
-          dashboard: 'executive'
-        })
-      });
-      if (response.ok) {
-        const kpiData = await response.json();
-        
-        // Simulate loading delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        if (kpiData.length > 0) {
-          // Map API data to component format
-          const mappedKpis = kpiData.map((kpi: any) => ({
-            title: kpi.title,
-            value: kpi.value,
-            change: kpi.change,
-            icon: getIconByName(kpi.icon),
-            color: kpi.color
-          }));
-          setKpis(mappedKpis);
-        }
+      // Use cached dataService.fetchKpis (no artificial delay!)
+      const kpiData = await dataService.fetchKpis(
+        'executive',
+        session.user.tenant_id
+      );
+      
+      if (kpiData.length > 0) {
+        const mappedKpis = kpiData.map((kpi: any) => ({
+          title: kpi.title,
+          value: kpi.value,
+          change: kpi.change,
+          icon: getIconByName(kpi.icon),
+          color: kpi.color
+        }));
+        setKpis(mappedKpis);
+        console.log(`[ExecutiveDashboard] KPIs loaded in ${Date.now() - startTime}ms`);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
@@ -139,6 +127,19 @@ export function ExecutiveDashboard() {
     }
   };
 
+  // Force refresh (invalidates cache first)
+  const handleRefresh = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    console.log('[ExecutiveDashboard] Force refresh triggered');
+    
+    // Invalidate cache before refetch
+    dataService.invalidateKpis(session.user.tenant_id, 'executive');
+    sqlService.invalidateCache(session.user.tenant_id);
+    
+    // Fetch fresh data
+    await Promise.all([fetchWidgets(), fetchKPIData()]);
+  };
 
   useEffect(() => {
     if (session?.user.tenant_id) {
@@ -160,6 +161,8 @@ export function ExecutiveDashboard() {
       const { dashboardId } = event.detail;
       if (dashboardId === 'executive' && session?.user.tenant_id) {
         console.log('Widget added to executive dashboard, refreshing...');
+        // Invalidate cache since new widget was added
+        dataService.invalidateKpis(session.user.tenant_id, 'executive');
         fetchWidgets();
       }
     };
@@ -181,10 +184,7 @@ export function ExecutiveDashboard() {
         </div>
         <Button 
           variant="gradient"
-          onClick={() => {
-            fetchWidgets();
-            fetchKPIData();
-          }} 
+          onClick={handleRefresh} 
           disabled={isLoadingWidgets || isLoadingKpis}
           className="flex items-center gap-2"
         >

@@ -31,7 +31,8 @@ interface ChatStore {
   clearChat: () => void;
   setSessionId: (sessionId: string) => void;
   markAsInitialized: () => void;
-  resetForNewUser: (userId: string) => void; // ✅ NEW: Force reset for user change
+  resetForNewUser: (userId: string) => void; 
+  logoutAndClearSession: () => void; // ✅ New action for logout/session end
 }
 
 // Helper function to convert backend message format to frontend format
@@ -125,6 +126,18 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     });
     
     console.log('🔄 Chat reset complete - fresh start for new user');
+  },
+
+  // ✅ NEW: Fully clear chat/session on logout or session expiry
+  logoutAndClearSession: () => {
+    console.log('👋 User logged out — clearing chat session completely');
+    set({
+      sessionId: null,
+      messages: [],
+      isInitialized: false,
+      lastUpdated: new Date(),
+      currentUserId: null,
+    });
   },
 }));
 

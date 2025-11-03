@@ -8,6 +8,8 @@ import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { API_BASE_URL } from "@/config/api";
 import { getIconByName } from '@/lib/iconUtils';
+import { dataService } from '@/services/dataService';
+import { sqlService } from '@/services/sqlService';
 
 interface FinanceMetric {
   title: string;
@@ -26,6 +28,7 @@ export function FinanceDashboard() {
   const [metrics, setMetrics] = useState<FinanceMetric[]>([]);
   const [widgets, setWidgets] = useState<any[]>([]);
   const [isLoadingWidgets, setIsLoadingWidgets] = useState(true);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   
   const { session } = useAuthStore();
 
@@ -33,6 +36,8 @@ export function FinanceDashboard() {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingWidgets(true);
+    const startTime = Date.now();
+    
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
         method: 'POST',
@@ -60,21 +65,14 @@ export function FinanceDashboard() {
             const sqlQuery = widget.sqlQuery || widget.sql_query;
             if (sqlQuery) {
               try {
-                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    query: sqlQuery,
-                    tenant_id: session.user.tenant_id,
-                    user_id: session.user.user_id,
-                  }),
-                });
+                // Use cached sqlService instead of direct fetch
+                const chartData = await sqlService.runSql(
+                  sqlQuery,
+                  session.user.tenant_id
+                );
                 
-                if (chartRes.ok) {
-                  const chartData = await chartRes.json();
-                  widget.config = { ...widget.config, chartData };
-                  widget.sqlQuery = sqlQuery;
-                }
+                widget.config = { ...widget.config, chartData };
+                widget.sqlQuery = sqlQuery;
               } catch (err) {
                 console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
               }
@@ -84,6 +82,7 @@ export function FinanceDashboard() {
           }));
           
           setWidgets(processedWidgets);
+          console.log(`[FinanceDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
         }
@@ -98,35 +97,42 @@ export function FinanceDashboard() {
   const fetchKPIData = async () => {
     if (!session?.user.tenant_id) return;
     
+    setIsLoadingMetrics(true);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/kpis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session.user.user_id,
-          tenant_id: session.user.tenant_id,
-          dashboard: 'finance'
-        })
-      });
-      if (response.ok) {
-        const kpiData = await response.json();
-        
-        if (kpiData.length > 0) {
-          const mappedKpis = kpiData.map((kpi: any) => ({
-            title: kpi.title,
-            value: kpi.value,
-            change: kpi.change,
-            icon: getIconByName(kpi.icon),
-            color: kpi.color
-          }));
-          setMetrics(mappedKpis);
-        }
+      // Use cached dataService.fetchKpis instead of direct fetch
+      const kpiData = await dataService.fetchKpis('finance', session.user.tenant_id);
+      
+      if (kpiData.length > 0) {
+        const mappedKpis = kpiData.map((kpi: any) => ({
+          title: kpi.title,
+          value: kpi.value,
+          change: kpi.change,
+          icon: getIconByName(kpi.icon),
+          color: kpi.color
+        }));
+        setMetrics(mappedKpis);
+        console.log(`[FinanceDashboard] KPIs loaded in ${Date.now() - startTime}ms`);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
+    } finally {
+      setIsLoadingMetrics(false);
     }
+  };
+
+  // Force refresh with cache invalidation
+  const handleRefresh = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    console.log('[FinanceDashboard] Force refresh triggered');
+    
+    // Invalidate cache before refetch
+    dataService.invalidateKpis(session.user.tenant_id, 'finance');
+    sqlService.invalidateCache(session.user.tenant_id);
+    
+    await Promise.all([fetchWidgets(), fetchKPIData()]);
   };
 
 
@@ -148,6 +154,8 @@ export function FinanceDashboard() {
       const { dashboardId } = event.detail;
       if (dashboardId === 'finance' && session?.user.tenant_id) {
         console.log('Widget added to finance dashboard, refreshing...');
+        // Invalidate cache since new widget was added
+        dataService.invalidateKpis(session.user.tenant_id, 'finance');
         fetchWidgets();
       }
     };
@@ -169,14 +177,11 @@ export function FinanceDashboard() {
           </div>
           <Button 
             variant="gradient"
-            onClick={() => {
-              fetchWidgets();
-              fetchKPIData();
-            }} 
-            disabled={isLoadingWidgets}
+            onClick={handleRefresh}
+            disabled={isLoadingWidgets || isLoadingMetrics}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoadingWidgets ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${(isLoadingWidgets || isLoadingMetrics) ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
         </div>

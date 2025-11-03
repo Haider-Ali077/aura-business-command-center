@@ -4,7 +4,7 @@ export interface ChartConfig {
   xLabel?: string;
   yLabel?: string;
   dataKeys?: string[]; // For tables with multiple columns
-  chartType?: 'line' | 'bar' | 'area' | 'pie' | 'table';
+  chartType?: 'line' | 'bar' | 'area' | 'doughnut' | 'table';
   colors?: string[];
   showGrid?: boolean;
   showLegend?: boolean;

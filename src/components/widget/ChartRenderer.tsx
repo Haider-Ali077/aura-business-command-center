@@ -208,6 +208,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
           </AreaChart>
         </ResponsiveContainer>
       );
+    case 'doughnut':
     case 'pie':
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
@@ -219,6 +220,7 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
               labelLine={false}
               label={({ payload, percent }) => `${payload[labelKey]} ${(percent * 100).toFixed(0)}%`}
               outerRadius={Math.min(chartHeight / 3, 100)}
+              innerRadius={Math.min(chartHeight / 5, 50)}
               fill="#8884d8"
               dataKey={dataKey}
               nameKey={labelKey}
