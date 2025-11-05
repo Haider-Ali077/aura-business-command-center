@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Upload, File, Trash2, Download, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/config/api";
+import { checkTenantRag } from "@/utils/tenantRagCheck";
 
 interface Document {
   id: string;
@@ -19,57 +21,58 @@ export function DocumentManagement() {
   const { session } = useAuthStore();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRagEnabled, setIsRagEnabled] = useState<boolean | null>(null);
+
+  // Check tenant RAG status on mount
+  useEffect(() => {
+    const checkRagStatus = async () => {
+      if (session?.user?.tenant_id) {
+        try {
+          const isRag = await checkTenantRag(session.user.tenant_id);
+          setIsRagEnabled(isRag);
+        } catch (error) {
+          console.warn("⚠️ Could not check tenant RAG status:", error);
+          setIsRagEnabled(false);
+        }
+      }
+    };
+    
+    checkRagStatus();
+  }, [session?.user?.tenant_id]);
 
   // Fetch documents on component mount
   useEffect(() => {
-    if (session) {
+    if (session && isRagEnabled) {
       fetchDocuments();
     }
-  }, [session]);
+  }, [session, isRagEnabled]);
 
   const fetchDocuments = async () => {
     if (!session) return;
     
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/documents`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session.user.user_id,
-          tenant_name: session.user.tenant_id,
-          role_name: session.user.role_name,
-          token: session.token
-        })
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/api/documents?tenant_id=${session.user.tenant_id}&user_id=${session.user.user_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
       if (response.ok) {
         const docs = await response.json();
+        console.log('📄 Fetched documents:', docs);
         setDocuments(docs);
+      } else {
+        console.error('Failed to fetch documents:', response.status);
+        setDocuments([]);
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
-      // Set dummy documents for demo
-      setDocuments([
-        {
-          id: '1',
-          name: 'Business_Plan_2024.pdf',
-          size: '2.4 MB',
-          uploadDate: '2024-01-15',
-          type: 'Business Document',
-          uploadedBy: 'admin@company.com',
-        },
-        {
-          id: '2',
-          name: 'Financial_Report_Q1.xlsx',
-          size: '1.8 MB',
-          uploadDate: '2024-01-14',
-          type: 'Financial Report',
-          uploadedBy: 'user@company.com',
-        },
-      ]);
+      setDocuments([]);
     } finally {
       setIsLoading(false);
     }
@@ -77,64 +80,130 @@ export function DocumentManagement() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files && session) {
-      setIsLoading(true);
+    console.log('📄 File upload triggered:', files?.length || 0, 'files');
+    
+    if (!files || files.length === 0) {
+      console.log('⚠️ No files selected');
+      return;
+    }
+
+    if (!session) {
+      toast.error("Please log in to upload documents");
+      return;
+    }
+
+    if (!isRagEnabled) {
+      toast.error("PDF inquiry feature is not activated in your package. Please contact the sales department to enable this feature.");
+      return;
+    }
+
+    // Filter to only PDF files
+    const pdfFiles = Array.from(files).filter(file => file.name.toLowerCase().endsWith('.pdf'));
+    
+    if (pdfFiles.length === 0) {
+      toast.error("Please upload PDF files only");
+      return;
+    }
+
+    console.log(`📊 Uploading ${pdfFiles.length} PDF file(s)...`);
+    setIsLoading(true);
+    
+    // Upload each PDF file individually
+    const uploadPromises = pdfFiles.map(async (file) => {
       try {
+        console.log(`📤 Uploading: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+        
         const formData = new FormData();
-        Array.from(files).forEach(file => {
-          formData.append('files', file);
-        });
-
-        const response = await fetch(`http://localhost:8000/api/documents/upload`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            files: Array.from(files).map(file => file.name),
-            user_id: session.user.user_id,
-            tenant_name: session.user.tenant_id,
-            role_name: session.user.role_name,
-            token: session.token,
-            uploadedBy: session.user.email
-          })
-        });
-
-        if (response.ok) {
-          toast.success("Documents uploaded successfully");
-          fetchDocuments();
-        } else {
-          toast.error("Failed to upload documents");
+        formData.append('file', file);
+        formData.append('tenant_id', session.user.tenant_id.toString());
+        formData.append('user_id', session.user.user_id.toString());
+        if (session.user.tenant_name) {
+          formData.append('tenant_name', session.user.tenant_name);
         }
+
+        console.log(`🌐 Sending to: ${API_BASE_URL}/api/documents/upload`);
+
+        const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
+          method: 'POST',
+          body: formData, // Don't set Content-Type header - browser will set it with boundary
+        });
+
+        console.log(`📥 Response status: ${response.status}`);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
+          console.error('❌ Upload error:', errorData);
+          throw new Error(errorData.detail || `Upload failed with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Upload success:', result);
+        return { success: true, filename: file.name, result };
       } catch (error) {
-        console.error('Error uploading files:', error);
-        toast.error("Error uploading documents");
-      } finally {
-        setIsLoading(false);
+        console.error(`❌ Error uploading ${file.name}:`, error);
+        return { 
+          success: false, 
+          filename: file.name, 
+          error: error instanceof Error ? error.message : 'Upload failed' 
+        };
       }
+    });
+
+    try {
+      const results = await Promise.all(uploadPromises);
+      const successes = results.filter(r => r.success);
+      const failures = results.filter(r => !r.success);
+
+      if (successes.length > 0) {
+        toast.success(
+          `Successfully uploaded ${successes.length} PDF${successes.length > 1 ? 's' : ''}. ${successes[0].result?.chunks_indexed || 0} chunks indexed.`
+        );
+        // Refresh document list after successful upload
+        await fetchDocuments();
+      }
+      
+      if (failures.length > 0) {
+        failures.forEach(f => {
+          toast.error(`Failed to upload ${f.filename}: ${f.error}`);
+        });
+      }
+
+      // Reset input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error("Error uploading documents");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteDocument = async (id: string) => {
+    if (!session) {
+      toast.error("Please log in to delete documents");
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:8000/api/documents/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session?.user.user_id,
-          tenant_name: session?.user.tenant_id,
-          role_name: session?.user.role_name,
-          token: session?.token
-        })
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/documents/${encodeURIComponent(id)}?tenant_id=${session.user.tenant_id}&user_id=${session.user.user_id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.ok) {
+        const result = await response.json();
         setDocuments(documents.filter(doc => doc.id !== id));
-        toast.success("Document deleted successfully");
+        toast.success(result.message || "Document deleted successfully");
+        // Optionally refresh the list
+        await fetchDocuments();
       } else {
-        toast.error("Failed to delete document");
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to delete document' }));
+        toast.error(errorData.detail || "Failed to delete document");
       }
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -166,22 +235,44 @@ export function DocumentManagement() {
         <div className="border-2 border-dashed border-border rounded-lg p-6 md:p-8 text-center hover:border-primary transition-colors">
           <Upload className="h-8 w-8 md:h-12 md:w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-base md:text-lg font-medium text-foreground mb-2">Upload Documents</h3>
-          <p className="text-muted-foreground mb-4 text-sm md:text-base">Drag and drop your files here, or click to browse</p>
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-            onChange={handleFileUpload}
-            className="hidden"
-            id="file-upload"
-            disabled={isLoading}
-          />
-          <label htmlFor="file-upload">
-            <Button variant="gradient" disabled={isLoading}>
-              {isLoading ? "Uploading..." : "Choose Files"}
-            </Button>
-          </label>
-          <p className="text-xs text-muted-foreground mt-2">Supports PDF, DOC, DOCX, XLS, XLSX, TXT files</p>
+          {isRagEnabled === false && (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                PDF inquiry feature is not activated in your package. Please contact the sales department to enable this feature.
+              </p>
+            </div>
+          )}
+          {isRagEnabled === true && (
+            <>
+              <p className="text-muted-foreground mb-4 text-sm md:text-base">Drag and drop PDF files here, or click to browse</p>
+              <input
+                type="file"
+                multiple
+                accept=".pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload"
+                disabled={isLoading}
+              />
+              <label htmlFor="file-upload" className="cursor-pointer inline-block">
+                <Button 
+                  type="button"
+                  variant="default" 
+                  disabled={isLoading}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('file-upload')?.click();
+                  }}
+                >
+                  {isLoading ? "Uploading..." : "Upload PDF Files"}
+                </Button>
+              </label>
+              <p className="text-xs text-muted-foreground mt-2">Upload PDF documents to be indexed for RAG queries</p>
+            </>
+          )}
+          {isRagEnabled === null && (
+            <p className="text-sm text-muted-foreground">Checking RAG availability...</p>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -194,7 +285,9 @@ export function DocumentManagement() {
                   <p className="text-xs md:text-sm text-muted-foreground">
                     {doc.size} • {doc.type} • {doc.uploadDate}
                   </p>
-                  <p className="text-xs text-muted-foreground">Uploaded by: {doc.uploadedBy}</p>
+                  {doc.uploadedBy && (
+                    <p className="text-xs text-muted-foreground">Uploaded by: {doc.uploadedBy}</p>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">

@@ -39,6 +39,7 @@ import { UnifiedChartRenderer } from "./UnifiedChartRenderer";
 import { ChartConfig, EnhancedChartData } from "@/types/chart";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserChatStore, Message } from "@/store/chatStore";
+import { checkTenantRag } from "@/utils/tenantRagCheck";
 
 interface ChartData {
   chart_type: string;
@@ -133,6 +134,33 @@ export function FloatingChatbot() {
   const restartTimeoutRef = useRef<any>(null);
   const autoSendTimeoutRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Cache tenant RAG status to avoid repeated API calls
+  const [tenantRagEnabled, setTenantRagEnabled] = useState<boolean | null>(null);
+  const lastCheckedTenantId = useRef<number | null>(null);
+  
+  // Check tenant RAG status on mount or when tenant changes
+  useEffect(() => {
+    const checkRagStatus = async () => {
+      const currentTenantId = session?.user?.tenant_id;
+      
+      // Only check if tenant changed or hasn't been checked yet
+      if (currentTenantId && currentTenantId !== lastCheckedTenantId.current) {
+        try {
+          const isRag = await checkTenantRag(currentTenantId);
+          setTenantRagEnabled(isRag);
+          lastCheckedTenantId.current = currentTenantId;
+          console.log(`🎯 Tenant RAG status: ${isRag ? 'Enabled' : 'Disabled'} for tenant ${currentTenantId}`);
+        } catch (error) {
+          console.warn("⚠️ Could not check tenant RAG status:", error);
+          setTenantRagEnabled(false); // Default to false on error
+          lastCheckedTenantId.current = currentTenantId;
+        }
+      }
+    };
+    
+    checkRagStatus();
+  }, [session?.user?.tenant_id]);
 
   // Auto-scroll to bottom when new messages arrive or chat opens
   useEffect(() => {
@@ -861,7 +889,14 @@ export function FloatingChatbot() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/ask`, {
+      // Determine endpoint based on tenant RAG status
+      // If RAG is enabled, use /ask_with_rag, otherwise use /ask
+      // Default to /ask if status is still loading (null)
+      const endpoint = tenantRagEnabled === true ? "/ask_with_rag" : "/ask";
+      
+      console.log(`📡 Sending request to: ${endpoint} (RAG ${tenantRagEnabled === true ? 'enabled' : tenantRagEnabled === false ? 'disabled' : 'checking...'})`);
+      
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -884,19 +919,24 @@ export function FloatingChatbot() {
       if (
         data.response?.chart_type &&
         data.response?.x_axis &&
-        data.response?.y_axis
+        (data.response?.y_axis || data.response?.y_axes)
       ) {
-        // Chart response
+        // Chart response - handle both y_axis (single) and y_axes (array)
+        const yAxis = data.response.y_axis || (data.response.y_axes && data.response.y_axes[0]);
+        const yAxes = data.response.y_axes || (data.response.y_axis ? [data.response.y_axis] : []);
+        
+        // Ensure yAxis is defined and exists in data
+        if (!yAxis) {
+          console.error("No valid Y-axis found in response:", data.response);
+        }
+        
         chart = {
           chart_type: data.response.chart_type,
-          title:
-            data.response.chart_type === "table"
-              ? "Data Table"
-              : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+          title: data.response.title || (data.response.chart_type === "table" ? "Data Table" : `Chart: ${yAxis || 'values'} by ${data.response.x_axis}`),  // Use generated title or fallback
           x: data.response.data.map((row: any) => row[data.response.x_axis]),
-          y: data.response.data.map((row: any) => row[data.response.y_axis]),
+          y: yAxis ? data.response.data.map((row: any) => row[yAxis]) : [],
           xLabel: data.response.x_axis,
-          yLabel: data.response.y_axis,
+          yLabel: yAxis || 'values',
           sqlQuery:
             data.response.sql_query ||
             `SELECT ${data.response.x_axis} as name, ${data.response.y_axis} as value FROM your_table`,
@@ -912,7 +952,7 @@ export function FloatingChatbot() {
         } else {
           messageContent = data.response.chart_type === 'table' 
             ? `📋 Here's your data table`
-            : `📊 Here's your chart showing ${data.response.y_axis} by ${data.response.x_axis}`;
+            : `📊 Here's your chart showing ${yAxis} by ${data.response.x_axis}`;
         }
       } else if (data.response?.text && data.response?.data) {
         // Text response with data
@@ -928,8 +968,12 @@ export function FloatingChatbot() {
       } else if (typeof data.response === "string") {
         // Plain text response
         messageContent = data.response;
+      } else if (data.response?.error) {
+        // Error response
+        messageContent = data.response.error;
       } else {
-        // Fallback
+        // Fallback - log for debugging
+        console.error("Unexpected response format:", data.response);
         messageContent =
           "Something went wrong. Please try again with another query, and if error presists please contact Admin.";
       }

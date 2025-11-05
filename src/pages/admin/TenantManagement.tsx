@@ -16,6 +16,7 @@ interface Tenant {
   tenant_id: number;
   name: string;
   is_active: boolean;
+  is_rag: boolean;
   created_at: string;
   schema?: string;
 }
@@ -29,6 +30,7 @@ export default function TenantManagement() {
   const [formData, setFormData] = useState({
     name: '',
     is_active: true,
+    is_rag: false,
     schema_text: ''
   });
 
@@ -66,7 +68,7 @@ export default function TenantManagement() {
       if (response.ok) {
         toast.success('Tenant created successfully');
         setCreateDialogOpen(false);
-        setFormData({ name: '', is_active: true, schema_text: '' });
+        setFormData({ name: '', is_active: true, is_rag: false, schema_text: '' });
         fetchTenants();
       } else {
         toast.error('Failed to create tenant');
@@ -152,6 +154,7 @@ export default function TenantManagement() {
     setFormData({
       name: tenant.name,
       is_active: tenant.is_active,
+      is_rag: tenant.is_rag || false,
       schema_text: tenant.schema || ''
     });
     setEditDialogOpen(true);
@@ -213,6 +216,14 @@ export default function TenantManagement() {
                 />
                 <Label htmlFor="is_active">Active</Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_rag"
+                  checked={formData.is_rag}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_rag: checked })}
+                />
+                <Label htmlFor="is_rag">PDF Inquiry Feature (RAG)</Label>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
                   Cancel
@@ -236,6 +247,7 @@ export default function TenantManagement() {
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>PDF Inquiry</TableHead>
                 <TableHead>Schema</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
@@ -253,6 +265,15 @@ export default function TenantManagement() {
                         : 'bg-red-100 text-red-800'
                     }`}>
                       {tenant.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      tenant.is_rag
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {tenant.is_rag ? 'Enabled' : 'Disabled'}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -326,6 +347,14 @@ export default function TenantManagement() {
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
               <Label htmlFor="edit_is_active">Active</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit_is_rag"
+                checked={formData.is_rag}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_rag: checked })}
+              />
+              <Label htmlFor="edit_is_rag">PDF Inquiry Feature (RAG)</Label>
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>

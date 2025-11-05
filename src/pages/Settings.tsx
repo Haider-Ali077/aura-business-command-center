@@ -1,7 +1,7 @@
 
 import { Layout } from "@/components/Layout";
 import { useAuthStore } from "@/store/authStore";
-// import { DocumentManagement } from "@/components/DocumentManagement";
+import { DocumentManagement } from "@/components/DocumentManagement";
 import { AppearanceSettings } from "@/components/AppearanceSettings";
 import { PasswordChange } from "@/components/PasswordChange";
 import { ProfilePictureSettings } from "@/components/ProfilePictureSettings";
@@ -30,7 +30,7 @@ const Settings = () => {
         </div>
 
         <ProfilePictureSettings />
-        {/* <DocumentManagement /> */}
+        <DocumentManagement />
         <AppearanceSettings />
         <PasswordChange />
       </div>
