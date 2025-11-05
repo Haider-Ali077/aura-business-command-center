@@ -1465,19 +1465,6 @@ export function FloatingChatbot() {
 
               {/* Input Area */}
               <div className="p-3 border-t border-gray-200 dark:border-border bg-white dark:bg-background flex-shrink-0">
-                {/* ✅ NEW: Visual indicator when listening for "add to dashboard" */}
-                {isListeningForAddToDashboard && (
-                  <div className="mb-2 px-3 py-2 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2 animate-pulse">
-                    <div className="relative">
-                      <Mic className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                    </div>
-                    <p className="text-xs font-medium text-green-700 dark:text-green-300">
-                      🎧 Listening... Say "add to dashboard" to save this chart
-                    </p>
-                  </div>
-                )}
-                
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}

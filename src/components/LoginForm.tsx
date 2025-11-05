@@ -1,8 +1,16 @@
 
+
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff } from 'lucide-react';
@@ -11,35 +19,37 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
   const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     await login(email, password);
+    const { session } = useAuthStore.getState();
+    if (session) {
+      window.location.href = '/';
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 flex items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* Left side - Branding */}
         <div className="text-center lg:text-left space-y-8 px-4 lg:px-0">
           <div className="flex items-center justify-center lg:justify-start mb-8">
             <img src="/logo.png" alt="Intellyca Logo" className="w-9 h-15" />
-            {/* <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-lg">
-              <img src="/logo.png" alt="Intellyca Logo" className="w-8 h-14" />
-            </div> */}
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">Intellyca</h1>
-              <p className="text-gray-600 text-base lg:text-lg">ERP Intelligence Platform</p>
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Intellyca</h1>
+              <p className="text-gray-600 dark:text-gray-300 text-base lg:text-lg">ERP Intelligence Platform</p>
             </div>
           </div>
-          
+
           <div className="space-y-6">
-            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 leading-tight">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
               Transform Your Business Intelligence
             </h2>
-            <p className="text-lg lg:text-xl text-gray-600 leading-relaxed">
+            <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
               Powerful analytics, intuitive dashboards, and AI-driven insights to accelerate your business growth.
             </p>
           </div>
@@ -47,17 +57,23 @@ export function LoginForm() {
 
         {/* Right side - Login Form */}
         <div className="flex justify-center px-4 lg:px-0">
-          <Card className="w-full max-w-md shadow-2xl border bg-white/95 backdrop-blur-sm">
+          <Card className="w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors">
             <CardHeader className="text-center space-y-3 pb-8">
-              <CardTitle className="text-2xl lg:text-3xl font-bold text-gray-900">Welcome Back</CardTitle>
-              <CardDescription className="text-gray-600 text-base">
+              <CardTitle className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                Welcome Back
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300 text-base">
                 Sign in to access your dashboard
               </CardDescription>
             </CardHeader>
+
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-gray-800 dark:text-gray-200">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -65,11 +81,15 @@ export function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="bg-white dark:bg-white text-gray-900 border-gray-300 dark:border-gray-400 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
+                {/* Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-gray-800 dark:text-gray-200">
+                    Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -78,6 +98,7 @@ export function LoginForm() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      className="bg-white dark:bg-white text-gray-900 border-gray-300 dark:border-gray-400 focus:ring-2 focus:ring-blue-500"
                     />
                     <Button
                       type="button"
@@ -87,19 +108,23 @@ export function LoginForm() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       ) : (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       )}
                     </Button>
                   </div>
                 </div>
 
+                {/* Error Message */}
                 {error && (
-                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
+                  <div className="text-red-600 text-sm bg-red-50 dark:bg-red-900/30 p-3 rounded-md border border-red-200 dark:border-red-700">
+                    {error}
+                  </div>
                 )}
 
-                <Button 
+                {/* Submit Button */}
+                <Button
                   type="submit"
                   className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg transition-all duration-200 hover:shadow-xl disabled:opacity-50"
                   disabled={isLoading}

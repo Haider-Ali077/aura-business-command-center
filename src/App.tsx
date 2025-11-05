@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -11,6 +10,7 @@ import KpiManagement from '@/pages/admin/KpiManagement';
 import WidgetManagement from '@/pages/admin/WidgetManagement';
 import RoleManagement from '@/pages/admin/RoleManagement';
 import PermissionManagement from '@/pages/admin/PermissionManagement';
+
 import { ExecutiveDashboard } from "@/components/dashboard/ExecutiveDashboard";
 import { FinanceDashboard } from "@/components/dashboard/FinanceDashboard";
 import { SalesDashboard } from "@/components/dashboard/SalesDashboard";
@@ -36,18 +36,12 @@ function App() {
   // Initialize inactivity timer
   useInactivityTimer();
 
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoginForm />
-        <Toaster />
-      </div>
-    );
-  }
-
-  // Get the first accessible dashboard for the user
+  // Calculate default dashboard
   const accessibleModules = getAccessibleModules();
-  const defaultDashboard = accessibleModules.length > 0 ? `/dashboard/${accessibleModules[0].id}` : '/settings';
+  const defaultDashboard =
+    accessibleModules.length > 0
+      ? `/dashboard/${accessibleModules[0].id}`
+      : '/settings';
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -55,89 +49,128 @@ function App() {
         <Router>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Routes>
-              <Route path="/" element={<Navigate to={defaultDashboard} replace />} />
-              <Route 
-                path="/dashboard/executive" 
+              {!session ? (
+                <Route path="/*" element={<LoginForm />} />
+              ) : (
+                <>
+                  <Route
+                    path="/"
+                    element={<Navigate to={defaultDashboard} replace />}
+                  />
+
+              <Route
+                path="/dashboard/executive"
                 element={
                   <ProtectedRoute moduleId="executive">
                     <ExecutiveDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/dashboard/finance" 
+
+              <Route
+                path="/dashboard/finance"
                 element={
                   <ProtectedRoute moduleId="finance">
                     <FinanceDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/dashboard/sales" 
+
+              <Route
+                path="/dashboard/sales"
                 element={
                   <ProtectedRoute moduleId="sales">
                     <SalesDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/dashboard/purchase" 
+
+              <Route
+                path="/dashboard/purchase"
                 element={
                   <ProtectedRoute moduleId="purchase">
                     <PurchaseDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/dashboard/inventory" 
+
+              <Route
+                path="/dashboard/inventory"
                 element={
                   <ProtectedRoute moduleId="inventory">
                     <InventoryDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/dashboard/hr" 
+
+              <Route
+                path="/dashboard/hr"
                 element={
                   <ProtectedRoute moduleId="hr">
                     <HRDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
+
               <Route path="/settings" element={<Settings />} />
-              
-              <Route path="/admin/tenants" element={
-                <AdminProtectedRoute>
-                  <TenantManagement />
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/users" element={
-                <AdminProtectedRoute>
-                  <UserManagement />
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/kpis" element={
-                <AdminProtectedRoute>
-                  <KpiManagement />
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/widgets" element={
-                <AdminProtectedRoute>
-                  <WidgetManagement />
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/roles" element={
-                <AdminProtectedRoute>
-                  <RoleManagement />
-                </AdminProtectedRoute>
-              } />
-              <Route path="/permissions" element={
-                <PermissionProtectedRoute>
-                  <PermissionManagement />
-                </PermissionProtectedRoute>
-              } />
-              
+
+              <Route
+                path="/admin/tenants"
+                element={
+                  <AdminProtectedRoute>
+                    <TenantManagement />
+                  </AdminProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminProtectedRoute>
+                    <UserManagement />
+                  </AdminProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/kpis"
+                element={
+                  <AdminProtectedRoute>
+                    <KpiManagement />
+                  </AdminProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/widgets"
+                element={
+                  <AdminProtectedRoute>
+                    <WidgetManagement />
+                  </AdminProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/roles"
+                element={
+                  <AdminProtectedRoute>
+                    <RoleManagement />
+                  </AdminProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/permissions"
+                element={
+                  <PermissionProtectedRoute>
+                    <PermissionManagement />
+                  </PermissionProtectedRoute>
+                }
+              />
+
               <Route path="*" element={<NotFound />} />
+                </>
+              )}
             </Routes>
           </div>
           <Toaster />

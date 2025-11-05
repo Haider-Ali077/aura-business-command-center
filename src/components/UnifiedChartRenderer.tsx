@@ -278,90 +278,110 @@ export const UnifiedChartRenderer = ({
         </div>
       );
 
-    case 'doughnut':
-case 'pie':
+   case "doughnut":
+case "pie": {
   const valueKey = effectiveSeriesKeys[0];
-  const total = safeData.reduce((s, r) => s + Number((r as any)[valueKey] || 0), 0);
 
-  // ---- Aggregate slices < 5% into "Other" ----
-  const threshold = 0.05;
-  const aggregated = safeData.reduce<{ main: any[]; otherValue: number }>(
-    (acc, row) => {
-      const val = Number(row[valueKey] || 0);
-      const pct = val / total;
-      if (pct >= threshold) acc.main.push(row);
-      else acc.otherValue += val;
-      return acc;
-    },
-    { main: [], otherValue: 0 }
+  // ✅ Keep original data (no aggregation)
+  const finalData = safeData;
+
+  const total = finalData.reduce(
+    (s, r) => s + Number((r as any)[valueKey] || 0),
+    0
   );
 
-  const finalData =
-    aggregated.otherValue > 0
-      ? [
-          ...aggregated.main,
-          { [labelKey]: 'Other', [valueKey]: aggregated.otherValue },
-        ]
-      : aggregated.main;
+  // ✅ Responsive radius + label font scaling
+  const getResponsiveSettings = () => {
+    const width = window.innerWidth;
+    if (width >= 1400)
+      return { outer: "65%", inner: "45%", font: 16, offset: 20 };
+    if (width >= 1024)
+      return { outer: "60%", inner: "42%", font: 14, offset: 18 };
+    if (width >= 768)
+      return { outer: "55%", inner: "38%", font: 12, offset: 15 };
+    return { outer: "52%", inner: "35%", font: 10, offset: 10 };
+  };
 
-  // ---- Calculate aggregated % for center ----
-  const aggregatedPercent = ((total / total) * 100).toFixed(1); // Always 100%
+  const { outer, inner, font, offset } = getResponsiveSettings();
 
-  const RightLegend = () => (
-    <div className="w-48 pl-4">
+  // ✅ Simple scrollable legend - no refs, no effects, just pure HTML scrolling
+  const legendHeight = Math.min(chartHeight - 40, 300);
+  const legendItems = finalData.map((entry: any, idx: number) => {
+    const label = entry[labelKey];
+    const color = colors[idx % colors.length];
+    const isPinned = pinnedSeries === String(label);
+    const isHovered = hoveredSeries === String(label);
+    const isActive = pinnedSeries ? isPinned : !hoveredSeries || isHovered;
+
+    return (
       <div
-        className="overflow-y-auto pr-2"
-        style={{ maxHeight: Math.max(120, chartHeight - 20) }}
+        key={`legend-${idx}`}
+        onMouseEnter={() => setHoveredSeries(String(label))}
+        onMouseLeave={() => setHoveredSeries((s) => (s === String(label) ? null : s))}
+        onClick={(e) => {
+          e.stopPropagation();
+          setPinnedSeries((p) => (p === String(label) ? null : String(label)));
+        }}
+        className={`flex items-center gap-3 py-2 px-1 cursor-pointer select-none transition-all ${
+          isActive ? "bg-muted/10 rounded-lg" : "opacity-90"
+        } hover:bg-muted/20`}
+        title={String(label)}
       >
-        {finalData.map((entry: any, idx: number) => {
-          const label = entry[labelKey];
-          const color = colors[idx % colors.length];
-          const isPinned = pinnedSeries === String(label);
-          const isHovered = hoveredSeries === String(label);
-          const isActive = pinnedSeries ? isPinned : (!hoveredSeries || isHovered);
-          return (
-            <div
-              key={`legend-${idx}`}
-              onMouseEnter={() => setHoveredSeries(String(label))}
-              onMouseLeave={() =>
-                setHoveredSeries((s) => (s === String(label) ? null : s))
-              }
-              onClick={(e) => {
-                e.stopPropagation();
-                setPinnedSeries((p) =>
-                  p === String(label) ? null : String(label)
-                );
-              }}
-              className={`flex items-center justify-start gap-3 py-2 px-1 cursor-pointer select-none ${
-                isActive ? 'bg-muted/5 rounded' : 'opacity-95'
-              }`}
-              title={String(label)}
-            >
-              <span
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                  background: color,
-                  display: 'inline-block',
-                  boxShadow: isPinned ? `0 0 8px ${color}66` : undefined,
-                }}
-              />
-              <span className="text-sm truncate">{label}</span>
-            </div>
-          );
-        })}
+        <span
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            background: color,
+            display: "inline-block",
+            boxShadow: isPinned ? `0 0 8px ${color}66` : undefined,
+            flexShrink: 0,
+          }}
+        />
+        <span className="text-sm truncate">{label}</span>
       </div>
-    </div>
-  );
+    );
+  });
+
+  // ✅ Hide label % on chart if <5%
+  const renderOutsideLabel = ({
+    cx,
+    cy,
+    midAngle,
+    outerRadius,
+    percent,
+    index,
+  }: any) => {
+    if (percent < 0.05) return null;
+
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + offset;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const color = colors[index % colors.length];
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill={color}
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize={font}
+        fontWeight={500}
+      >
+        {(percent * 100).toFixed(0)}%
+      </text>
+    );
+  };
 
   return (
     <div
       className="relative w-full"
       style={{ height: chartHeight }}
-      data-maximized={isMaximized ? 'true' : undefined}
+      data-maximized={isMaximized ? "true" : undefined}
     >
-      <div className="flex h-full items-center">
+      <div className="flex h-full items-center justify-between gap-2">
         <div
           className="flex-1 flex items-center justify-center"
           style={{ minWidth: 0 }}
@@ -372,17 +392,14 @@ case 'pie':
                 data={finalData}
                 cx="50%"
                 cy="50%"
-                // Only show % labels for >= 5%
-                label={({ percent }) =>
-                  percent >= threshold ? `${(percent * 100).toFixed(0)}%` : ''
-                }
+                label={renderOutsideLabel}
                 labelLine={false}
-                outerRadius="60%"
-                innerRadius="40%"
-                fill="#8884d8"
+                outerRadius={outer}
+                innerRadius={inner}
                 dataKey={valueKey}
                 nameKey={labelKey}
                 isAnimationActive={false}
+                paddingAngle={2}
               >
                 {finalData.map((entry, index) => {
                   const label = entry[labelKey];
@@ -392,13 +409,14 @@ case 'pie':
                   const isActive = pinnedSeries
                     ? isPinned
                     : !hoveredSeries || isHovered;
+
                   return (
                     <Cell
                       key={`cell-${index}`}
                       fill={color}
-                      stroke={isActive ? '#00000011' : undefined}
+                      stroke={isActive ? "#00000022" : undefined}
                       strokeWidth={isActive ? 2 : 0}
-                      fillOpacity={isActive ? 1 : 0.45}
+                      fillOpacity={isActive ? 1 : 0.6}
                       onMouseEnter={() => setHoveredSeries(String(label))}
                       onMouseLeave={() =>
                         setHoveredSeries((s) =>
@@ -418,29 +436,20 @@ case 'pie':
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-
-          {/* ---- Center aggregated % ---- */}
-          <div
-            className="absolute text-center"
-            style={{
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none',
-            }}
-          >
-            {/* <div className="text-lg font-semibold">{aggregatedPercent}%</div>
-            <div className="text-xs text-muted-foreground">Total</div> */}
-          </div>
         </div>
 
-        {/* Right-side legend for dashboard/maximized views */}
-        {context !== 'chatbot' && (isMaximized || context === 'dashboard') && (
-          <RightLegend />
+        {(context !== "chatbot" &&
+          (isMaximized || context === "dashboard")) && (
+          <div className="w-52 pl-4 flex flex-col overflow-hidden" style={{ height: legendHeight }}>
+            <div className="h-full overflow-auto pr-2">
+              {legendItems}
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
+}
 
     case 'table':
   return (
@@ -449,8 +458,8 @@ case 'pie':
       style={{ height: chartHeight }}
       data-maximized={isMaximized ? 'true' : undefined}
     >
-      {/* Top bar with Export button */}
-      <div className="flex justify-end items-center px-2">
+      {/* Top bar with Export button - positioned to avoid overlap with maximize button in chatbot */}
+      <div className={`flex items-center px-2 ${context === 'chatbot' ? 'justify-start pr-12' : 'justify-end'}`}>
         <Button
           variant='gradient'
           size='sm'
