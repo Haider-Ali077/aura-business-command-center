@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { SortableFilterableTable } from '@/components/ui/sortable-filterable-table';
 // select dropdown removed — legend shown inline
@@ -61,10 +61,27 @@ export const UnifiedChartRenderer = ({
   context = 'dashboard',
   tableName
 }: UnifiedChartRendererProps) => {
-  const chartHeight = isMaximized ? 500 : (context === 'chatbot' ? 200 : 280);
+  // Responsive maximized height: base on viewport so maximize doesn't get cut off
+  const [maximizedHeight, setMaximizedHeight] = useState<number>(500);
+  useEffect(() => {
+    if (!isMaximized) return;
+    const compute = () => {
+      if (typeof window === 'undefined') return;
+      // Reserve space for modal header/footer and some padding (approx 180px)
+      const h = Math.max(300, Math.min(900, window.innerHeight - 180));
+      setMaximizedHeight(h);
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [isMaximized]);
+
+  const chartHeight = isMaximized ? maximizedHeight : (context === 'chatbot' ? 200 : 280);
   // Height reserved for the legend area (space below the chart)
   const LEGEND_HEIGHT = 42;
-  const chartInnerHeight = Math.max(80, chartHeight - LEGEND_HEIGHT);
+  // Keep chart full height; allocate extra outer height to fit legend below
+  const chartInnerHeight = Math.max(80, chartHeight);
+  const outerHeight = chartHeight + LEGEND_HEIGHT;
 
   if (isLoading) {
     return (
@@ -84,8 +101,25 @@ export const UnifiedChartRenderer = ({
     );
   }
 
-  const labelKey = config?.xLabel || metadata?.labelKey || 'name';
-  const allKeys = Object.keys(safeData[0] || {});
+  // Determine the key used for X axis labels. Chatbot chart conversion often
+  // populates a `name` property while `config.xLabel` contains a human label
+  // like "Month". Prefer an actual existing key on the data (e.g. 'name'),
+  // then fall back to config.xLabel, metadata, or the first available key.
+  const firstRowKeys = Object.keys(safeData[0] || {});
+  let labelKey: string;
+  if (firstRowKeys.includes('name')) {
+    labelKey = 'name';
+  } else if (config?.xLabel && firstRowKeys.includes(config.xLabel)) {
+    labelKey = config.xLabel;
+  } else if (metadata?.labelKey && firstRowKeys.includes(metadata.labelKey)) {
+    labelKey = metadata.labelKey;
+  } else if (firstRowKeys.length > 0) {
+    // Prefer the first key that looks like a label (string values in the first row)
+    labelKey = firstRowKeys[0];
+  } else {
+    labelKey = 'name';
+  }
+  const allKeys = firstRowKeys;
   const seriesKeys = allKeys.filter((k) => k !== labelKey);
   const effectiveSeriesKeys = config?.dataKeys && config.dataKeys.length ? config.dataKeys : seriesKeys;
   const tableKeys = config?.dataKeys || allKeys;
@@ -99,10 +133,11 @@ export const UnifiedChartRenderer = ({
 
   // <CHANGE> Legend now only appears inside the dropdown
   // New compact in-chart legend (single row) with hover/pin interactions
-  const LegendBar = () => (
-    // Non-overlapping legend placed below the chart and centered
-    <div className="w-full flex justify-center mt-2 pointer-events-auto">
-      <div className="bg-background/80 backdrop-blur-sm border border-border rounded-lg px-3 py-1 flex items-center gap-3 justify-center shadow-sm overflow-x-auto">
+  const LegendBar = ({ top }: { top?: boolean } = {}) => (
+    // Legend placed above or below the chart and centered. When `top` is true,
+    // add bottom margin instead of top margin so it doesn't overlap the chart.
+    <div className={`w-full flex justify-center pointer-events-auto ${top ? 'mb-2' : 'mt-2'}`}>
+      <div className="px-1 py-0 flex items-center gap-3 justify-center overflow-x-auto">
         {effectiveSeriesKeys.map((key, idx) => {
           const color = colors[idx % colors.length];
           const isPinned = pinnedSeries === key;
@@ -112,12 +147,12 @@ export const UnifiedChartRenderer = ({
               key={key}
               onMouseEnter={() => setHoveredSeries(key)}
               onMouseLeave={() => setHoveredSeries((s) => (s === key ? null : s))}
-              onClick={() => setPinnedSeries((p) => (p === key ? null : key))}
-              className={`flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer select-none ${isPinned || isHovered ? 'ring-1 ring-offset-1' : 'opacity-95'}`}
+              onClick={(e) => { e.stopPropagation(); setPinnedSeries((p) => (p === key ? null : key)); }}
+              className={`flex items-center gap-2 px-2 py-0 cursor-pointer select-none ${isPinned || isHovered ? 'ring-1 ring-offset-1' : 'opacity-95'}`}
               title={key}
             >
-              <span style={{ width: 12, height: 12, borderRadius: 6, background: color, display: 'inline-block', boxShadow: isPinned ? `0 0 8px ${color}66` : undefined, border: '1px solid rgba(0,0,0,0.08)' }} />
-              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--muted-foreground)' }}>{key}</span>
+              <span style={{ width: 12, height: 12, borderRadius: 6, background: color, display: 'inline-block', boxShadow: isPinned ? `0 0 8px ${color}66` : undefined }} />
+              <span className="text-xs whitespace-nowrap ml-1" style={{ color: 'var(--muted-foreground)' }}>{key}</span>
             </div>
           );
         })}
@@ -162,13 +197,19 @@ export const UnifiedChartRenderer = ({
     return () => document.removeEventListener('click', onDocClick);
   }, []);
 
+  // extra margin at top for chatbot context so overlay icons placed in the
+  // container header don't overlap the plotting grid. When maximized, use
+  // the tighter margin to avoid extra clipping.
+  const chartMarginTop = context === 'chatbot' && !isMaximized ? 28 : 15;
   switch (type) {
     case 'line':
       return (
-        <div className="relative w-full flex flex-col" style={{ height: chartHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+        <div className="relative w-full flex flex-col" style={{ height: outerHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+          {/* If maximized, render legend at top to avoid it being cut off at the bottom */}
+          {isMaximized && <LegendBar top />}
           <div style={{ height: chartInnerHeight }}>
-            <ResponsiveContainer width="100%" height={chartInnerHeight}>
-              <LineChart data={safeData} margin={{ top: 15, right: 15, left: 15, bottom: 8 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={safeData} margin={{ top: chartMarginTop, right: 15, left: 15, bottom: 8 }}>
               {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
               <XAxis dataKey={labelKey} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} label={{ value: config?.xLabel, position: 'insideBottom', offset: -5, style: { fontSize: '10px' } }} />
               <YAxis tickFormatter={formatYAxisLabel} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} label={{ value: config?.yLabel, angle: -90, position: 'insideLeft', style: { fontSize: '10px' } }} />
@@ -183,16 +224,17 @@ export const UnifiedChartRenderer = ({
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <LegendBar />
+          {context !== 'chatbot' && !isMaximized && <LegendBar />}
         </div>
       );
 
     case 'bar':
       return (
-        <div className="relative w-full flex flex-col" style={{ height: chartHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+        <div className="relative w-full flex flex-col" style={{ height: outerHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+          {isMaximized && <LegendBar top />}
           <div style={{ height: chartInnerHeight }}>
-            <ResponsiveContainer width="100%" height={chartInnerHeight}>
-              <BarChart data={safeData} margin={{ top: 15, right: 15, left: 15, bottom: 8 }}>
+              <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={safeData} margin={{ top: chartMarginTop, right: 15, left: 15, bottom: 8 }}>
               {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
               <XAxis dataKey={labelKey} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} label={{ value: config?.xLabel, position: 'insideBottom', offset: -5, style: { fontSize: '10px' } }} />
               <YAxis tickFormatter={formatYAxisLabel} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} label={{ value: config?.yLabel, angle: -90, position: 'insideLeft', style: { fontSize: '10px' } }} />
@@ -207,16 +249,17 @@ export const UnifiedChartRenderer = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <LegendBar />
+          {context !== 'chatbot' && !isMaximized && <LegendBar />}
         </div>
       );
 
     case 'area':
       return (
-        <div className="relative w-full flex flex-col" style={{ height: chartHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+        <div className="relative w-full flex flex-col" style={{ height: outerHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+          {isMaximized && <LegendBar top />}
           <div style={{ height: chartInnerHeight }}>
-            <ResponsiveContainer width="100%" height={chartInnerHeight}>
-              <AreaChart data={safeData} margin={{ top: 15, right: 15, left: 15, bottom: 8 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={safeData} margin={{ top: chartMarginTop, right: 15, left: 15, bottom: 8 }}>
               {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
               <XAxis dataKey={labelKey} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} label={{ value: config?.xLabel, position: 'insideBottom', offset: -5, style: { fontSize: '10px' } }} />
               <YAxis tickFormatter={formatYAxisLabel} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} label={{ value: config?.yLabel, angle: -90, position: 'insideLeft', style: { fontSize: '10px' } }} />
@@ -231,28 +274,173 @@ export const UnifiedChartRenderer = ({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <LegendBar />
+          {context !== 'chatbot' && !isMaximized && <LegendBar />}
         </div>
       );
 
     case 'doughnut':
-    case 'pie':
-      // Doughnut chart with innerRadius and outerRadius
-      // 'pie' is a fallback for legacy data from backend
-      return (
-        <div className="relative w-full" style={{ height: chartHeight }} data-maximized={isMaximized ? 'true' : undefined}>
+case 'pie':
+  const valueKey = effectiveSeriesKeys[0];
+  const total = safeData.reduce((s, r) => s + Number((r as any)[valueKey] || 0), 0);
+
+  // ---- Aggregate slices < 5% into "Other" ----
+  const threshold = 0.05;
+  const aggregated = safeData.reduce<{ main: any[]; otherValue: number }>(
+    (acc, row) => {
+      const val = Number(row[valueKey] || 0);
+      const pct = val / total;
+      if (pct >= threshold) acc.main.push(row);
+      else acc.otherValue += val;
+      return acc;
+    },
+    { main: [], otherValue: 0 }
+  );
+
+  const finalData =
+    aggregated.otherValue > 0
+      ? [
+          ...aggregated.main,
+          { [labelKey]: 'Other', [valueKey]: aggregated.otherValue },
+        ]
+      : aggregated.main;
+
+  // ---- Calculate aggregated % for center ----
+  const aggregatedPercent = ((total / total) * 100).toFixed(1); // Always 100%
+
+  const RightLegend = () => (
+    <div className="w-48 pl-4">
+      <div
+        className="overflow-y-auto pr-2"
+        style={{ maxHeight: Math.max(120, chartHeight - 20) }}
+      >
+        {finalData.map((entry: any, idx: number) => {
+          const label = entry[labelKey];
+          const color = colors[idx % colors.length];
+          const isPinned = pinnedSeries === String(label);
+          const isHovered = hoveredSeries === String(label);
+          const isActive = pinnedSeries ? isPinned : (!hoveredSeries || isHovered);
+          return (
+            <div
+              key={`legend-${idx}`}
+              onMouseEnter={() => setHoveredSeries(String(label))}
+              onMouseLeave={() =>
+                setHoveredSeries((s) => (s === String(label) ? null : s))
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                setPinnedSeries((p) =>
+                  p === String(label) ? null : String(label)
+                );
+              }}
+              className={`flex items-center justify-start gap-3 py-2 px-1 cursor-pointer select-none ${
+                isActive ? 'bg-muted/5 rounded' : 'opacity-95'
+              }`}
+              title={String(label)}
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  background: color,
+                  display: 'inline-block',
+                  boxShadow: isPinned ? `0 0 8px ${color}66` : undefined,
+                }}
+              />
+              <span className="text-sm truncate">{label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      className="relative w-full"
+      style={{ height: chartHeight }}
+      data-maximized={isMaximized ? 'true' : undefined}
+    >
+      <div className="flex h-full items-center">
+        <div
+          className="flex-1 flex items-center justify-center"
+          style={{ minWidth: 0 }}
+        >
           <ResponsiveContainer width="100%" height={chartHeight}>
             <PieChart>
-              <Pie data={safeData} cx="50%" cy="50%" labelLine={false} label={({ payload, percent }) => safeData.length <= 8 ? `${payload[labelKey]} ${(percent * 100).toFixed(0)}%` : percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''} outerRadius="70%" innerRadius="45%" fill="#8884d8" dataKey={effectiveSeriesKeys[0]} nameKey={labelKey}>
-                {safeData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                ))}
+              <Pie
+                data={finalData}
+                cx="50%"
+                cy="50%"
+                // Only show % labels for >= 5%
+                label={({ percent }) =>
+                  percent >= threshold ? `${(percent * 100).toFixed(0)}%` : ''
+                }
+                labelLine={false}
+                outerRadius="60%"
+                innerRadius="40%"
+                fill="#8884d8"
+                dataKey={valueKey}
+                nameKey={labelKey}
+                isAnimationActive={false}
+              >
+                {finalData.map((entry, index) => {
+                  const label = entry[labelKey];
+                  const color = colors[index % colors.length];
+                  const isPinned = pinnedSeries === String(label);
+                  const isHovered = hoveredSeries === String(label);
+                  const isActive = pinnedSeries
+                    ? isPinned
+                    : !hoveredSeries || isHovered;
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={color}
+                      stroke={isActive ? '#00000011' : undefined}
+                      strokeWidth={isActive ? 2 : 0}
+                      fillOpacity={isActive ? 1 : 0.45}
+                      onMouseEnter={() => setHoveredSeries(String(label))}
+                      onMouseLeave={() =>
+                        setHoveredSeries((s) =>
+                          s === String(label) ? null : s
+                        )
+                      }
+                      onClick={(e: any) => {
+                        e.stopPropagation();
+                        setPinnedSeries((p) =>
+                          p === String(label) ? null : String(label)
+                        );
+                      }}
+                    />
+                  );
+                })}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
+
+          {/* ---- Center aggregated % ---- */}
+          <div
+            className="absolute text-center"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }}
+          >
+            {/* <div className="text-lg font-semibold">{aggregatedPercent}%</div>
+            <div className="text-xs text-muted-foreground">Total</div> */}
+          </div>
         </div>
-      );
+
+        {/* Right-side legend for dashboard/maximized views */}
+        {context !== 'chatbot' && (isMaximized || context === 'dashboard') && (
+          <RightLegend />
+        )}
+      </div>
+    </div>
+  );
 
     case 'table':
   return (

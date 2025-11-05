@@ -87,8 +87,8 @@ export const WidgetHeader = ({
       {/* Spacer to push icons to far right */}
       <div className="flex-1" />
 
-      {/* Icon Section */}
-      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+  {/* Icon Section (always visible) */}
+  <div className="flex gap-2 opacity-100 transition-opacity">
         <Button variant="ghost" size="sm" onClick={onToggleMaximize}>
           <Maximize2 className="h-4 w-4" />
         </Button>

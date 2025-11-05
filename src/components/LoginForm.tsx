@@ -1,37 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/authStore';
-import { useRoleStore } from '@/store/roleStore';
 import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const { login, isLoading, error, clearError, session } = useAuthStore();
-  const { getAccessibleModules } = useRoleStore();
-  const navigate = useNavigate();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     await login(email, password);
   };
-
-  // ✅ After login success, redirect to user's specific dashboard
-  useEffect(() => {
-    if (session) {
-      const accessibleModules = getAccessibleModules();
-      const defaultDashboard =
-        accessibleModules.length > 0 ? `/dashboard/${accessibleModules[0].id}` : '/settings';
-      navigate(defaultDashboard, { replace: true });
-    }
-  }, [session, getAccessibleModules, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
@@ -40,6 +26,9 @@ export function LoginForm() {
         <div className="text-center lg:text-left space-y-8 px-4 lg:px-0">
           <div className="flex items-center justify-center lg:justify-start mb-8">
             <img src="/logo.png" alt="Intellyca Logo" className="w-9 h-15" />
+            {/* <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-lg">
+              <img src="/logo.png" alt="Intellyca Logo" className="w-8 h-14" />
+            </div> */}
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">Intellyca</h1>
               <p className="text-gray-600 text-base lg:text-lg">ERP Intelligence Platform</p>

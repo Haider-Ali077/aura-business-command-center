@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { MessageSquare, Send, Bot, X, Minimize2, Maximize2, Plus, Mic, RefreshCw, Volume2, VolumeX } from "lucide-react"
+import { MessageSquare, Send, Bot, X, Minimize2, Maximize2, Plus, Mic, RefreshCw, Volume2, VolumeX, Edit3 } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
 import { useRoleStore } from "@/store/roleStore"
 import { API_BASE_URL } from "@/config/api"
@@ -105,9 +105,14 @@ export function FloatingChatbot() {
   const [isLoading, setIsLoading] = useState(false)
   const [showDashboardSelect, setShowDashboardSelect] = useState(false)
   const [pendingChart, setPendingChart] = useState<ChartData | null>(null)
+  const [titleDraft, setTitleDraft] = useState<string>('')
+  const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false)
+  const [isEditingTableTitle, setIsEditingTableTitle] = useState<boolean>(false)
   const [showTitleDialog, setShowTitleDialog] = useState(false)
   const [tableTitle, setTableTitle] = useState("")
   const [modalDashboard, setModalDashboard] = useState<string>("")
+  const [maxChart, setMaxChart] = useState<ChartData | null>(null)
+  const [showMaxDialog, setShowMaxDialog] = useState(false)
 
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null)
@@ -842,8 +847,13 @@ export function FloatingChatbot() {
     const accessibleModules = getAccessibleModules()
     console.log('✅ Accessible modules:', accessibleModules)
     
-    // Set pending chart for modal
+    // Set pending chart for modal and prefill editable titles
     setPendingChart(chart)
+    setTitleDraft(chart.title || '')
+    if (chart.chart_type === 'table') {
+      // Prefill table title from API-provided title so user can edit it instead of asking
+      setTableTitle(chart.title || '')
+    }
     
     // Pre-select dashboard if only one available
     if (accessibleModules.length === 1) {
@@ -1149,11 +1159,12 @@ export function FloatingChatbot() {
         const rows = data.response.data
 
         // If rows are objects (keyed by column names), treat as rawData and allow multi-series
-        if (rows.length > 0 && typeof rows[0] === 'object' && !Array.isArray(rows[0])) {
+          if (rows.length > 0 && typeof rows[0] === 'object' && !Array.isArray(rows[0])) {
           const inferredX = data.response.x_axis || Object.keys(rows[0])[0]
           chart = {
             chart_type: data.response.chart_type,
-            title: data.response.chart_type === 'table' ? 'Data Table' : `Chart: ${data.response.y_axis ?? ''} by ${inferredX}`,
+            // Prefer API-provided title when available, otherwise keep legacy generated title
+            title: data.response.title || (data.response.chart_type === 'table' ? 'Data Table' : `Chart: ${data.response.y_axis ?? ''} by ${inferredX}`),
             x: rows.map((row: any) => row[inferredX]),
             xLabel: inferredX,
             // y and yLabel left undefined for multi-series; converter uses rawData
@@ -1171,7 +1182,8 @@ export function FloatingChatbot() {
           // Legacy single-series chart format where data is array of rows but y_axis is a single key
           chart = {
             chart_type: data.response.chart_type,
-            title: data.response.chart_type === 'table' ? 'Data Table' : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`,
+            // Prefer API-provided title if present
+            title: data.response.title || (data.response.chart_type === 'table' ? 'Data Table' : `Chart: ${data.response.y_axis} by ${data.response.x_axis}`),
             x: data.response.data.map((row: any) => row[data.response.x_axis]),
             y: data.response.data.map((row: any) => row[data.response.y_axis]),
             xLabel: data.response.x_axis,
@@ -1398,26 +1410,36 @@ export function FloatingChatbot() {
                                   <div className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                                 </div>
                                 <div
-                                  className={`w-full bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 ${
+                                  className={`relative w-full bg-gray-50/50 dark:bg-background/30 rounded-lg p-2 ${
                                     message.chart.chart_type === "table"
-                                      ? "h-48 md:h-56 overflow-hidden"
-                                      : "h-56 overflow-hidden"
+                                      ? "h-48 md:h-56"
+                                      : "h-56"
                                   }`}
                                 >
+                                  {/* Maximize button placed top-right inside chart area */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setMaxChart(message.chart!); setShowMaxDialog(true); }}
+                                    title="Maximize chart"
+                                    className="absolute top-2 right-2 z-20 bg-white/0 hover:bg-white/5 rounded p-1"
+                                  >
+                                    <Maximize2 className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                                  </button>
                                   <div className="w-full h-full">{renderChart(message.chart)}</div>
                                 </div>
-                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-border">
+                                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-border">
                                   <p className="text-xs text-gray-500 dark:text-muted-foreground opacity-70">
                                     {new Date(message.timestamp).toLocaleTimeString()}
                                   </p>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleAddToDashboard(message.chart!)}
-                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full h-7"
-                                  >
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    Add to Dashboard
-                                  </Button>
+                                    <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleAddToDashboard(message.chart!)}
+                                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs px-3 py-1.5 shadow-sm rounded-full h-7"
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      Add to Dashboard
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1519,7 +1541,28 @@ export function FloatingChatbot() {
             <DialogTitle>Add Chart to Dashboard</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* Chart title (from API) with inline edit support */}
             <div className="space-y-2">
+              <label className="text-sm font-medium">Chart Title</label>
+              {!isEditingTitle ? (
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-foreground truncate">{titleDraft || pendingChart?.title || 'Untitled Chart'}</div>
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditingTitle(true)}>
+                    <Edit3 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} className="flex-1" />
+                  <Button size="sm" onClick={() => { if (pendingChart) { setPendingChart({...pendingChart, title: titleDraft}); } setIsEditingTitle(false); }}>
+                    Save
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { setTitleDraft(pendingChart?.title || ''); setIsEditingTitle(false); }}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
+
               <label className="text-sm font-medium">Select Dashboard</label>
               <Select value={modalDashboard} onValueChange={setModalDashboard}>
                 <SelectTrigger className="w-full">
@@ -1578,14 +1621,31 @@ export function FloatingChatbot() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Table Title</label>
-              <Input
-                value={tableTitle}
-                onChange={(e) => setTableTitle(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && tableTitle.trim() && modalDashboard && handleTitleConfirm()}
-                placeholder="Enter a title for your table..."
-                className="w-full"
-                autoFocus
-              />
+              {!isEditingTableTitle ? (
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-foreground truncate">{tableTitle || pendingChart?.title || 'Untitled Table'}</div>
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditingTableTitle(true)}>
+                    <Edit3 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={tableTitle}
+                    onChange={(e) => setTableTitle(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && tableTitle.trim() && modalDashboard && handleTitleConfirm()}
+                    placeholder="Enter a title for your table..."
+                    className="flex-1"
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={() => setIsEditingTableTitle(false)}>
+                    Save
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { setTableTitle(pendingChart?.title || ''); setIsEditingTableTitle(false); }}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Dashboard</label>
@@ -1612,6 +1672,31 @@ export function FloatingChatbot() {
               Add to Dashboard
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Maximize chart dialog */}
+      <Dialog open={showMaxDialog} onOpenChange={(open) => { setShowMaxDialog(open); if (!open) setMaxChart(null); }}>
+        {/* Allow taller dialog and constrain to viewport so maximized charts aren't cut off */}
+        <DialogContent className="sm:max-w-[800px] w-full max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>{maxChart?.title ?? 'Chart'}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {maxChart && (
+              <UnifiedChartRenderer
+                type={maxChart.chart_type as any}
+                data={convertChatbotChartData(maxChart).data}
+                config={convertChatbotChartData(maxChart).config}
+                isLoading={false}
+                isMaximized={true}
+                // When maximized, treat context as dashboard-like so margins and
+                // legends behave appropriately and avoid extra top offset.
+                context="dashboard"
+                tableName={maxChart.tableName}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

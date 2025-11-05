@@ -6,6 +6,7 @@ import { RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { API_BASE_URL } from '@/config/api';
 import { getIconByName } from '@/lib/iconUtils';
+import { cache } from '@/lib/cache';
 import { ConfigurableWidget } from '@/components/ConfigurableWidget';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { dataService } from '@/services/dataService';
@@ -31,6 +32,14 @@ const PurchaseDashboard = () => {
     
     setIsLoadingWidgets(true);
     const startTime = Date.now();
+    const widgetsCacheKey = `widgets:${session.user.tenant_id}:purchase`;
+    const cachedWidgets = cache.get<any[]>(widgetsCacheKey);
+    if (cachedWidgets) {
+      setWidgets(cachedWidgets);
+      setIsLoadingWidgets(false);
+      console.log('[PurchaseDashboard] Widgets loaded from cache');
+      return;
+    }
     
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
@@ -62,9 +71,10 @@ const PurchaseDashboard = () => {
             if (sqlQuery) {
               try {
                 // Use cached sqlService instead of direct fetch
-                const chartData = await sqlService.runSql(
+                const chartData = await sqlService.runSqlWithWidgetCache(
                   sqlQuery,
-                  session.user.tenant_id
+                  session.user.tenant_id,
+                  widget.id
                 );
                 
                 widget.config = { ...widget.config, chartData };
@@ -78,6 +88,7 @@ const PurchaseDashboard = () => {
           }));
           
           setWidgets(processedWidgets);
+          try { cache.set(widgetsCacheKey, processedWidgets); } catch (e) { /* ignore */ }
           console.log(`[PurchaseDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
@@ -127,6 +138,7 @@ const PurchaseDashboard = () => {
     // Invalidate cache before refetch
     dataService.invalidateKpis(session.user.tenant_id, 'purchase');
     sqlService.invalidateCache(session.user.tenant_id);
+    cache.invalidate(`widgets:${session.user.tenant_id}:purchase`);
     
     await Promise.all([fetchWidgets(), fetchKPIData()]);
   };
@@ -147,6 +159,7 @@ const PurchaseDashboard = () => {
         console.log('Widget added to purchase dashboard, refreshing...');
         // Invalidate cache since new widget was added
         dataService.invalidateKpis(session.user.tenant_id, 'purchase');
+        try { cache.invalidate(`widgets:${session.user.tenant_id}:purchase`); } catch (e) { /* ignore */ }
         fetchWidgets();
       }
     };
@@ -188,10 +201,26 @@ const PurchaseDashboard = () => {
             {metrics.map((metric, index) => {
               const IconComponent = metric.icon;
               return (
-                <Card key={index} className="hover:shadow-md transition-shadow">
+                <Card key={index} className="relative overflow-hidden hover:shadow-md transition-shadow animate-fade-in">
+                  {/* decorative inner shadow using a soft purplish tint (inset) */}
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      boxShadow: 'inset 0 10px 30px rgba(124,58,237,0.06), inset 0 -6px 20px rgba(99,102,241,0.04)'
+                    }}
+                  />
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
-                    <IconComponent className={`h-4 w-4 ${metric.color}`} />
+                    {(() => {
+                      const Icon = IconComponent as any;
+                      const baseClass = 'h-5 w-5';
+                      const isTailwindClass = typeof metric.color === 'string' && metric.color.startsWith('text-');
+                      const isRawColor = typeof metric.color === 'string' && (metric.color.startsWith('#') || metric.color.startsWith('rgb'));
+                      const iconClass = isTailwindClass ? `${baseClass} ${metric.color}` : baseClass;
+                      const iconStyle = isRawColor ? { color: metric.color } : undefined;
+                      return <Icon className={iconClass} style={iconStyle} aria-hidden />;
+                    })()}
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{metric.value}</div>

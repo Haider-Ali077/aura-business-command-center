@@ -9,6 +9,7 @@ import { Layout } from "@/components/Layout";
 import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
 import { getIconByName } from '@/lib/iconUtils';
+import { cache } from '@/lib/cache';
 import { dataService } from '@/services/dataService';
 import { sqlService } from '@/services/sqlService';
 
@@ -39,6 +40,14 @@ export function ExecutiveDashboard() {
     
     setIsLoadingWidgets(true);
     const startTime = Date.now();
+    const widgetsCacheKey = `widgets:${session.user.tenant_id}:executive`;
+    const cachedWidgets = cache.get<any[]>(widgetsCacheKey);
+    if (cachedWidgets) {
+      setWidgets(cachedWidgets);
+      setIsLoadingWidgets(false);
+      console.log('[ExecutiveDashboard] Widgets loaded from cache');
+      return;
+    }
     
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
@@ -68,9 +77,10 @@ export function ExecutiveDashboard() {
             if (sqlQuery) {
               try {
                 // Use cached sqlService instead of direct fetch
-                const chartData = await sqlService.runSql(
+                const chartData = await sqlService.runSqlWithWidgetCache(
                   sqlQuery,
-                  session.user.tenant_id
+                  session.user.tenant_id,
+                  widget.id
                 );
                 
                 widget.config = { ...widget.config, chartData };
@@ -84,6 +94,7 @@ export function ExecutiveDashboard() {
           }));
           
           setWidgets(processedWidgets);
+          try { cache.set(widgetsCacheKey, processedWidgets); } catch (e) { /* ignore */ }
           console.log(`[ExecutiveDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
@@ -136,6 +147,7 @@ export function ExecutiveDashboard() {
     // Invalidate cache before refetch
     dataService.invalidateKpis(session.user.tenant_id, 'executive');
     sqlService.invalidateCache(session.user.tenant_id);
+    cache.invalidate(`widgets:${session.user.tenant_id}:executive`);
     
     // Fetch fresh data
     await Promise.all([fetchWidgets(), fetchKPIData()]);
@@ -163,6 +175,8 @@ export function ExecutiveDashboard() {
         console.log('Widget added to executive dashboard, refreshing...');
         // Invalidate cache since new widget was added
         dataService.invalidateKpis(session.user.tenant_id, 'executive');
+        // Invalidate widgets cache so fetchWidgets will refetch from server
+        try { cache.invalidate(`widgets:${session.user.tenant_id}:executive`); } catch (e) { /* ignore */ }
         fetchWidgets();
       }
     };
@@ -199,10 +213,29 @@ export function ExecutiveDashboard() {
       ) : kpis.length > 0 ? (
         <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
           {kpis.map((kpi, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow animate-fade-in">
+            <Card key={index} className="relative overflow-hidden hover:shadow-md transition-shadow animate-fade-in">
+              {/* decorative inner shadow using a soft purplish tint (inset) */}
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  boxShadow: 'inset 0 10px 30px rgba(124,58,237,0.06), inset 0 -6px 20px rgba(99,102,241,0.04)'
+                }}
+              />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+                {
+                  // Render icon with color from DB. Support both Tailwind text- classes and raw color values like '#7c3aed' or 'rgb(124,58,237)'.
+                }
+                {(() => {
+                  const Icon = kpi.icon as any;
+                  const baseClass = 'h-5 w-5';
+                  const isTailwindClass = typeof kpi.color === 'string' && kpi.color.startsWith('text-');
+                  const isRawColor = typeof kpi.color === 'string' && (kpi.color.startsWith('#') || kpi.color.startsWith('rgb'));
+                  const iconClass = isTailwindClass ? `${baseClass} ${kpi.color}` : baseClass;
+                  const iconStyle = isRawColor ? { color: kpi.color } : undefined;
+                  return <Icon className={iconClass} style={iconStyle} aria-hidden />;
+                })()}
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
