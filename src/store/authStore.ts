@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { API_BASE_URL } from '@/config/api';
+import { useChatStore } from '@/store/chatStore';
 
 export interface User {
   user_id: number;
@@ -78,7 +79,12 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        // Chat is now in-memory only, no need to clear localStorage
+        // Clear chat history before clearing session (FloatingChatbot unmounts before useEffect can run)
+        const chatStore = useChatStore.getState();
+        if (chatStore.currentUserId) {
+          chatStore.logoutAndClearSession();
+        }
+        // Clear session
         set({ session: null, error: null, lastActivity: Date.now() });
       },
 

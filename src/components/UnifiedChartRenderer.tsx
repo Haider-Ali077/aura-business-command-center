@@ -278,8 +278,7 @@ export const UnifiedChartRenderer = ({
         </div>
       );
 
-   case "doughnut":
-case "pie": {
+   case "doughnut": {
   const valueKey = effectiveSeriesKeys[0];
 
   // ✅ Keep original data (no aggregation)

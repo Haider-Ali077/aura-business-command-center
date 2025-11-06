@@ -209,7 +209,6 @@ export const ChartRenderer = ({ type, data, isLoading, isMaximized }: ChartRende
         </ResponsiveContainer>
       );
     case 'doughnut':
-    case 'pie':
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>

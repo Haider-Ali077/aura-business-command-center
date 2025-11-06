@@ -141,7 +141,7 @@ export function ConfigurableWidget({
       <CardContent className="p-3 pt-0 flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 w-full min-h-[280px]">
           <UnifiedChartRenderer
-            type={widget.type as "line" | "bar" | "area" | "doughnut" | "pie" | "table"}
+            type={widget.type as "line" | "bar" | "area" | "doughnut" | "table"}
             data={displayData}
             config={widget.config?.chartConfig}
             metadata={metadata}

@@ -1291,7 +1291,7 @@ export function FloatingChatbot() {
 
     return (
       <UnifiedChartRenderer
-        type={chart.chart_type as "line" | "bar" | "area" | "doughnut" | "pie" | "table"}
+        type={chart.chart_type as "line" | "bar" | "area" | "doughnut" | "table"}
         data={data}
         config={config}
         isLoading={false}
@@ -1523,30 +1523,32 @@ export function FloatingChatbot() {
 
       {/* ✅ NEW: Chart Dashboard Selection Modal (for non-table charts) */}
       <Dialog open={showDashboardSelect} onOpenChange={setShowDashboardSelect}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[425px] mx-4 p-4 sm:p-6 overflow-hidden">
           <DialogHeader>
-            <DialogTitle>Add Chart to Dashboard</DialogTitle>
+            <DialogTitle className="truncate">Add Chart to Dashboard</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Chart title (from API) with inline edit support */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Chart Title</label>
               {!isEditingTitle ? (
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-foreground truncate">{titleDraft || pendingChart?.title || 'Untitled Chart'}</div>
-                  <Button variant="ghost" size="sm" onClick={() => setIsEditingTitle(true)}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="text-sm text-foreground truncate min-w-0 flex-1">{titleDraft || pendingChart?.title || 'Untitled Chart'}</div>
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditingTitle(true)} className="flex-shrink-0">
                     <Edit3 className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Input value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} className="flex-1" />
-                  <Button size="sm" onClick={() => { if (pendingChart) { setPendingChart({...pendingChart, title: titleDraft}); } setIsEditingTitle(false); }}>
-                    Save
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => { setTitleDraft(pendingChart?.title || ''); setIsEditingTitle(false); }}>
-                    Cancel
-                  </Button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <Input value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} className="flex-1 min-w-0" />
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button size="sm" onClick={() => { if (pendingChart) { setPendingChart({...pendingChart, title: titleDraft}); } setIsEditingTitle(false); }}>
+                      Save
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setTitleDraft(pendingChart?.title || ''); setIsEditingTitle(false); }}>
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -1558,14 +1560,14 @@ export function FloatingChatbot() {
                 <SelectContent>
                   {getAccessibleModules().map((module) => (
                     <SelectItem key={module.id} value={module.id}>
-                      {module.name}
+                      <span className="truncate block">{module.name}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button 
               variant="outline" 
               onClick={() => {
@@ -1579,6 +1581,7 @@ export function FloatingChatbot() {
                   setTimeout(() => startAddToDashboardListener(), 500)
                 }
               }}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -1591,9 +1594,11 @@ export function FloatingChatbot() {
                 }
               }}
               disabled={!modalDashboard}
+              className="w-full sm:w-auto"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add to Dashboard
+              <Plus className="h-4 w-4 mr-0 sm:mr-2" />
+              <span className="hidden sm:inline">Add to Dashboard</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1601,36 +1606,38 @@ export function FloatingChatbot() {
 
       {/* Table Title + Dashboard Selection Dialog */}
       <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[425px] mx-4 p-4 sm:p-6 overflow-hidden">
           <DialogHeader>
-            <DialogTitle>Add Table to Dashboard</DialogTitle>
+            <DialogTitle className="truncate">Add Table to Dashboard</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Table Title</label>
               {!isEditingTableTitle ? (
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-foreground truncate">{tableTitle || pendingChart?.title || 'Untitled Table'}</div>
-                  <Button variant="ghost" size="sm" onClick={() => setIsEditingTableTitle(true)}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="text-sm text-foreground truncate min-w-0 flex-1">{tableTitle || pendingChart?.title || 'Untitled Table'}</div>
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditingTableTitle(true)} className="flex-shrink-0">
                     <Edit3 className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <Input
                     value={tableTitle}
                     onChange={(e) => setTableTitle(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && tableTitle.trim() && modalDashboard && handleTitleConfirm()}
                     placeholder="Enter a title for your table..."
-                    className="flex-1"
+                    className="flex-1 min-w-0"
                     autoFocus
                   />
-                  <Button size="sm" onClick={() => setIsEditingTableTitle(false)}>
-                    Save
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => { setTableTitle(pendingChart?.title || ''); setIsEditingTableTitle(false); }}>
-                    Cancel
-                  </Button>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button size="sm" onClick={() => setIsEditingTableTitle(false)}>
+                      Save
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setTableTitle(pendingChart?.title || ''); setIsEditingTableTitle(false); }}>
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1643,20 +1650,21 @@ export function FloatingChatbot() {
                 <SelectContent>
                   {getAccessibleModules().map((module) => (
                     <SelectItem key={module.id} value={module.id}>
-                      {module.name}
+                      <span className="truncate block">{module.name}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleTitleCancel}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleTitleCancel} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleTitleConfirm} disabled={!tableTitle.trim() || !modalDashboard}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add to Dashboard
+            <Button onClick={handleTitleConfirm} disabled={!tableTitle.trim() || !modalDashboard} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-0 sm:mr-2" />
+              <span className="hidden sm:inline">Add to Dashboard</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </DialogFooter>
         </DialogContent>
