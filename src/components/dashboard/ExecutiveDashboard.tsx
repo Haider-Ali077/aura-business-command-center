@@ -280,7 +280,7 @@ export function ExecutiveDashboard() {
               />
             ))}
           </div>
-        ) : !isLoadingWidgets && kpis.length === 0 && (
+        ) : !isLoadingWidgets && !isLoadingKpis && kpis.length === 0 && widgets.length === 0 && (
           <Card className="p-8 text-center">
             <CardContent>
               <div className="text-muted-foreground">

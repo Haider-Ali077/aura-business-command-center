@@ -161,10 +161,13 @@ export function SalesDashboard() {
       const { dashboardId } = event.detail;
       if (dashboardId === 'sales' && session?.user.tenant_id) {
         console.log('Widget added to sales dashboard, refreshing...');
-        // Invalidate cache since new widget was added
-        dataService.invalidateKpis(session.user.tenant_id, 'sales');
-        try { cache.invalidate(`widgets:${session.user.tenant_id}:sales`); } catch (e) { /* ignore */ }
-        fetchWidgets();
+        // Add a small delay to prevent conflicts with the add operation
+        setTimeout(() => {
+          // Invalidate cache since new widget was added
+          dataService.invalidateKpis(session.user.tenant_id, 'sales');
+          try { cache.invalidate(`widgets:${session.user.tenant_id}:sales`); } catch (e) { /* ignore */ }
+          fetchWidgets();
+        }, 300);
       }
     };
 
