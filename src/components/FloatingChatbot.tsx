@@ -22,6 +22,7 @@ interface ChartData {
   y?: number[]
   xLabel?: string
   yLabel?: string
+  y_axes?: string[] // Array of Y-axis column names (for multi-series charts)
   sqlQuery?: string
   rawData?: any[] // Preserve original data for tables
   tableName?: string // Table name for table charts
@@ -49,16 +50,26 @@ const convertChatbotChartData = (
   // transform rawData rows into EnhancedChartData preserving all numeric series keys.
   if (chart.rawData && chart.chart_type !== "table") {
     // rawData is expected as array of objects: [{ x: 'Jan', sales: 100, purchase: 120 }, ...]
+    // If y_axes is provided, only include those columns (plus X-axis) to avoid showing unwanted columns
+    const allowedKeys = chart.y_axes && chart.y_axes.length > 0
+      ? [chart.xLabel, ...chart.y_axes].filter(Boolean) // Include X-axis + Y-axes
+      : null; // If no y_axes specified, include all keys (backward compatibility)
+    
     const data = chart.rawData.map((row: any) => {
       const entry: any = { name: row[chart.xLabel] ?? row.name ?? '' };
       Object.keys(row).forEach((k) => {
-        if (k === chart.xLabel) return;
+        if (k === chart.xLabel) return; // Skip X-axis (already in 'name')
+        // If y_axes is specified, only include those columns
+        if (allowedKeys && !allowedKeys.includes(k)) return;
         entry[k] = row[k];
       });
       return entry;
     });
 
-    const seriesKeys = data.length ? Object.keys(data[0]).filter((k) => k !== 'name') : [];
+    // Use y_axes if provided, otherwise extract from data (backward compatibility)
+    const seriesKeys = chart.y_axes && chart.y_axes.length > 0
+      ? chart.y_axes
+      : (data.length ? Object.keys(data[0]).filter((k) => k !== 'name') : []);
 
     const config: ChartConfig = {
       xLabel: chart.xLabel,
@@ -1168,6 +1179,7 @@ export function FloatingChatbot() {
             x: rows.map((row: any) => row[inferredX]),
             xLabel: inferredX,
             // y and yLabel left undefined for multi-series; converter uses rawData
+            y_axes: data.response.y_axes, // Include y_axes array if provided (for filtering columns)
             rawData: rows,
             tableName: data.response.table_name,
             sqlQuery: data.response.sql_query,
