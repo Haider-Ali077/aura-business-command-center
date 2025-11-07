@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useRoleStore } from '@/store/roleStore';
 import { useAuthStore } from '@/store/authStore';
+import { API_BASE_URL } from '@/config/api';
 
 export interface SearchResult {
   id: string;

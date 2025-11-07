@@ -8,7 +8,7 @@ import { API_BASE_URL } from '@/config/api';
 import { getIconByName } from '@/lib/iconUtils';
 import { cache } from '@/lib/cache';
 import { ConfigurableWidget } from '@/components/ConfigurableWidget';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton, LoadingOverlay } from '@/components/ui/loading-skeleton';
 import { dataService } from '@/services/dataService';
 import { sqlService } from '@/services/sqlService';
 
@@ -191,11 +191,7 @@ const PurchaseDashboard = () => {
 
         {/* Purchase Metrics */}
         {isLoadingMetrics ? (
-          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <LoadingSkeleton key={i} className="h-32" />
-            ))}
-          </div>
+          <LoadingSkeleton variant="kpi" count={4} />
         ) : metrics.length > 0 ? (
           <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
             {metrics.map((metric, index) => {
@@ -237,40 +233,42 @@ const PurchaseDashboard = () => {
         ) : null}
 
         {/* Dynamic Widgets */}
-        {widgets.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {widgets
-              .sort((a, b) => {
-                // Sort so tables come last
-                if (a.type === 'table' && b.type !== 'table') return 1;
-                if (a.type !== 'table' && b.type === 'table') return -1;
-                return 0;
-              })
-              .map((widget) => (
-              <ConfigurableWidget
-                key={widget.id}
-                widget={widget}
-                data={widget.config?.chartData || []}
-                onRemove={(id) => {
-                  // Remove widget from local state
-                  setWidgets(prev => prev.filter(w => w.id !== id));
-                }}
-                onUpdate={() => {}}
-                onMove={() => {}}
-                onResize={() => {}}
-              />
-            ))}
-          </div>
-        ) : !isLoadingWidgets && metrics.length === 0 && (
-          <Card className="p-8 text-center">
-            <CardContent>
-              <div className="text-muted-foreground">
-                <h3 className="text-lg font-medium mb-2">No widgets or KPIs configured</h3>
-                <p>Please contact your administrator to configure dashboard widgets and KPI metrics for this section.</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <LoadingOverlay isLoading={isLoadingWidgets}>
+          {widgets.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {widgets
+                .sort((a, b) => {
+                  // Sort so tables come last
+                  if (a.type === 'table' && b.type !== 'table') return 1;
+                  if (a.type !== 'table' && b.type === 'table') return -1;
+                  return 0;
+                })
+                .map((widget) => (
+                <ConfigurableWidget
+                  key={widget.id}
+                  widget={widget}
+                  data={widget.config?.chartData || []}
+                  onRemove={(id) => {
+                    // Remove widget from local state
+                    setWidgets(prev => prev.filter(w => w.id !== id));
+                  }}
+                  onUpdate={() => {}}
+                  onMove={() => {}}
+                  onResize={() => {}}
+                />
+              ))}
+            </div>
+          ) : !isLoadingWidgets && metrics.length === 0 && (
+            <Card className="p-8 text-center">
+              <CardContent>
+                <div className="text-muted-foreground">
+                  <h3 className="text-lg font-medium mb-2">No widgets or KPIs configured</h3>
+                  <p>Please contact your administrator to configure dashboard widgets and KPI metrics for this section.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </LoadingOverlay>
       </div>
     </Layout>
   );

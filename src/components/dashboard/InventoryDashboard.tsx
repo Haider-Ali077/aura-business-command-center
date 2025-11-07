@@ -5,6 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
+import { LoadingSkeleton, LoadingOverlay } from "@/components/ui/loading-skeleton";
 import { API_BASE_URL } from "@/config/api";
 import { getIconByName } from '@/lib/iconUtils';
 import { cache } from '@/lib/cache';
@@ -192,8 +193,11 @@ export function InventoryDashboard() {
         </div>
 
       {/* Inventory Metrics */}
-      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
-        {metrics.map((metric, index) => (
+      {isLoadingMetrics ? (
+        <LoadingSkeleton variant="kpi" count={4} />
+      ) : metrics.length > 0 ? (
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+          {metrics.map((metric, index) => (
           <Card key={index} className="relative overflow-hidden hover:shadow-md transition-shadow">
             {/* decorative inner shadow using a soft purplish tint (inset) */}
             <div
@@ -223,12 +227,14 @@ export function InventoryDashboard() {
                 </p>
               )}
             </CardContent>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      ) : null}
 
       {/* Dynamic Widgets */}
-      {widgets.length > 0 ? (
+      <LoadingOverlay isLoading={isLoadingWidgets}>
+        {widgets.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {widgets
             .sort((a, b) => {
@@ -248,19 +254,20 @@ export function InventoryDashboard() {
               onUpdate={() => {}}
               onMove={() => {}}
               onResize={() => {}}
-            />
-          ))}
-        </div>
+              />
+            ))}
+          </div>
         ) : !isLoadingWidgets && metrics.length === 0 && (
-        <Card className="p-8 text-center">
-          <CardContent>
-            <div className="text-muted-foreground">
-              <h3 className="text-lg font-medium mb-2">No widgets or KPIs configured</h3>
-              <p>Please contact your administrator to configure dashboard widgets and KPI metrics for this section.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          <Card className="p-8 text-center">
+            <CardContent>
+              <div className="text-muted-foreground">
+                <h3 className="text-lg font-medium mb-2">No widgets or KPIs configured</h3>
+                <p>Please contact your administrator to configure dashboard widgets and KPI metrics for this section.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </LoadingOverlay>
       </div>
     </Layout>
   );
