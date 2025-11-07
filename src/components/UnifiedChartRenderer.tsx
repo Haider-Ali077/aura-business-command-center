@@ -61,8 +61,13 @@ export const UnifiedChartRenderer = ({
   context = 'dashboard',
   tableName
 }: UnifiedChartRendererProps) => {
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Responsive maximized height: base on viewport so maximize doesn't get cut off
   const [maximizedHeight, setMaximizedHeight] = useState<number>(500);
+  // Hover / pin state for legend interactions
+  const [hoveredSeries, setHoveredSeries] = useState<string | null>(null);
+  const [pinnedSeries, setPinnedSeries] = useState<string | null>(null);
+
   useEffect(() => {
     if (!isMaximized) return;
     const compute = () => {
@@ -76,13 +81,15 @@ export const UnifiedChartRenderer = ({
     return () => window.removeEventListener('resize', compute);
   }, [isMaximized]);
 
-  const chartHeight = isMaximized ? maximizedHeight : (context === 'chatbot' ? 200 : 280);
-  // Height reserved for the legend area (space below the chart)
-  const LEGEND_HEIGHT = 42;
-  // Keep chart full height; allocate extra outer height to fit legend below
-  const chartInnerHeight = Math.max(80, chartHeight);
-  const outerHeight = chartHeight + LEGEND_HEIGHT;
+  // Clear hover state when the user clicks anywhere on the document
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const onDocClick = () => setHoveredSeries(null);
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, []);
 
+  // NOW we can do conditional returns after all hooks are called
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -100,6 +107,13 @@ export const UnifiedChartRenderer = ({
       </div>
     );
   }
+
+  const chartHeight = isMaximized ? maximizedHeight : (context === 'chatbot' ? 200 : 280);
+  // Height reserved for the legend area (space below the chart)
+  const LEGEND_HEIGHT = 42;
+  // Keep chart full height; allocate extra outer height to fit legend below
+  const chartInnerHeight = Math.max(80, chartHeight);
+  const outerHeight = chartHeight + LEGEND_HEIGHT;
 
   // Determine the key used for X axis labels. Chatbot chart conversion often
   // populates a `name` property while `config.xLabel` contains a human label
@@ -125,11 +139,6 @@ export const UnifiedChartRenderer = ({
   const tableKeys = config?.dataKeys || allKeys;
   const colors = config?.colors || DEFAULT_COLORS;
   const showGrid = config?.showGrid !== false;
-
-  // Hover / pin state for legend interactions
-  const [hoveredSeries, setHoveredSeries] = useState<string | null>(null);
-  const [pinnedSeries, setPinnedSeries] = useState<string | null>(null);
-  // dropdown/select state removed — legend shown inline
 
   // <CHANGE> Legend now only appears inside the dropdown
   // New compact in-chart legend (single row) with hover/pin interactions
@@ -183,19 +192,6 @@ export const UnifiedChartRenderer = ({
     const outName = (filename || 'table') + '-' + Date.now() + '.xlsx';
     XLSX.writeFile(wb, outName);
   }
-
-  // Observe the DOM for any element that has data-maximized="true" so we can
-  // hide series overlays on other charts. This runs only on the client.
-  // Previously there was code to watch other charts and manage a select overlay.
-  // That code was removed because the legend is shown inline below the chart.
-
-  // Clear hover state when the user clicks anywhere on the document
-  React.useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const onDocClick = () => setHoveredSeries(null);
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
-  }, []);
 
   // extra margin at top for chatbot context so overlay icons placed in the
   // container header don't overlap the plotting grid. When maximized, use
