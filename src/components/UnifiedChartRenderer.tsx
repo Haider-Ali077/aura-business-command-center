@@ -286,19 +286,45 @@ export const UnifiedChartRenderer = ({
     0
   );
 
-  // ✅ Responsive radius + label font scaling
-  const getResponsiveSettings = () => {
-    const width = window.innerWidth;
-    if (width >= 1400)
-      return { outer: "65%", inner: "45%", font: 16, offset: 20 };
-    if (width >= 1024)
-      return { outer: "60%", inner: "42%", font: 14, offset: 18 };
-    if (width >= 768)
-      return { outer: "55%", inner: "38%", font: 12, offset: 15 };
-    return { outer: "52%", inner: "35%", font: 10, offset: 10 };
-  };
+  // ✅ Responsive radius + label font scaling with React state
+  const [responsiveSettings, setResponsiveSettings] = useState(() => {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
+    if (context === 'chatbot') {
+      // Chatbot context: larger radius, bigger font for centered display
+      if (width >= 1400) return { outer: "78%", inner: "52%", font: 14, offset: 25, margin: 30 };
+      if (width >= 1024) return { outer: "78%", inner: "52%", font: 14, offset: 25, margin: 30 };
+      if (width >= 768) return { outer: "75%", inner: "50%", font: 13, offset: 22, margin: 28 };
+      return { outer: "72%", inner: "48%", font: 12, offset: 20, margin: 25 };
+    }
+    // Dashboard context: standard sizing with legend on side
+    if (width >= 1400) return { outer: "65%", inner: "45%", font: 16, offset: 20, margin: 20 };
+    if (width >= 1024) return { outer: "60%", inner: "42%", font: 14, offset: 18, margin: 18 };
+    if (width >= 768) return { outer: "55%", inner: "38%", font: 12, offset: 15, margin: 15 };
+    return { outer: "50%", inner: "35%", font: 11, offset: 12, margin: 12 };
+  });
 
-  const { outer, inner, font, offset } = getResponsiveSettings();
+  // Update settings on resize
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (context === 'chatbot') {
+        if (width >= 1400) setResponsiveSettings({ outer: "78%", inner: "52%", font: 14, offset: 25, margin: 30 });
+        else if (width >= 1024) setResponsiveSettings({ outer: "78%", inner: "52%", font: 14, offset: 25, margin: 30 });
+        else if (width >= 768) setResponsiveSettings({ outer: "75%", inner: "50%", font: 13, offset: 22, margin: 28 });
+        else setResponsiveSettings({ outer: "72%", inner: "48%", font: 12, offset: 20, margin: 25 });
+      } else {
+        if (width >= 1400) setResponsiveSettings({ outer: "65%", inner: "45%", font: 16, offset: 20, margin: 20 });
+        else if (width >= 1024) setResponsiveSettings({ outer: "60%", inner: "42%", font: 14, offset: 18, margin: 18 });
+        else if (width >= 768) setResponsiveSettings({ outer: "55%", inner: "38%", font: 12, offset: 15, margin: 15 });
+        else setResponsiveSettings({ outer: "50%", inner: "35%", font: 11, offset: 12, margin: 12 });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [context]);
+
+  const { outer, inner, font, offset, margin } = responsiveSettings;
 
   // ✅ Simple scrollable legend - no refs, no effects, just pure HTML scrolling
   const legendHeight = Math.min(chartHeight - 40, 300);
@@ -377,18 +403,18 @@ export const UnifiedChartRenderer = ({
       style={{ height: chartHeight }}
       data-maximized={isMaximized ? "true" : undefined}
     >
-      <div className="flex h-full items-center justify-between gap-2">
+      <div className={`flex h-full items-center ${context === 'chatbot' ? 'justify-center' : 'justify-between'} gap-2`}>
         <div
-          className="flex-1 flex items-center justify-center"
+          className={`${context === 'chatbot' ? 'w-full' : 'flex-1'} flex items-center justify-center ${context === 'chatbot' ? 'px-4' : ''}`}
           style={{ minWidth: 0 }}
         >
           <ResponsiveContainer width="100%" height={chartHeight}>
-            <PieChart>
+            <PieChart margin={{ top: margin, right: margin, bottom: margin, left: margin }}>
               <Pie
                 data={finalData}
                 cx="50%"
                 cy="50%"
-                label={renderOutsideLabel}
+                label={context === 'chatbot' ? renderOutsideLabel : renderOutsideLabel}
                 labelLine={false}
                 outerRadius={outer}
                 innerRadius={inner}
