@@ -101,6 +101,8 @@ export const UnifiedChartRenderer = ({
   // Hover / pin state for legend interactions
   const [hoveredSeries, setHoveredSeries] = useState<string | null>(null);
   const [pinnedSeries, setPinnedSeries] = useState<string | null>(null);
+  // Track screen size for responsive doughnut charts
+  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('lg');
 
   useEffect(() => {
     if (!isMaximized) return;
@@ -121,6 +123,24 @@ export const UnifiedChartRenderer = ({
     const onDocClick = () => setHoveredSeries(null);
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
+  }, []);
+
+  // Detect screen size for responsive doughnut charts
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const updateScreenSize = () => {
+      const width = window.innerWidth;
+      if (width < 480) setScreenSize('xs');
+      else if (width < 768) setScreenSize('sm');
+      else if (width < 1024) setScreenSize('md');
+      else if (width < 1280) setScreenSize('lg');
+      else setScreenSize('xl');
+    };
+    
+    updateScreenSize();
+    window.addEventListener("resize", updateScreenSize);
+    return () => window.removeEventListener("resize", updateScreenSize);
   }, []);
 
   // NOW we can do conditional returns after all hooks are called
@@ -401,16 +421,31 @@ export const UnifiedChartRenderer = ({
 
       const total = finalData.reduce((s, r) => s + Number((r as any)[valueKey] || 0), 0);
 
-      // ✅ Responsive radius + label font scaling
+      // ✅ Smart responsive radius + label font scaling based on screen size
       const getResponsiveSettings = () => {
-        const width = window.innerWidth;
-        if (width >= 1400) return { outer: "65%", inner: "45%", font: 16, offset: 20 };
-        if (width >= 1024) return { outer: "60%", inner: "42%", font: 14, offset: 18 };
-        if (width >= 768) return { outer: "55%", inner: "38%", font: 12, offset: 15 };
-        return { outer: "52%", inner: "35%", font: 10, offset: 10 };
+        // On xs/sm screens, hide legend and maximize chart with visible % labels
+        if (screenSize === 'xs') {
+          return { outer: "80%", inner: "58%", font: 9, offset: 6, showLegend: false };
+        }
+        if (screenSize === 'sm') {
+          return { outer: "75%", inner: "52%", font: 10, offset: 8, showLegend: false };
+        }
+        
+        // On md screens (tablets in 2-column grid), reduce chart size to prevent clipping
+        if (screenSize === 'md') {
+          return { outer: "50%", inner: "35%", font: 11, offset: 10, showLegend: false };
+        }
+        
+        // On lg+ screens, show legend on the side
+        if (screenSize === 'lg') {
+          return { outer: "58%", inner: "40%", font: 13, offset: 14, showLegend: true };
+        }
+        
+        // xl screens
+        return { outer: "65%", inner: "45%", font: 15, offset: 18, showLegend: true };
       };
 
-      const { outer, inner, font, offset } = getResponsiveSettings();
+      const { outer, inner, font, offset, showLegend } = getResponsiveSettings();
 
       // ✅ Simple scrollable legend - no refs, no effects, just pure HTML scrolling
       const legendHeight = Math.min(chartHeight - 40, 300);
@@ -451,9 +486,10 @@ export const UnifiedChartRenderer = ({
         );
       });
 
-      // ✅ Hide label % on chart if <5%
+      // ✅ Show % labels - only hide very small percentages (<3%) to reduce clutter
       const renderOutsideLabel = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
-        if (percent < 0.05) return null;
+        // Hide very small percentages to reduce clutter
+        if (percent < 0.03) return null;
 
         const RADIAN = Math.PI / 180;
         const radius = outerRadius + offset;
@@ -481,8 +517,9 @@ export const UnifiedChartRenderer = ({
           className="relative w-full"
           style={{ height: chartHeight }}
           data-maximized={isMaximized ? "true" : undefined}
+          data-chart-container="doughnut"
         >
-          <div className="flex h-full items-center justify-between gap-2">
+          <div className="flex h-full items-center justify-center gap-2">
             <div className="flex-1 flex items-center justify-center" style={{ minWidth: 0 }}>
               <ResponsiveContainer width="100%" height={chartHeight}>
                 <PieChart>
@@ -497,7 +534,7 @@ export const UnifiedChartRenderer = ({
                     dataKey={valueKey}
                     nameKey={labelKey}
                     isAnimationActive={false}
-                    paddingAngle={2}
+                    paddingAngle={screenSize === 'xs' ? 1 : 2}
                   >
                     {finalData.map((entry, index) => {
                       const label = entry[labelKey];
@@ -528,7 +565,8 @@ export const UnifiedChartRenderer = ({
               </ResponsiveContainer>
             </div>
 
-            {context !== "chatbot" && (isMaximized || context === "dashboard") && (
+            {/* Show legend only on large screens (lg+) and when not in chatbot */}
+            {context !== "chatbot" && (isMaximized || context === "dashboard") && showLegend && (
               <div className="w-52 pl-4 flex flex-col overflow-hidden" style={{ height: legendHeight }}>
                 <div className="h-full overflow-auto pr-2">{legendItems}</div>
               </div>
