@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/store/authStore";
 import { API_BASE_URL } from '@/config/api';
+import { cache } from '@/lib/cache';
 
 // export interface DashboardData {
 //   revenue: number;
@@ -51,7 +52,7 @@ export interface DashboardData {
       value: number;
     }>;
 
-    pie: Array<{
+    doughnut: Array<{
       name: string;
       value: number;
       color: string;
@@ -144,7 +145,7 @@ class DataService {
             { name: "Jun 2024", value: 32000 },
             { name: "Jul 2024", value: 35000 },
           ],
-          pie: [
+          doughnut: [
             { name: "Electronics", value: 40000, color: "#FF6384" },
             { name: "Furniture", value: 30000, color: "#36A2EB" },
             { name: "Apparel", value: 20000, color: "#FFCE56" },
@@ -301,6 +302,85 @@ class DataService {
       console.error("Error chatting with agent:", error);
       return "Sorry, I encountered an error processing your request.";
     }
+  }
+
+  /**
+   * Fetch KPI cards for a dashboard with caching (10 minutes)
+   * This prevents re-running queries when switching between dashboards
+   */
+  async fetchKpis(dashboard: string, tenantId?: number): Promise<any[]> {
+    try {
+      const session = useAuthStore.getState().session;
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const effectiveTenantId = tenantId || session.user.tenant_id;
+      const userId = session.user.user_id;
+      
+      const cacheKey = `kpis:${effectiveTenantId}:${dashboard}`;
+
+      // Check cache first
+      const cached = cache.get<any[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/kpis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: effectiveTenantId,
+          tenant_name: effectiveTenantId,
+          dashboard,
+          user_id: userId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch KPIs: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Cache the result
+      cache.set(cacheKey, data);
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching KPIs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Invalidate KPI cache for a tenant/dashboard
+   * Call this after any operation that changes KPI data
+   */
+  invalidateKpis(tenantId: number, dashboard?: string): void {
+    if (dashboard) {
+      cache.invalidate(`kpis:${tenantId}:${dashboard}`);
+    } else {
+      cache.invalidate(`kpis:${tenantId}:`);
+    }
+  }
+
+  /**
+   * Force refresh KPIs by invalidating cache and re-fetching
+   */
+  async refreshKpis(dashboard: string, tenantId?: number): Promise<any[]> {
+    const session = useAuthStore.getState().session;
+    if (!session) {
+      throw new Error('No active session');
+    }
+
+    const effectiveTenantId = tenantId || session.user.tenant_id;
+    this.invalidateKpis(effectiveTenantId, dashboard);
+    
+    return this.fetchKpis(dashboard, tenantId);
   }
 }
 

@@ -37,7 +37,7 @@ const widgetTypes = [
   'line',
   'bar',
   'area',
-  'pie',
+  'doughnut',
   'table'
 ];
 

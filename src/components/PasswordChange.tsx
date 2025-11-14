@@ -14,6 +14,10 @@ export function PasswordChange() {
     newPassword: '',
     confirmPassword: ''
   });
+  // Read-only flags to prevent browser/password-manager autofill — inputs become editable on user focus
+  const [currentReadOnly, setCurrentReadOnly] = useState(true);
+  const [newReadOnly, setNewReadOnly] = useState(true);
+  const [confirmReadOnly, setConfirmReadOnly] = useState(true);
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -58,10 +62,23 @@ export function PasswordChange() {
         <p className="text-gray-600 text-sm md:text-base">Update your account password</p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Dummy hidden fields to capture autofill from password managers (helps prevent filling the visible fields) */}
+        <div style={{ position: 'absolute', left: -9999, top: 0, height: 0, overflow: 'hidden' }} aria-hidden>
+          <input name="username" autoComplete="username" />
+          <input name="fake-password" type="password" autoComplete="current-password" />
+        </div>
         <div>
           <label className="block text-sm font-medium mb-2">Current Password</label>
           <Input
             type="password"
+            name="current-password"
+            autoComplete="new-password"
+            readOnly={currentReadOnly}
+            onFocus={(e) => {
+              setCurrentReadOnly(false);
+              // ensure the actual input becomes editable - some browsers need a short delay
+              setTimeout(() => { try { (e.target as HTMLInputElement).removeAttribute('readonly'); } catch {} }, 50);
+            }}
             value={passwordData.currentPassword}
             onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
             placeholder="Enter current password"
@@ -71,6 +88,13 @@ export function PasswordChange() {
           <label className="block text-sm font-medium mb-2">New Password</label>
           <Input
             type="password"
+            name="new-password"
+            autoComplete="new-password"
+            readOnly={newReadOnly}
+            onFocus={(e) => {
+              setNewReadOnly(false);
+              setTimeout(() => { try { (e.target as HTMLInputElement).removeAttribute('readonly'); } catch {} }, 50);
+            }}
             value={passwordData.newPassword}
             onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
             placeholder="Enter new password"
@@ -80,6 +104,13 @@ export function PasswordChange() {
           <label className="block text-sm font-medium mb-2">Confirm New Password</label>
           <Input
             type="password"
+            name="confirm-password"
+            autoComplete="new-password"
+            readOnly={confirmReadOnly}
+            onFocus={(e) => {
+              setConfirmReadOnly(false);
+              setTimeout(() => { try { (e.target as HTMLInputElement).removeAttribute('readonly'); } catch {} }, 50);
+            }}
             value={passwordData.confirmPassword}
             onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
             placeholder="Confirm new password"

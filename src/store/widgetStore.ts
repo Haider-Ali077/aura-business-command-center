@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useEffect } from 'react';
 import { sqlService } from '@/services/sqlService';
 import { API_BASE_URL } from '@/config/api';
+import { cache } from '@/lib/cache';
 
 export interface Widget {
   id: string;
@@ -56,6 +57,16 @@ export const useUserScopedWidgetStore = (userId: string | null) => {
       try {
         console.log('Fetching widgets with tenantId:', tenantId, 'dashboard:', dashboard, 'userId:', userId);
         
+        const cacheKey = `widgets:${tenantId}:${dashboard}:${userId || 'anon'}`;
+
+        // Check cache first
+        const cached = cache.get<any[]>(cacheKey);
+        if (cached) {
+          console.log('Using cached widgets for', cacheKey);
+          set({ widgets: cached, loading: false });
+          return;
+        }
+
         const res = await fetch(`${API_BASE_URL}/widgetfetch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -132,6 +143,10 @@ export const useUserScopedWidgetStore = (userId: string | null) => {
         }));
         
         console.log('Transformed widgets:', transformed);
+        
+        // Cache the transformed widgets
+        cache.set(cacheKey, transformed);
+        
         set({ widgets: transformed, loading: false });
         
       } catch (error) {
@@ -176,6 +191,9 @@ export const useUserScopedWidgetStore = (userId: string | null) => {
         const result = await response.json();
         const newWidget = { ...widget, id: result.id };
         
+        // Invalidate widget cache for this dashboard
+        cache.invalidate(`widgets:${tenantId}:${dashboard}:`);
+        
         set((state) => ({
           widgets: [...state.widgets, newWidget],
         }));
@@ -197,6 +215,9 @@ export const useUserScopedWidgetStore = (userId: string | null) => {
       const dashboardType = currentPath.split('/').pop() || 'executive';
       
       console.log('Refreshing data for dashboard:', dashboardType, 'tenant:', session.user.tenant_id, 'user:', session.user.user_id);
+      
+      // Invalidate cache before re-fetching
+      cache.invalidate(`widgets:${session.user.tenant_id}:${dashboardType}:`);
       
       // Re-fetch widgets from backend to get latest configuration and data
       await get().fetchWidgets(session.user.tenant_id, dashboardType);

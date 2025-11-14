@@ -7,6 +7,9 @@ import { useAuthStore } from "@/store/authStore";
 import { ConfigurableWidget } from "@/components/ConfigurableWidget";
 import { API_BASE_URL } from "@/config/api";
 import { getIconByName } from '@/lib/iconUtils';
+import { cache } from '@/lib/cache';
+import { dataService } from '@/services/dataService';
+import { sqlService } from '@/services/sqlService';
 
 interface HRMetric {
   title: string;
@@ -20,6 +23,7 @@ export function HRDashboard() {
   const [metrics, setMetrics] = useState<HRMetric[]>([]);
   const [widgets, setWidgets] = useState<any[]>([]);
   const [isLoadingWidgets, setIsLoadingWidgets] = useState(true);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   
   const { session } = useAuthStore();
 
@@ -27,6 +31,16 @@ export function HRDashboard() {
     if (!session?.user.tenant_id) return;
     
     setIsLoadingWidgets(true);
+    const startTime = Date.now();
+    const widgetsCacheKey = `widgets:${session.user.tenant_id}:hr`;
+    const cachedWidgets = cache.get<any[]>(widgetsCacheKey);
+    if (cachedWidgets) {
+      setWidgets(cachedWidgets);
+      setIsLoadingWidgets(false);
+      console.log('[HRDashboard] Widgets loaded from cache');
+      return;
+    }
+    
     try {
       const response = await fetch(`${API_BASE_URL}/widgetfetch`, {
         method: 'POST',
@@ -54,21 +68,15 @@ export function HRDashboard() {
             const sqlQuery = widget.sqlQuery || widget.sql_query;
             if (sqlQuery) {
               try {
-                const chartRes = await fetch(`${API_BASE_URL}/execute-sql`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    query: sqlQuery,
-                    tenant_id: session.user.tenant_id,
-                    user_id: session.user.user_id,
-                  }),
-                });
+                // Use cached sqlService instead of direct fetch
+                const chartData = await sqlService.runSqlWithWidgetCache(
+                  sqlQuery,
+                  session.user.tenant_id,
+                  widget.id
+                );
                 
-                if (chartRes.ok) {
-                  const chartData = await chartRes.json();
-                  widget.config = { ...widget.config, chartData };
-                  widget.sqlQuery = sqlQuery;
-                }
+                widget.config = { ...widget.config, chartData };
+                widget.sqlQuery = sqlQuery;
               } catch (err) {
                 console.error(`Failed to fetch chart data for widget ${widget.id}`, err);
               }
@@ -78,6 +86,8 @@ export function HRDashboard() {
           }));
           
           setWidgets(processedWidgets);
+          try { cache.set(widgetsCacheKey, processedWidgets); } catch (e) { /* ignore */ }
+          console.log(`[HRDashboard] Widgets loaded in ${Date.now() - startTime}ms`);
         } else {
           setWidgets([]);
         }
@@ -92,35 +102,43 @@ export function HRDashboard() {
   const fetchKPIData = async () => {
     if (!session?.user.tenant_id) return;
     
+    setIsLoadingMetrics(true);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/kpis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: session.user.user_id,
-          tenant_id: session.user.tenant_id,
-          dashboard: 'hr'
-        })
-      });
-      if (response.ok) {
-        const kpiData = await response.json();
-        
-        if (kpiData.length > 0) {
-          const mappedKpis = kpiData.map((kpi: any) => ({
-            title: kpi.title,
-            value: kpi.value,
-            change: kpi.change,
-            icon: getIconByName(kpi.icon),
-            color: kpi.color
-          }));
-          setMetrics(mappedKpis);
-        }
+      // Use cached dataService.fetchKpis instead of direct fetch
+      const kpiData = await dataService.fetchKpis('hr', session.user.tenant_id);
+      
+      if (kpiData.length > 0) {
+        const mappedKpis = kpiData.map((kpi: any) => ({
+          title: kpi.title,
+          value: kpi.value,
+          change: kpi.change,
+          icon: getIconByName(kpi.icon),
+          color: kpi.color
+        }));
+        setMetrics(mappedKpis);
+        console.log(`[HRDashboard] KPIs loaded in ${Date.now() - startTime}ms`);
       }
     } catch (error) {
       console.error('Error fetching KPI data:', error);
+    } finally {
+      setIsLoadingMetrics(false);
     }
+  };
+
+  // Force refresh with cache invalidation
+  const handleRefresh = async () => {
+    if (!session?.user.tenant_id) return;
+    
+    console.log('[HRDashboard] Force refresh triggered');
+    
+    // Invalidate cache before refetch
+    dataService.invalidateKpis(session.user.tenant_id, 'hr');
+    sqlService.invalidateCache(session.user.tenant_id);
+    cache.invalidate(`widgets:${session.user.tenant_id}:hr`);
+    
+    await Promise.all([fetchWidgets(), fetchKPIData()]);
   };
 
   useEffect(() => {
@@ -141,6 +159,9 @@ export function HRDashboard() {
       const { dashboardId } = event.detail;
       if (dashboardId === 'hr' && session?.user.tenant_id) {
         console.log('Widget added to HR dashboard, refreshing...');
+        // Invalidate cache since new widget was added
+        dataService.invalidateKpis(session.user.tenant_id, 'hr');
+        try { cache.invalidate(`widgets:${session.user.tenant_id}:hr`); } catch (e) { /* ignore */ }
         fetchWidgets();
       }
     };
@@ -161,14 +182,11 @@ export function HRDashboard() {
           </div>
           <Button 
             variant="gradient"
-            onClick={() => {
-              fetchWidgets();
-              fetchKPIData();
-            }} 
-            disabled={isLoadingWidgets}
+            onClick={handleRefresh}
+            disabled={isLoadingWidgets || isLoadingMetrics}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoadingWidgets ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${(isLoadingWidgets || isLoadingMetrics) ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
         </div>
@@ -176,10 +194,26 @@ export function HRDashboard() {
       {/* HR Metrics */}
       <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         {metrics.map((metric, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
+          <Card key={index} className="relative overflow-hidden hover:shadow-md transition-shadow">
+            {/* decorative inner shadow using a soft purplish tint (inset) */}
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                boxShadow: 'inset 0 10px 30px rgba(124,58,237,0.06), inset 0 -6px 20px rgba(99,102,241,0.04)'
+              }}
+            />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
-              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+              {(() => {
+                const Icon = metric.icon as any;
+                const baseClass = 'h-5 w-5';
+                const isTailwindClass = typeof metric.color === 'string' && metric.color.startsWith('text-');
+                const isRawColor = typeof metric.color === 'string' && (metric.color.startsWith('#') || metric.color.startsWith('rgb'));
+                const iconClass = isTailwindClass ? `${baseClass} ${metric.color}` : baseClass;
+                const iconStyle = isRawColor ? { color: metric.color } : undefined;
+                return <Icon className={iconClass} style={iconStyle} aria-hidden />;
+              })()}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>

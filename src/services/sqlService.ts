@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { API_BASE_URL } from '@/config/api';
 import { SqlResult, EnhancedChartData, ChartMetadata, ChartConfig } from '@/types/chart';
+import { cache } from '@/lib/cache';
 
 // Legacy interface for backward compatibility
 export interface ChartData {
@@ -13,49 +14,118 @@ export interface ChartData {
 export type { EnhancedChartData };
 
 class SqlService {
+  // Limit concurrent SQL requests to avoid overloading backend and browser
+  private maxConcurrent = 6;
+  private activeCount = 0;
+  private queue: Array<() => void> = [];
+
+  private async acquireSlot(): Promise<void> {
+    if (this.activeCount < this.maxConcurrent) {
+      this.activeCount++;
+      return;
+    }
+
+    await new Promise<void>(resolve => {
+      this.queue.push(() => {
+        this.activeCount++;
+        resolve();
+      });
+    });
+  }
+
+  private releaseSlot(): void {
+    this.activeCount = Math.max(0, this.activeCount - 1);
+    const next = this.queue.shift();
+    if (next) next();
+  }
+
+  /**
+   * Run SQL but prefer a widget-specific cache key when provided. This helps
+   * avoid cache misses due to formatting differences in the SQL text and
+   * speeds up switching between dashboards where the same widget is shown.
+   */
+  async runSqlWithWidgetCache(query: string, tenantId?: number, widgetId?: string | number): Promise<SqlResult | any[]> {
+    try {
+      const authStore = useAuthStore.getState();
+      const session = authStore.session;
+      if (!session) throw new Error('No active session');
+
+      const userId = session.user.user_id;
+      const effectiveTenantId = tenantId || session.user.tenant_id;
+
+      // If widgetId supplied, try widget specific cache first
+      if (widgetId) {
+        const widgetCacheKey = `widget:${effectiveTenantId}:${widgetId}:chartData`;
+        const widgetCached = cache.get<any>(widgetCacheKey);
+        if (widgetCached) return widgetCached;
+      }
+
+      // Fallback to normal runSql which has its own query-based caching
+      const result = await this.runSql(query, tenantId);
+
+      // Persist under widget-specific key too for faster lookups next time
+      if (widgetId) {
+        const widgetCacheKey = `widget:${effectiveTenantId}:${widgetId}:chartData`;
+        try { cache.set(widgetCacheKey, result); } catch (e) { /* ignore */ }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('runSqlWithWidgetCache error:', error);
+      throw error;
+    }
+  }
+
   async runSql(query: string, tenantId?: number): Promise<SqlResult | any[]> {
     try {
       const authStore = useAuthStore.getState();
       const session = authStore.session;
-      
-      if (!session) {
-        throw new Error('No active session');
-      }
+      if (!session) throw new Error('No active session');
 
-      const response = await fetch(`${API_BASE_URL}/execute-sql`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          query,
-          tenant_id: tenantId || session.user.tenant_id,  // Use tenant_id instead of database_name
-          user_id: session.user.user_id,
-        }),
-      });
+      const userId = session.user.user_id;
+      const effectiveTenantId = tenantId || session.user.tenant_id;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Normalize query for consistent caching (trim & lowercase for key generation)
+      const normalizedQuery = query.trim().replace(/\s+/g, ' ').toLowerCase();
+      const cacheKey = `sql:${effectiveTenantId}:${userId}:${normalizedQuery}`;
 
-      const data = await response.json();
-      
-      // Return raw data if it's already an array of objects
-      if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-        return data;
+      // Check cache first
+      const cached = cache.get<any>(cacheKey);
+      if (cached) return cached;
+
+      // Acquire concurrency slot before making network request
+      await this.acquireSlot();
+      try {
+        const response = await fetch(`${API_BASE_URL}/execute-sql`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, tenant_id: effectiveTenantId, user_id: userId }),
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+
+        // Cache the raw result
+        cache.set(cacheKey, data);
+
+        // Return raw data directly if it's already an array of objects
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+          return data;
+        }
+
+        // Handle legacy format - data is array of objects
+        if (Array.isArray(data) && data.length > 0) {
+          const columns = Object.keys(data[0]);
+          const rows = data.map(row => columns.map(col => row[col]));
+          return { columns, rows };
+        }
+
+        return { columns: data.columns || data.cols || [], rows: data.rows || data.data || [] };
+      } finally {
+        // Always release the concurrency slot
+        this.releaseSlot();
       }
-      
-      // Handle legacy format - data is array of objects
-      if (Array.isArray(data) && data.length > 0) {
-        const columns = Object.keys(data[0]);
-        const rows = data.map(row => columns.map(col => row[col]));
-        return { columns, rows };
-      }
-      
-      return {
-        columns: data.columns || data.cols || [],
-        rows: data.rows || data.data || []
-      };
     } catch (error) {
       console.error('Error running SQL query:', error);
       throw error;
@@ -302,6 +372,19 @@ class SqlService {
         dataKey: config?.yLabel || metadata.dataKey
       }
     };
+  }
+
+  /**
+   * Invalidate SQL cache for a specific tenant/user or all
+   */
+  invalidateCache(tenantId?: number, userId?: number): void {
+    if (tenantId && userId) {
+      cache.invalidate(`sql:${tenantId}:${userId}:`);
+    } else if (tenantId) {
+      cache.invalidate(`sql:${tenantId}:`);
+    } else {
+      cache.invalidate('sql:');
+    }
   }
 }
 
